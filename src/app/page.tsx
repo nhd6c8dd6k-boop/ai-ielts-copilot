@@ -30,10 +30,12 @@ type Pillar = {
 
 type HomeCopy = {
   beta: string;
+  brand: string;
   badge: string;
   title: string;
   subtitle: string;
   availability: string[];
+  betaNotice: string;
   primary: string;
   secondary: string;
   languageLabel: string;
@@ -43,6 +45,7 @@ type HomeCopy = {
   previewTitle: string;
   previewParagraphs: string[];
   questions: string[];
+  steps: string[][];
   pillars: Pillar[];
   complianceBadge: string;
   complianceTitle: string;
@@ -54,63 +57,77 @@ type HomeCopy = {
 const copy = {
   zh: {
     beta: "Beta",
-    badge: "为中国雅思考生准备的电脑端练习空间",
-    title: "AI IELTS Copilot",
+    brand: "AI IELTS Copilot",
+    badge: "面向中国雅思学生",
+    title: "电脑雅思练习，从这里开始",
     subtitle:
-      "用英文原创题熟悉 Computer IELTS 的阅读、听力和写作界面。当前 Beta 已开放 Reading and Listening practice，Writing AI feedback is coming soon.",
+      "用原创英文题熟悉 Computer IELTS 的做题节奏。Reading / Listening 已开放练习并自动判分；Writing 练习模式已开放，AI Writing Feedback coming soon。Beta 阶段免费使用。",
     availability: [
-      "Reading and Listening practice are available.",
-      "Writing AI feedback is coming soon.",
-      "All practice sets are original and admin-reviewed.",
+      "Reading / Listening 已可练习并自动判分",
+      "Writing 练习模式已开放",
+      "AI 写作批改即将上线",
     ],
-    primary: "开始练习",
-    secondary: "查看 Dashboard",
+    betaNotice:
+      "Beta 阶段免费使用。Reading 和 Listening 已开放，Writing 练习已开放，AI 写作批改即将上线。",
+    primary: "开始免费练习",
+    secondary: "查看练习中心",
     languageLabel: "首页语言",
     passageTitle: "Reading Passage 2",
     timer: "36:42",
     answerSheet: "答题卡",
-    previewTitle: "The changing economics of urban learning",
+    previewTitle: "Urban Green Spaces and Public Health",
     previewParagraphs: [
-      "In many large cities, education has become less attached to a single classroom and more dependent on flexible networks of mentors, software, and public institutions.",
-      "Researchers argue that this shift is not simply technical. It changes how learners measure progress, choose materials, and recover from mistakes.",
+      "In many cities, public parks and tree-lined streets are no longer treated as decorative extras. Health researchers increasingly describe them as part of a city’s preventive infrastructure.",
+      "The strongest benefits appear when green spaces are close to homes, safe to enter, and connected to daily routines such as walking to school or commuting.",
     ],
     questions: [
-      "1. According to paragraph B, what caused the first shift?",
+      "1. According to paragraph A, what is one role of green spaces?",
       "2. TRUE / FALSE / NOT GIVEN",
-      "3. Match the heading to paragraph C",
-      "4. Complete the summary below",
+      "3. Complete the sentence below.",
+      "4. Choose the correct answer.",
+    ],
+    steps: [
+      ["选择练习", "进入 Practice，选择 Reading、Listening 或 Writing。"],
+      ["完成做题", "在电脑雅思风格界面中计时、答题、标记和提交。"],
+      ["查看复盘", "提交后查看分数、正确答案、解析和练习记录。"],
     ],
     pillars: [
       {
-        title: "Beta 可用题库",
+        title: "电脑雅思风格界面",
         description:
-          "管理员审核后发布原创 IELTS 风格 Reading、Listening 和 Writing 内容，先保证质量再开放练习。",
-        icon: Sparkles,
-      },
-      {
-        title: "自动判分",
-        description:
-          "Reading 和 Listening 提交后自动判分，结果页展示答案、解析和复盘入口。",
-        icon: CheckCircle2,
-      },
-      {
-        title: "电脑雅思体验",
-        description:
-          "左右分栏、计时器、答题导航、标记题目和提交结果，贴近电脑端练习习惯。",
+          "左右分栏、计时器、答题卡和题号导航，让学生先熟悉 Computer IELTS 的操作感。",
         icon: Timer,
       },
       {
-        title: "学习进度看板",
+        title: "Reading / Listening 自动判分",
         description:
-          "Dashboard 汇总真实练习记录、最近成绩、技能分布和下一步练习建议。",
+          "完成练习后自动统计正确率、分数和预估表现，减少手动对答案的成本。",
+        icon: CheckCircle2,
+      },
+      {
+        title: "答案解析和复盘",
+        description:
+          "结果页展示用户答案、正确答案和解析，方便回看错误原因。",
+        icon: ShieldCheck,
+      },
+      {
+        title: "Dashboard 学习记录",
+        description:
+          "自动记录最近练习、分数和学习轨迹，帮助学生看见自己的进度。",
         icon: LineChart,
       },
+      {
+        title: "Writing practice",
+        description:
+          "写作题目和草稿保存已开放，AI Writing Feedback 将在后续版本上线。",
+        icon: PenLine,
+      },
     ],
-    complianceBadge: "合规优先",
-    complianceTitle: "只做原创雅思风格训练",
+    complianceBadge: "内容合规",
+    complianceTitle: "原创 IELTS 风格练习内容",
     complianceText:
-      "内容系统围绕原创生成、管理员审核和发布流程设计。Cambridge 真题、考试回忆和盗版 PDF 不进入产品。",
-    complianceItems: ["原创练习内容", "管理员审核发布", "官方公开样题仅做链接"],
+      "AI IELTS Copilot 使用原创 IELTS 风格练习内容，不提供盗版真题或考试回忆。",
+    complianceItems: ["原创练习内容", "管理员审核发布", "不提供盗版真题"],
     modules: [
       ["阅读", "练习已发布的英文文章和题目，提交后自动判分并查看解析。"],
       ["听力", "练习已发布的英文听力题；音频未就绪时可用 script preview 测试流程。"],
@@ -119,63 +136,77 @@ const copy = {
   },
   en: {
     beta: "Beta",
-    badge: "Computer IELTS practice for Chinese candidates",
-    title: "AI IELTS Copilot",
+    brand: "AI IELTS Copilot",
+    badge: "Built for Chinese IELTS candidates",
+    title: "Computer IELTS practice starts here",
     subtitle:
-      "Practice with original English content in a Computer IELTS-style interface. Reading and Listening practice are available in beta. Writing AI feedback is coming soon.",
+      "Practice with original English content in a Computer IELTS-style interface. Reading and Listening are available with automatic scoring; Writing practice mode is open, and AI Writing Feedback is coming soon. Free during beta.",
     availability: [
-      "Reading and Listening practice are available.",
-      "Writing AI feedback is coming soon.",
-      "All practice sets are original and admin-reviewed.",
+      "Reading / Listening practice and auto scoring are available.",
+      "Writing practice mode is open.",
+      "AI Writing Feedback is coming soon.",
     ],
-    primary: "Start practice",
-    secondary: "View Dashboard",
+    betaNotice:
+      "Free during beta. Reading and Listening are available, Writing practice is open, and AI Writing Feedback is coming soon.",
+    primary: "Start free practice",
+    secondary: "View Practice center",
     languageLabel: "Homepage language",
     passageTitle: "Reading Passage 2",
     timer: "36:42",
     answerSheet: "Answer Sheet",
-    previewTitle: "The changing economics of urban learning",
+    previewTitle: "Urban Green Spaces and Public Health",
     previewParagraphs: [
-      "In many large cities, education has become less attached to a single classroom and more dependent on flexible networks of mentors, software, and public institutions.",
-      "Researchers argue that this shift is not simply technical. It changes how learners measure progress, choose materials, and recover from mistakes.",
+      "In many cities, public parks and tree-lined streets are no longer treated as decorative extras. Health researchers increasingly describe them as part of a city’s preventive infrastructure.",
+      "The strongest benefits appear when green spaces are close to homes, safe to enter, and connected to daily routines such as walking to school or commuting.",
     ],
     questions: [
-      "1. According to paragraph B, what caused the first shift?",
+      "1. According to paragraph A, what is one role of green spaces?",
       "2. TRUE / FALSE / NOT GIVEN",
-      "3. Match the heading to paragraph C",
-      "4. Complete the summary below",
+      "3. Complete the sentence below.",
+      "4. Choose the correct answer.",
+    ],
+    steps: [
+      ["Choose a practice mode", "Open Practice and select Reading, Listening, or Writing."],
+      ["Complete the test flow", "Use a Computer IELTS-style interface with timer, answers, flags, and submit."],
+      ["Review your result", "See score, correct answers, explanations, and practice history."],
     ],
     pillars: [
       {
-        title: "Beta practice library",
+        title: "Computer IELTS-style interface",
         description:
-          "Admins review original IELTS-style Reading, Listening, and Writing content before it appears in practice.",
-        icon: Sparkles,
-      },
-      {
-        title: "Automatic scoring",
-        description:
-          "Reading and Listening submissions are scored automatically with answer review.",
-        icon: CheckCircle2,
-      },
-      {
-        title: "Computer IELTS flow",
-        description:
-          "Split-pane practice, timer, answer navigation, flags, and focused result review.",
+          "Split panes, timer, answer sheet, and question navigation help students get used to the computer test flow.",
         icon: Timer,
       },
       {
-        title: "Progress dashboard",
+        title: "Reading / Listening auto scoring",
         description:
-          "Track real attempts, recent scores, skill trends, and next practice focus.",
+          "Submissions are scored automatically with correct count, percentage, and estimated performance.",
+        icon: CheckCircle2,
+      },
+      {
+        title: "Answer review",
+        description:
+          "Result pages show user answers, correct answers, and explanations for review.",
+        icon: ShieldCheck,
+      },
+      {
+        title: "Dashboard history",
+        description:
+          "Track recent attempts, scores, and learning progress in one place.",
         icon: LineChart,
+      },
+      {
+        title: "Writing practice",
+        description:
+          "Published Writing prompts and draft saving are open now. AI Writing Feedback is coming soon.",
+        icon: PenLine,
       },
     ],
     complianceBadge: "Compliance first",
     complianceTitle: "Built for original IELTS style training",
     complianceText:
-      "The content system is designed around original generation, admin review, and published practice sets. Protected Cambridge content and exam recalls stay outside the product.",
-    complianceItems: ["Original practice", "Admin reviewed", "Official samples as links only"],
+      "AI IELTS Copilot uses original IELTS-style practice content and does not provide pirated official tests or exam recalls.",
+    complianceItems: ["Original practice", "Admin reviewed", "No pirated tests"],
     modules: [
       ["Reading", "Published passages and questions with automatic scoring."],
       ["Listening", "Published scripts and questions with script preview when audio is pending."],
@@ -194,12 +225,13 @@ export default function Home() {
       <main>
         <section className="relative overflow-hidden border-b border-slate-200 bg-[#f8faf8]">
           <div className="absolute inset-0 bg-[linear-gradient(to_right,#e5e7eb_1px,transparent_1px),linear-gradient(to_bottom,#e5e7eb_1px,transparent_1px)] bg-[size:72px_72px] opacity-40" />
-          <div className="relative mx-auto grid min-h-[calc(100vh-4rem)] max-w-7xl content-center gap-10 px-4 py-16 sm:px-6 lg:px-8">
-            <div className="max-w-3xl">
+          <div className="relative mx-auto grid min-h-[calc(100vh-4rem)] max-w-7xl items-center gap-10 px-4 py-14 sm:px-6 lg:grid-cols-[0.88fr_1.12fr] lg:px-8">
+            <div className="max-w-2xl">
               <div className="flex flex-wrap items-center gap-3">
                 <Badge className="border-slate-950 bg-slate-950 text-white">
                   {t.beta}
                 </Badge>
+                <Badge className="bg-white/80">{t.brand}</Badge>
                 <Badge className="bg-white/80">{t.badge}</Badge>
                 <div
                   className="inline-flex rounded-md border border-slate-200 bg-white p-1"
@@ -238,75 +270,150 @@ export default function Home() {
                   </div>
                 ))}
               </div>
+              <div className="mt-5 rounded-lg border border-teal-200 bg-white/85 p-4 text-sm leading-6 text-slate-700">
+                <span className="font-medium text-teal-800">{t.beta}</span>
+                <span className="ml-2">{t.betaNotice}</span>
+              </div>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Button asChild size="lg">
-                  <Link href="/practice">
+                  <Link href="/practice/reading">
                     {t.primary}
                     <ArrowRight className="h-4 w-4" aria-hidden="true" />
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="lg">
-                  <Link href="/dashboard">{t.secondary}</Link>
+                  <Link href="/practice">{t.secondary}</Link>
                 </Button>
               </div>
             </div>
 
-            <div className="grid overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xl lg:grid-cols-[1.1fr_0.9fr]">
-              <div className="border-b border-slate-200 p-5 lg:border-b-0 lg:border-r">
-                <div className="mb-4 flex items-center justify-between border-b border-slate-200 pb-3 text-sm">
-                  <div className="font-medium text-slate-950">
-                    {t.passageTitle}
-                  </div>
-                  <div className="flex items-center gap-2 text-slate-600">
-                    <Timer className="h-4 w-4" aria-hidden="true" />
-                    {t.timer}
-                  </div>
+            <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xl">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-slate-950 px-5 py-3 text-white">
+                <div className="flex items-center gap-3">
+                  <Badge className="border-white/20 bg-white/10 text-white">
+                    Computer IELTS-style
+                  </Badge>
+                  <span className="text-sm font-medium">{t.passageTitle}</span>
                 </div>
-                <div className="space-y-4 text-sm leading-7 text-slate-700">
-                  <p className="font-medium text-slate-950">{t.previewTitle}</p>
-                  {t.previewParagraphs.map((paragraph) => (
-                    <p key={paragraph}>{paragraph}</p>
-                  ))}
+                <div className="flex items-center gap-2 rounded-md bg-white px-3 py-2 text-sm font-semibold text-slate-950">
+                  <Timer className="h-4 w-4" aria-hidden="true" />
+                  {t.timer}
                 </div>
               </div>
-              <div className="bg-slate-50 p-5">
-                <div className="mb-4 flex items-center justify-between">
-                  <div className="text-sm font-medium text-slate-950">
-                    {t.answerSheet}
-                  </div>
-                  <Badge className="bg-white">Practice preview</Badge>
-                </div>
-                <div className="space-y-3">
-                  {t.questions.map((question, index) => (
-                    <div
-                      key={question}
-                      className="rounded-md border border-slate-200 bg-white p-3"
-                    >
-                      <div className="flex items-start gap-3">
-                        {index === 1 ? (
-                          <CheckCircle2
-                            className="mt-0.5 h-4 w-4 text-teal-700"
-                            aria-hidden="true"
-                          />
-                        ) : (
-                          <Circle
-                            className="mt-0.5 h-4 w-4 text-slate-300"
-                            aria-hidden="true"
-                          />
-                        )}
-                        <p className="text-sm leading-6 text-slate-700">
-                          {question}
-                        </p>
-                      </div>
+
+              <div className="grid min-h-[460px] lg:grid-cols-[1.08fr_0.92fr]">
+                <div className="border-b border-slate-200 p-5 lg:border-b-0 lg:border-r">
+                  <div className="mb-4 flex items-center justify-between border-b border-slate-200 pb-3 text-sm">
+                    <div className="font-medium text-slate-950">
+                      Reading passage
                     </div>
-                  ))}
+                    <Badge className="bg-slate-50">Scrollable passage</Badge>
+                  </div>
+                  <div className="space-y-4 text-sm leading-7 text-slate-700">
+                    <p className="font-medium text-slate-950">{t.previewTitle}</p>
+                    {t.previewParagraphs.map((paragraph) => (
+                      <p key={paragraph}>{paragraph}</p>
+                    ))}
+                    <p>
+                      City planners now face a practical question: how can these
+                      benefits be measured and protected as urban populations
+                      grow?
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-slate-50 p-5">
+                  <div className="mb-4 flex items-center justify-between">
+                    <div className="text-sm font-medium text-slate-950">
+                      {t.answerSheet}
+                    </div>
+                    <Badge className="bg-white">Auto scoring preview</Badge>
+                  </div>
+                  <div className="space-y-3">
+                    {t.questions.map((question, index) => (
+                      <div
+                        key={question}
+                        className="rounded-md border border-slate-200 bg-white p-3"
+                      >
+                        <div className="flex items-start gap-3">
+                          {index === 1 ? (
+                            <CheckCircle2
+                              className="mt-0.5 h-4 w-4 text-teal-700"
+                              aria-hidden="true"
+                            />
+                          ) : (
+                            <Circle
+                              className="mt-0.5 h-4 w-4 text-slate-300"
+                              aria-hidden="true"
+                            />
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm leading-6 text-slate-700">
+                              {question}
+                            </p>
+                            {index === 0 ? (
+                              <div className="mt-3 grid gap-2">
+                                {["A. A design feature", "B. A health asset", "C. A tourism plan"].map(
+                                  (option) => (
+                                    <div
+                                      key={option}
+                                      className="rounded border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600"
+                                    >
+                                      {option}
+                                    </div>
+                                  ),
+                                )}
+                              </div>
+                            ) : (
+                              <div className="mt-3 h-9 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-400">
+                                Type your answer
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-5 flex items-center justify-between gap-3 border-t border-slate-200 pt-4">
+                    <div className="text-xs text-slate-500">
+                      Flag, review, then submit when ready.
+                    </div>
+                    <Button size="sm">Submit Practice</Button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        <section className="mx-auto grid max-w-7xl gap-6 px-4 py-20 sm:px-6 md:grid-cols-2 lg:grid-cols-4 lg:px-8">
+        <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+          <div className="max-w-2xl">
+            <Badge>3 steps</Badge>
+            <h2 className="mt-5 text-3xl font-semibold tracking-tight text-slate-950">
+              从选择练习到查看复盘，一条流程完成
+            </h2>
+          </div>
+          <div className="mt-8 grid gap-4 md:grid-cols-3">
+            {t.steps.map(([title, description], index) => (
+              <div
+                key={title}
+                className="rounded-lg border border-slate-200 bg-white p-6"
+              >
+                <div className="flex h-9 w-9 items-center justify-center rounded-md bg-slate-950 text-sm font-semibold text-white">
+                  {index + 1}
+                </div>
+                <h3 className="mt-5 text-lg font-semibold text-slate-950">
+                  {title}
+                </h3>
+                <p className="mt-3 text-sm leading-6 text-slate-600">
+                  {description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="mx-auto grid max-w-7xl gap-4 px-4 pb-16 sm:px-6 md:grid-cols-2 xl:grid-cols-5 lg:px-8">
           {t.pillars.map((pillar) => {
             const Icon = pillar.icon;
 
@@ -327,37 +434,7 @@ export default function Home() {
           })}
         </section>
 
-        <section className="border-y border-slate-200 bg-white">
-          <div className="mx-auto grid max-w-7xl gap-8 px-4 py-20 sm:px-6 lg:grid-cols-[0.8fr_1.2fr] lg:px-8">
-            <div>
-              <Badge>{t.complianceBadge}</Badge>
-              <h2 className="mt-5 text-3xl font-semibold tracking-tight text-slate-950">
-                {t.complianceTitle}
-              </h2>
-              <p className="mt-4 text-base leading-7 text-slate-600">
-                {t.complianceText}
-              </p>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-3">
-              {t.complianceItems.map((item) => (
-                <div
-                  key={item}
-                  className="rounded-lg border border-slate-200 bg-[#fbfbf8] p-5"
-                >
-                  <ShieldCheck
-                    className="h-5 w-5 text-teal-700"
-                    aria-hidden="true"
-                  />
-                  <p className="mt-4 text-sm font-medium text-slate-950">
-                    {item}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="mx-auto grid max-w-7xl gap-6 px-4 py-20 sm:px-6 lg:grid-cols-3 lg:px-8">
+        <section className="mx-auto grid max-w-7xl gap-6 border-t border-slate-200 px-4 py-16 sm:px-6 lg:grid-cols-3 lg:px-8">
           {t.modules.map(([title, description], index) => (
             <div
               key={title}
@@ -378,6 +455,36 @@ export default function Home() {
               </p>
             </div>
           ))}
+        </section>
+
+        <section className="border-y border-slate-200 bg-white">
+          <div className="mx-auto grid max-w-7xl gap-8 px-4 py-14 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:px-8">
+            <div>
+              <Badge>{t.complianceBadge}</Badge>
+              <h2 className="mt-5 text-2xl font-semibold tracking-tight text-slate-950">
+                {t.complianceTitle}
+              </h2>
+              <p className="mt-4 text-sm leading-6 text-slate-600">
+                {t.complianceText}
+              </p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-3">
+              {t.complianceItems.map((item) => (
+                <div
+                  key={item}
+                  className="rounded-lg border border-slate-200 bg-[#fbfbf8] p-5"
+                >
+                  <ShieldCheck
+                    className="h-5 w-5 text-teal-700"
+                    aria-hidden="true"
+                  />
+                  <p className="mt-4 text-sm font-medium text-slate-950">
+                    {item}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
         </section>
       </main>
     </div>
