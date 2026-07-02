@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { HeaderAuthNav } from "@/components/layout/header-auth-nav";
 
 const navigation = [
   { href: "/features", label: "功能" },
@@ -30,17 +30,7 @@ export function MarketingHeader() {
             </Link>
           ))}
         </nav>
-        <div className="flex items-center gap-2">
-          <Button asChild variant="ghost" size="sm">
-            <Link href="/login">登录</Link>
-          </Button>
-          <Button asChild size="sm">
-            <Link href="/register">
-              免费开始
-              <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </Link>
-          </Button>
-        </div>
+        <HeaderAuthNav />
       </div>
     </header>
   );
