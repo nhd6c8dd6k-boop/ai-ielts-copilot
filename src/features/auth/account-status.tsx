@@ -89,17 +89,7 @@ export function AccountStatus() {
   };
 
   if (mode === "loading") {
-    return (
-      <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-md bg-slate-200" />
-          <div className="flex-1 space-y-2">
-            <div className="h-3 w-28 rounded bg-slate-200" />
-            <div className="h-2.5 w-36 rounded bg-slate-100" />
-          </div>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   if (mode === "anonymous" || mode === "error") {
