@@ -1,51 +1,23 @@
-import { Apple, Check, Globe2, ShieldCheck, Smartphone } from "lucide-react";
+import Link from "next/link";
+import { Check, Clock, ShieldCheck } from "lucide-react";
 
 import { MarketingHeader } from "@/components/layout/marketing-header";
 import { Badge } from "@/components/ui/badge";
-import { CheckoutButton } from "@/features/payments/checkout-button";
+import { Button } from "@/components/ui/button";
 
-const plans = [
-  {
-    name: "Free",
-    plan: "free",
-    price: "¥0",
-    cadence: "",
-    description: "适合先体验核心功能。",
-    features: [
-      "Reading 每天 3 次",
-      "Listening 每天 2 次",
-      "Writing 题目每天 3 次",
-      "写作批改每天 2 次",
-    ],
-  },
-  {
-    name: "Pro Monthly",
-    plan: "pro_monthly",
-    price: "¥49",
-    cadence: "/ 月",
-    description: "适合正在备考的学生。",
-    features: [
-      "AI 功能每天最多 100 次",
-      "完整写作预估评分",
-      "自适应学习建议",
-      "结果复盘和弱项追踪",
-    ],
-  },
-  {
-    name: "Pro Yearly",
-    plan: "pro_yearly",
-    price: "¥399",
-    cadence: "/ 年",
-    description: "适合长期系统备考。",
-    features: [
-      "年度更优惠",
-      "AI 功能每天最多 100 次",
-      "完整学习历史",
-      "优先生成队列",
-      "后续新功能优先体验",
-    ],
-  },
-] as const;
+const betaFeatures = [
+  "Reading practice with automatic scoring",
+  "Listening practice with script preview and automatic scoring",
+  "Writing practice mode with browser draft saving",
+  "Dashboard progress tracking",
+];
+
+const comingSoon = [
+  "AI Writing feedback",
+  "More published practice sets",
+  "Pro plans and usage limits",
+  "Domestic payment options after beta",
+];
 
 export default function PricingPage() {
   return (
@@ -53,137 +25,82 @@ export default function PricingPage() {
       <MarketingHeader />
       <main className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
         <div className="max-w-3xl">
-          <Badge>人民币定价 · 国内支付优先</Badge>
+          <Badge>Beta pricing</Badge>
           <h1 className="mt-5 text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-            适合中国雅思考生的订阅方案
+            Free during beta
           </h1>
           <p className="mt-5 text-lg leading-8 text-slate-600">
-            国内用户优先使用微信支付或支付宝，iPhone/Safari 用户可使用
-            Apple Pay 快捷支付，海外用户保留 Stripe 国际支付。MVP
-            阶段建议采用月卡/年卡一次性购买，减少自动续费合规复杂度。
+            AI IELTS Copilot is currently open for early testing. Reading and
+            Listening practice are available now. Writing AI feedback and paid
+            Pro plans are coming soon, so there are no payment buttons during
+            this beta stage.
           </p>
         </div>
 
-        <div className="mt-12 grid gap-5 lg:grid-cols-3">
-          {plans.map((plan) => (
-            <div
-              key={plan.name}
-              className="rounded-lg border border-slate-200 bg-white p-6"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h2 className="text-lg font-semibold text-slate-950">
-                    {plan.name}
-                  </h2>
-                  <p className="mt-2 text-sm text-slate-600">
-                    {plan.description}
-                  </p>
-                </div>
-                {plan.plan === "pro_yearly" ? (
-                  <Badge className="bg-teal-50 text-teal-800">推荐</Badge>
-                ) : null}
-              </div>
-
-              <div className="mt-6 flex items-end gap-1">
-                <span className="text-4xl font-semibold tracking-tight text-slate-950">
-                  {plan.price}
-                </span>
-                {plan.cadence ? (
-                  <span className="pb-1 text-sm text-slate-500">
-                    {plan.cadence}
-                  </span>
-                ) : null}
-              </div>
-
-              <ul className="mt-6 space-y-3">
-                {plan.features.map((feature) => (
-                  <li key={feature} className="flex gap-3 text-sm text-slate-600">
-                    <Check
-                      className="mt-0.5 h-4 w-4 text-teal-700"
-                      aria-hidden="true"
-                    />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-
-              <div className="mt-8 space-y-2">
-                {plan.plan === "free" ? (
-                  <CheckoutButton plan={plan.plan}>免费开始</CheckoutButton>
-                ) : (
-                  <>
-                    <CheckoutButton plan={plan.plan} channel="wechat">
-                      微信支付
-                    </CheckoutButton>
-                    <CheckoutButton
-                      plan={plan.plan}
-                      channel="alipay"
-                      variant="outline"
-                    >
-                      支付宝
-                    </CheckoutButton>
-                    <CheckoutButton
-                      plan={plan.plan}
-                      channel="apple_pay"
-                      variant="secondary"
-                    >
-                      Apple Pay
-                    </CheckoutButton>
-                    <CheckoutButton
-                      plan={plan.plan}
-                      channel="stripe"
-                      variant="ghost"
-                    >
-                      国际卡 / Stripe
-                    </CheckoutButton>
-                  </>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <section className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {[
-            {
-              title: "国内转化优先",
-              description: "人民币价格和微信/支付宝更符合中国学生的购买习惯。",
-              icon: Smartphone,
-            },
-            {
-              title: "国际化保留",
-              description: "Stripe 继续作为海外学生和国际卡支付通道。",
-              icon: Globe2,
-            },
-            {
-              title: "快捷支付补充",
-              description: "Apple Pay 适合 iPhone、Safari 和已绑定卡的用户快速付款。",
-              icon: Apple,
-            },
-            {
-              title: "合规渐进",
-              description: "先做月卡/年卡购买，后续再评估自动续费和发票流程。",
-              icon: ShieldCheck,
-            },
-          ].map((item) => {
-            const Icon = item.icon;
-
-            return (
-              <div
-                key={item.title}
-                className="rounded-lg border border-slate-200 bg-white p-5"
-              >
-                <Icon className="h-5 w-5 text-teal-700" aria-hidden="true" />
-                <h2 className="mt-4 text-sm font-semibold text-slate-950">
-                  {item.title}
+        <div className="mt-12 grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
+          <section className="rounded-lg border border-slate-200 bg-white p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <Badge className="border-slate-950 bg-slate-950 text-white">
+                  Available now
+                </Badge>
+                <h2 className="mt-5 text-2xl font-semibold text-slate-950">
+                  Beta Access
                 </h2>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
-                  {item.description}
+                  Use the current MVP while the product is being tested with
+                  early users.
                 </p>
               </div>
-            );
-          })}
-        </section>
+              <div className="text-right">
+                <div className="text-4xl font-semibold tracking-tight text-slate-950">
+                  ¥0
+                </div>
+                <div className="mt-1 text-sm text-slate-500">during beta</div>
+              </div>
+            </div>
+
+            <ul className="mt-8 grid gap-3 sm:grid-cols-2">
+              {betaFeatures.map((feature) => (
+                <li key={feature} className="flex gap-3 text-sm text-slate-600">
+                  <Check
+                    className="mt-0.5 h-4 w-4 text-teal-700"
+                    aria-hidden="true"
+                  />
+                  {feature}
+                </li>
+              ))}
+            </ul>
+
+            <Button asChild className="mt-8">
+              <Link href="/practice">Start practicing</Link>
+            </Button>
+          </section>
+
+          <section className="rounded-lg border border-slate-200 bg-[#fbfbf8] p-6">
+            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-white text-slate-700">
+              <Clock className="h-5 w-5" aria-hidden="true" />
+            </div>
+            <h2 className="mt-5 text-xl font-semibold text-slate-950">
+              Pro plans coming soon
+            </h2>
+            <p className="mt-3 text-sm leading-6 text-slate-600">
+              Paid plans will be added after the beta flow is stable. Payment
+              options are intentionally disabled for now.
+            </p>
+            <ul className="mt-6 space-y-3">
+              {comingSoon.map((feature) => (
+                <li key={feature} className="flex gap-3 text-sm text-slate-600">
+                  <ShieldCheck
+                    className="mt-0.5 h-4 w-4 text-slate-400"
+                    aria-hidden="true"
+                  />
+                  {feature}
+                </li>
+              ))}
+            </ul>
+          </section>
+        </div>
       </main>
     </div>
   );

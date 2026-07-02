@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BookOpen, Headphones, PenLine } from "lucide-react";
+import { BookOpen, Headphones, PenLine, Timer } from "lucide-react";
 
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/layout/page-header";
@@ -17,7 +17,7 @@ export default async function PracticePage() {
     {
       title: "Reading Practice",
       description:
-        "Computer IELTS-style reading with passage, answer sheet, timer, auto scoring, and result review.",
+        "Practice published original passages in a split-screen Computer IELTS-style workspace with automatic scoring.",
       count: stats.readingCount,
       countLabel: "published sets",
       href: "/practice/reading",
@@ -28,7 +28,7 @@ export default async function PracticePage() {
     {
       title: "Listening Practice",
       description:
-        "Published listening sets with questions, timer, auto scoring, and script preview when audio is pending.",
+        "Work through published listening sets with answer inputs, timer, automatic scoring, and script preview while audio is pending.",
       count: stats.listeningCount,
       countLabel: "published sets",
       href: "/practice/listening",
@@ -42,7 +42,7 @@ export default async function PracticePage() {
     {
       title: "Writing Practice",
       description:
-        "Choose a published Task 1 or Task 2 prompt, write in the browser, save drafts, and prepare for AI feedback.",
+        "Choose a published Task 1 or Task 2 prompt, write in the browser, and save your draft during beta.",
       count: stats.writingCount,
       countLabel: "published tasks",
       href: "/practice/writing",
@@ -50,28 +50,46 @@ export default async function PracticePage() {
       icon: PenLine,
       badge: "AI Feedback Coming Soon",
     },
+    {
+      title: "Full Exam",
+      description:
+        "A longer Computer IELTS-style exam workspace for combining sections. Beta preview is available while full scoring is being refined.",
+      count: null,
+      countLabel: "",
+      href: "/exam",
+      cta: "Open Full Exam",
+      icon: Timer,
+      badge: "Beta preview",
+    },
   ];
 
   return (
     <AppShell>
       <PageHeader
         eyebrow="Practice"
-        title="Choose your next IELTS practice"
-        description="V1 uses admin-reviewed, published original practice content. Reading and Listening support automatic scoring; Writing is available as practice mode while AI feedback is being configured."
+        title="Choose a beta practice mode"
+        description="Reading and Listening are ready for real practice with published original content. Writing is available for timed drafting, with AI feedback coming soon."
       />
 
-      <div className="grid gap-4 xl:grid-cols-3">
+      <div className="grid gap-4 xl:grid-cols-4">
         {cards.map((card) => {
           const Icon = card.icon;
 
           return (
-            <Card key={card.title}>
+            <Card
+              key={card.title}
+              className="overflow-hidden transition-colors hover:border-slate-300"
+            >
               <CardHeader>
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <CardTitle>{card.title}</CardTitle>
                     <div className="mt-3 flex flex-wrap gap-2">
-                      <Badge>{card.count} {card.countLabel}</Badge>
+                      {card.count === null ? null : (
+                        <Badge>
+                          {card.count} {card.countLabel}
+                        </Badge>
+                      )}
                       {card.badge ? (
                         <Badge className="bg-white">{card.badge}</Badge>
                       ) : null}
@@ -83,7 +101,7 @@ export default async function PracticePage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="min-h-[72px] text-sm leading-6 text-slate-600">
+                <p className="min-h-[96px] text-sm leading-6 text-slate-600">
                   {card.description}
                 </p>
                 <Button asChild className="mt-5 w-full">

@@ -4,9 +4,8 @@ import { Sparkles } from "lucide-react";
 import { HeaderAuthNav } from "@/components/layout/header-auth-nav";
 
 const navigation = [
-  { href: "/features", label: "功能" },
-  { href: "/pricing", label: "价格" },
-  { href: "/practice/reading", label: "练习" },
+  { href: "/practice", label: "Practice" },
+  { href: "/pricing", label: "Pricing" },
 ];
 
 export function MarketingHeader() {

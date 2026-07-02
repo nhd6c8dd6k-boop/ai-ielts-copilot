@@ -29,9 +29,11 @@ type Pillar = {
 };
 
 type HomeCopy = {
+  beta: string;
   badge: string;
   title: string;
   subtitle: string;
+  availability: string[];
   primary: string;
   secondary: string;
   languageLabel: string;
@@ -51,12 +53,18 @@ type HomeCopy = {
 
 const copy = {
   zh: {
-    badge: "面向中国学生的 AI 雅思学习平台",
+    beta: "Beta",
+    badge: "为中国雅思考生准备的电脑端练习空间",
     title: "AI IELTS Copilot",
     subtitle:
-      "Computer IELTS-style Reading and Listening practice，配合后台审核发布的原创英文练习内容。Writing 练习模式已可用，AI 写作反馈即将开放。",
-    primary: "免费开始",
-    secondary: "体验练习工作台",
+      "用英文原创题熟悉 Computer IELTS 的阅读、听力和写作界面。当前 Beta 已开放 Reading and Listening practice，Writing AI feedback is coming soon.",
+    availability: [
+      "Reading and Listening practice are available.",
+      "Writing AI feedback is coming soon.",
+      "All practice sets are original and admin-reviewed.",
+    ],
+    primary: "开始练习",
+    secondary: "查看 Dashboard",
     languageLabel: "首页语言",
     passageTitle: "Reading Passage 2",
     timer: "36:42",
@@ -74,9 +82,9 @@ const copy = {
     ],
     pillars: [
       {
-        title: "已发布原创题库",
+        title: "Beta 可用题库",
         description:
-          "管理员审核后发布原创 IELTS 风格 Reading、Listening 和 Writing 内容。",
+          "管理员审核后发布原创 IELTS 风格 Reading、Listening 和 Writing 内容，先保证质量再开放练习。",
         icon: Sparkles,
       },
       {
@@ -110,12 +118,18 @@ const copy = {
     ],
   },
   en: {
-    badge: "AI IELTS platform for Chinese candidates",
+    beta: "Beta",
+    badge: "Computer IELTS practice for Chinese candidates",
     title: "AI IELTS Copilot",
     subtitle:
-      "Computer IELTS-style Reading and Listening practice with admin-reviewed original content. Writing practice mode is available, with AI feedback coming soon.",
-    primary: "Start free",
-    secondary: "View practice workspace",
+      "Practice with original English content in a Computer IELTS-style interface. Reading and Listening practice are available in beta. Writing AI feedback is coming soon.",
+    availability: [
+      "Reading and Listening practice are available.",
+      "Writing AI feedback is coming soon.",
+      "All practice sets are original and admin-reviewed.",
+    ],
+    primary: "Start practice",
+    secondary: "View Dashboard",
     languageLabel: "Homepage language",
     passageTitle: "Reading Passage 2",
     timer: "36:42",
@@ -133,9 +147,9 @@ const copy = {
     ],
     pillars: [
       {
-        title: "Reviewed content library",
+        title: "Beta practice library",
         description:
-          "Admins review and publish original IELTS-style Reading, Listening, and Writing content.",
+          "Admins review original IELTS-style Reading, Listening, and Writing content before it appears in practice.",
         icon: Sparkles,
       },
       {
@@ -183,6 +197,9 @@ export default function Home() {
           <div className="relative mx-auto grid min-h-[calc(100vh-4rem)] max-w-7xl content-center gap-10 px-4 py-16 sm:px-6 lg:px-8">
             <div className="max-w-3xl">
               <div className="flex flex-wrap items-center gap-3">
+                <Badge className="border-slate-950 bg-slate-950 text-white">
+                  {t.beta}
+                </Badge>
                 <Badge className="bg-white/80">{t.badge}</Badge>
                 <div
                   className="inline-flex rounded-md border border-slate-200 bg-white p-1"
@@ -211,15 +228,25 @@ export default function Home() {
               <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">
                 {t.subtitle}
               </p>
+              <div className="mt-6 grid max-w-2xl gap-2 sm:grid-cols-3">
+                {t.availability.map((item) => (
+                  <div
+                    key={item}
+                    className="rounded-md border border-slate-200 bg-white/80 p-3 text-sm leading-6 text-slate-700"
+                  >
+                    {item}
+                  </div>
+                ))}
+              </div>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Button asChild size="lg">
-                  <Link href="/register">
+                  <Link href="/practice">
                     {t.primary}
                     <ArrowRight className="h-4 w-4" aria-hidden="true" />
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="lg">
-                  <Link href="/practice/reading">{t.secondary}</Link>
+                  <Link href="/dashboard">{t.secondary}</Link>
                 </Button>
               </div>
             </div>

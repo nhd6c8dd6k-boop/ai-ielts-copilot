@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, LayoutDashboard, LogOut, Shield } from "lucide-react";
+import { ArrowRight, LayoutDashboard, LogOut, Shield, UserRound } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { isSupabaseConfigured } from "@/lib/env";
@@ -151,6 +151,12 @@ export function HeaderAuthNav() {
         <Link href="/dashboard">
           <LayoutDashboard className="h-4 w-4" aria-hidden="true" />
           Dashboard
+        </Link>
+      </Button>
+      <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
+        <Link href="/profile">
+          <UserRound className="h-4 w-4" aria-hidden="true" />
+          Profile
         </Link>
       </Button>
       {isAdmin ? (
