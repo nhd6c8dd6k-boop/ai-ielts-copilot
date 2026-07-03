@@ -1,7 +1,10 @@
 import { createOpenAIClient } from "@/lib/openai/client";
 import {
   buildTtsDialogueText,
+  hasSpeakerLabels,
   type ListeningScriptSegment,
+  parseListeningScript,
+  stripSpeakerLabels,
 } from "@/server/services/listening-script-parser";
 
 export type TtsProvider = "openai";
@@ -46,6 +49,8 @@ export type GenerateSpeechResult = {
     speaker: string | null;
     voice: TtsVoice;
   }>;
+  inputPreview: string;
+  inputContainsSpeakerLabels: boolean;
 };
 
 const OPENAI_TTS_MODEL = "gpt-4o-mini-tts";
@@ -65,6 +70,7 @@ export async function generateSpeech({
 
   const cleanSegments = normalizeSegments(text, segments);
   const input = buildTtsDialogueText(cleanSegments);
+  assertNoSpeakerLabels(input);
   const openai = createOpenAIClient();
 
   if (cleanSegments.length > 1 && cleanSegments.length <= MAX_MULTI_VOICE_SEGMENTS) {
@@ -93,6 +99,8 @@ export async function generateSpeech({
       segmentCount: cleanSegments.length,
       voiceStrategy: "multi_voice_mp3_concat",
       voices,
+      inputPreview: buildInputPreview(input),
+      inputContainsSpeakerLabels: hasSpeakerLabels(input),
     };
   }
 
@@ -116,6 +124,8 @@ export async function generateSpeech({
     segmentCount: cleanSegments.length,
     voiceStrategy: "single_voice_clean_script",
     voices: [{ speaker: null, voice }],
+    inputPreview: buildInputPreview(input),
+    inputContainsSpeakerLabels: hasSpeakerLabels(input),
   };
 }
 
@@ -128,10 +138,13 @@ async function createSpeechBuffer({
   voice: TtsVoice;
   openai: ReturnType<typeof createOpenAIClient>;
 }) {
+  const safeInput = stripSpeakerLabels(input);
+  assertNoSpeakerLabels(safeInput);
+
   const response = await openai.audio.speech.create({
     model: OPENAI_TTS_MODEL,
     voice,
-    input,
+    input: safeInput,
     instructions:
       "Read only the spoken dialogue text. Do not add a speaker name. Use natural IELTS listening pacing.",
     response_format: "mp3",
@@ -145,17 +158,28 @@ function normalizeSegments(
   segments?: ListeningScriptSegment[],
 ): TtsSegment[] {
   if (!segments?.length) {
+    const parsedSegments = parseListeningScript(text);
+
+    if (parsedSegments.length) {
+      return parsedSegments.map((segment) => ({
+        speaker: segment.speaker,
+        text: stripSpeakerLabels(segment.text),
+        voice: getVoiceForSpeaker(segment.speaker),
+      }));
+    }
+
     return [
       {
         speaker: null,
-        text: text.trim(),
+        text: stripSpeakerLabels(text),
         voice: DEFAULT_OPENAI_VOICE,
       },
     ];
   }
 
   return segments.map((segment) => ({
-    ...segment,
+    speaker: segment.speaker,
+    text: stripSpeakerLabels(segment.text),
     voice: getVoiceForSpeaker(segment.speaker),
   }));
 }
@@ -207,6 +231,18 @@ async function mapWithConcurrency<T, R>(
   );
 
   return results;
+}
+
+function assertNoSpeakerLabels(input: string) {
+  if (hasSpeakerLabels(input)) {
+    throw new Error(
+      "TTS input still contains speaker labels after sanitization.",
+    );
+  }
+}
+
+function buildInputPreview(input: string) {
+  return input.replace(/\s+/g, " ").trim().slice(0, 200);
 }
 
 function estimateTokens(text: string) {

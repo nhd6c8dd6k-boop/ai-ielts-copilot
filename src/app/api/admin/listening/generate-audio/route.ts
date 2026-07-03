@@ -43,7 +43,7 @@ export async function POST(request: Request) {
   const listeningSetId = parsed.data.listening_set_id;
   const { data: listeningSet, error: setError } = await admin
     .from("listening_sets")
-    .select("id,title,script")
+    .select("id,title,script,audio_url")
     .eq("id", listeningSetId)
     .maybeSingle();
 
@@ -80,7 +80,7 @@ export async function POST(request: Request) {
       text: listeningSet.script,
       segments: parseListeningScript(listeningSet.script),
     });
-    const storagePath = `listening/${listeningSetId}.mp3`;
+    const storagePath = `listening/${listeningSetId}-${Date.now()}.mp3`;
     const { error: uploadError } = await admin.storage
       .from(LISTENING_AUDIO_BUCKET)
       .upload(storagePath, speech.audioBuffer, {
@@ -130,12 +130,15 @@ export async function POST(request: Request) {
         model: speech.model,
         audioStatus: "ready",
         storagePath,
+        previousStoragePath: getStoragePathFromPublicUrl(listeningSet.audio_url),
         inputCharacters: speech.inputCharacters,
         estimatedTokens: speech.estimatedTokens,
         estimatedCost: speech.estimatedCost,
         segmentCount: speech.segmentCount,
         voiceStrategy: speech.voiceStrategy,
         voices: speech.voices,
+        inputPreview: speech.inputPreview,
+        inputContainsSpeakerLabels: speech.inputContainsSpeakerLabels,
       },
     });
 
@@ -145,6 +148,8 @@ export async function POST(request: Request) {
       title: listeningSet.title,
       audioStatus: "ready",
       audioUrl,
+      storagePath,
+      previousStoragePath: getStoragePathFromPublicUrl(listeningSet.audio_url),
       usage: {
         model: speech.model,
         inputTokens: speech.estimatedTokens,
@@ -153,6 +158,8 @@ export async function POST(request: Request) {
         estimatedCost: speech.estimatedCost,
         segmentCount: speech.segmentCount,
         voiceStrategy: speech.voiceStrategy,
+        inputPreview: speech.inputPreview,
+        inputContainsSpeakerLabels: speech.inputContainsSpeakerLabels,
       },
     });
   } catch (error) {
@@ -167,6 +174,21 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
+
+function getStoragePathFromPublicUrl(audioUrl?: string | null) {
+  if (!audioUrl) {
+    return null;
+  }
+
+  try {
+    return new URL(audioUrl).pathname.replace(
+      `/storage/v1/object/public/${LISTENING_AUDIO_BUCKET}/`,
+      "",
+    );
+  } catch {
+    return null;
   }
 }
 
