@@ -184,11 +184,25 @@ export function ListeningPracticeClient({
                 </Badge>
               </div>
               {hasReadyAudio ? (
-                <audio
-                  className="mt-4 w-full"
-                  src={listeningSet.audioUrl ?? undefined}
-                  controls
-                />
+                <div className="mt-4 rounded-md border border-slate-200 bg-slate-50 p-4">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-slate-950">
+                        Audio Player
+                      </p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        Listen to the recording, then answer the questions on
+                        the right.
+                      </p>
+                    </div>
+                    <Badge className="bg-teal-50 text-teal-800">Ready</Badge>
+                  </div>
+                  <audio
+                    className="w-full"
+                    src={listeningSet.audioUrl ?? undefined}
+                    controls
+                  />
+                </div>
               ) : (
                 <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-800">
                   Audio is not ready yet. You can use the script preview for
@@ -197,16 +211,38 @@ export function ListeningPracticeClient({
               )}
             </div>
 
-            <article className="p-6 text-[15px] leading-8 text-slate-700">
-              <h2 className="mb-4 text-sm font-semibold text-slate-950">
-                Script Preview
-              </h2>
-              {listeningSet.script.split(/\n{2,}/).map((paragraph, index) => (
-                <p key={`${paragraph.slice(0, 24)}-${index}`} className="mb-5">
-                  {paragraph}
-                </p>
-              ))}
-            </article>
+            {hasReadyAudio ? (
+              <div className="p-6">
+                <details className="rounded-md border border-slate-200 bg-slate-50 p-4">
+                  <summary className="cursor-pointer text-sm font-semibold text-slate-950">
+                    Transcript for review
+                  </summary>
+                  <article className="mt-5 text-[15px] leading-8 text-slate-700">
+                    {listeningSet.script
+                      .split(/\n{2,}/)
+                      .map((paragraph, index) => (
+                        <p
+                          key={`${paragraph.slice(0, 24)}-${index}`}
+                          className="mb-5"
+                        >
+                          {paragraph}
+                        </p>
+                      ))}
+                  </article>
+                </details>
+              </div>
+            ) : (
+              <article className="p-6 text-[15px] leading-8 text-slate-700">
+                <h2 className="mb-4 text-sm font-semibold text-slate-950">
+                  Script Preview
+                </h2>
+                {listeningSet.script.split(/\n{2,}/).map((paragraph, index) => (
+                  <p key={`${paragraph.slice(0, 24)}-${index}`} className="mb-5">
+                    {paragraph}
+                  </p>
+                ))}
+              </article>
+            )}
           </CardContent>
         </Card>
 
