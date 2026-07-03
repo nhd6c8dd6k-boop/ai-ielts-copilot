@@ -5,6 +5,10 @@ import {
   normalizeSpeechText,
 } from "@/server/services/listening-speech-normalizer";
 import {
+  getListeningTtsProfile,
+  type ListeningTtsProfile,
+} from "@/server/services/listening-tts-profile";
+import {
   hasSpeakerLabels,
   type ListeningScriptSegment,
   parseListeningScript,
@@ -59,6 +63,7 @@ export type GenerateSpeechResult = {
   estimatedCost: number;
   segmentCount: number;
   voiceStrategy: "single_voice_clean_script" | "multi_voice_mp3_concat";
+  section: number;
   voices: Array<{
     speaker: string | null;
     voice: TtsVoice;
@@ -75,6 +80,15 @@ export type GenerateSpeechResult = {
     speaker: string;
     voice: TtsVoice;
   }>;
+  pauseStrategy: string;
+  ttsProfile: {
+    section: number;
+    speed: number;
+    pauseMultiplier: number;
+    voiceStrategy: string;
+    narratorVoice: TtsVoice;
+    pauseStrategy: string;
+  };
 };
 
 const OPENAI_TTS_MODEL = "gpt-4o-mini-tts";
@@ -94,14 +108,15 @@ export async function generateSpeech({
   }
 
   const cleanSegments = normalizeSegments(text, segments);
-  const naturalSegments = buildNaturalSegments(cleanSegments);
+  const profile = getListeningTtsProfile(section);
+  const naturalSegments = buildNaturalSegments(cleanSegments, profile);
   const input = naturalSegments.map((segment) => segment.speechText).join("\n\n");
   assertNoSpeakerLabels(input);
   const openai = createOpenAIClient();
-  const speed = getSpeedForSection(section);
+  const speed = profile.speed;
   const voices = naturalSegments.map((segment) => ({
     speaker: segment.speaker,
-    voice: segment.voice ?? getVoiceForSpeaker(segment.speaker),
+    voice: segment.voice ?? profile.narratorVoice,
   }));
   const pauseSummary = naturalSegments.map((segment, index) => ({
     speaker: segment.speaker,
@@ -110,6 +125,7 @@ export async function generateSpeech({
   }));
 
   if (
+    profile.voiceStrategy === "multi_voice" &&
     naturalSegments.length > 1 &&
     naturalSegments.length <= MAX_MULTI_VOICE_SEGMENTS
   ) {
@@ -119,9 +135,10 @@ export async function generateSpeech({
       async (segment) =>
         createSpeechBuffer({
           input: segment.speechText,
-          voice: segment.voice ?? getVoiceForSpeaker(segment.speaker),
+          voice: segment.voice ?? profile.narratorVoice,
           openai,
           speed,
+          profile,
         }),
     );
 
@@ -134,21 +151,23 @@ export async function generateSpeech({
       estimatedCost: estimateTtsCost(input.length),
       segmentCount: cleanSegments.length,
       voiceStrategy: "multi_voice_mp3_concat",
+      section: profile.section,
       voices,
       inputPreview: buildInputPreview(input),
       inputContainsSpeakerLabels: hasSpeakerLabels(input),
       speed,
       pauseSummary,
       voiceMappingSummary: summarizeVoiceMapping(voices),
+      pauseStrategy: profile.pauseStrategy,
+      ttsProfile: buildProfileLog(profile),
     };
   }
 
   const response = await openai.audio.speech.create({
     model: OPENAI_TTS_MODEL,
-    voice,
+    voice: profile.narratorVoice ?? voice,
     input,
-    instructions:
-      buildTtsInstructions(),
+    instructions: buildTtsInstructions(profile),
     response_format: "mp3",
     speed,
   });
@@ -163,12 +182,17 @@ export async function generateSpeech({
     estimatedCost: estimateTtsCost(input.length),
     segmentCount: cleanSegments.length,
     voiceStrategy: "single_voice_clean_script",
-    voices: [{ speaker: null, voice }],
+    section: profile.section,
+    voices: [{ speaker: null, voice: profile.narratorVoice ?? voice }],
     inputPreview: buildInputPreview(input),
     inputContainsSpeakerLabels: hasSpeakerLabels(input),
     speed,
     pauseSummary,
-    voiceMappingSummary: summarizeVoiceMapping([{ speaker: null, voice }]),
+    voiceMappingSummary: summarizeVoiceMapping([
+      { speaker: null, voice: profile.narratorVoice ?? voice },
+    ]),
+    pauseStrategy: profile.pauseStrategy,
+    ttsProfile: buildProfileLog(profile),
   };
 }
 
@@ -177,11 +201,13 @@ async function createSpeechBuffer({
   voice,
   openai,
   speed,
+  profile,
 }: {
   input: string;
   voice: TtsVoice;
   openai: ReturnType<typeof createOpenAIClient>;
   speed: number;
+  profile: ListeningTtsProfile;
 }) {
   const safeInput = stripSpeakerLabels(input);
   assertNoSpeakerLabels(safeInput);
@@ -190,7 +216,7 @@ async function createSpeechBuffer({
     model: OPENAI_TTS_MODEL,
     voice,
     input: safeInput,
-    instructions: buildTtsInstructions(),
+    instructions: buildTtsInstructions(profile),
     response_format: "mp3",
     speed,
   });
@@ -229,14 +255,24 @@ function normalizeSegments(
   }));
 }
 
-function buildNaturalSegments(segments: TtsSegment[]): NaturalTtsSegment[] {
+function buildNaturalSegments(
+  segments: TtsSegment[],
+  profile: ListeningTtsProfile,
+): NaturalTtsSegment[] {
   return segments.map((segment, index) => {
-    const pauseMs = getPauseDuration(segment, segments[index + 1]);
+    const pauseMs = getPauseDuration(
+      segment,
+      segments[index + 1],
+      profile.pauseMultiplier,
+    );
 
     return {
       speaker: segment.speaker,
       text: segment.text,
-      voice: segment.voice,
+      voice:
+        profile.voiceStrategy === "multi_voice"
+          ? segment.voice
+          : profile.narratorVoice,
       pauseMs,
       speechText: buildNaturalSpeechSegmentText({
         text: segment.text,
@@ -277,10 +313,11 @@ function assertNoSpeakerLabels(input: string) {
   }
 }
 
-function buildTtsInstructions() {
+function buildTtsInstructions(profile: ListeningTtsProfile) {
   return [
     "Speak naturally, like a real IELTS Listening recording.",
-    "Use clear pronunciation, moderate pace, realistic service-scenario intonation, and natural pauses.",
+    profile.styleInstruction,
+    "Use clear pronunciation, realistic intonation, and section-appropriate pacing.",
     "Questions should sound like genuine questions, with gentle rising intonation.",
     "Statements should settle naturally, with clear falling intonation.",
     "Read numbers, names, addresses, dates, prices, and spelling very clearly.",
@@ -288,20 +325,19 @@ function buildTtsInstructions() {
   ].join(" ");
 }
 
-function getSpeedForSection(section?: number | null) {
-  if (section === 1 || section === 3) {
-    return 0.92;
-  }
-
-  if (section === 4) {
-    return 0.9;
-  }
-
-  return 0.95;
-}
-
 function buildInputPreview(input: string) {
   return input.replace(/\s+/g, " ").trim().slice(0, 200);
+}
+
+function buildProfileLog(profile: ListeningTtsProfile) {
+  return {
+    section: profile.section,
+    speed: profile.speed,
+    pauseMultiplier: profile.pauseMultiplier,
+    voiceStrategy: profile.voiceStrategy,
+    narratorVoice: profile.narratorVoice,
+    pauseStrategy: profile.pauseStrategy,
+  };
 }
 
 function estimateTokens(text: string) {

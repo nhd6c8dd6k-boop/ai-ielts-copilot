@@ -36,6 +36,7 @@ export function buildNaturalSpeechSegmentText({
 export function getPauseDuration(
   segment: ListeningScriptSegment,
   nextSegment?: ListeningScriptSegment,
+  pauseMultiplier = 1,
 ) {
   if (!nextSegment) {
     return 0;
@@ -46,22 +47,22 @@ export function getPauseDuration(
   const jitter = getStableJitter(currentText + nextText);
 
   if (isNewTopicStart(nextText)) {
-    return 700 + (jitter % 201);
+    return applyPauseMultiplier(700 + (jitter % 201), pauseMultiplier);
   }
 
   if (isInformationListing(currentText) || isInformationListing(nextText)) {
-    return 500 + (jitter % 201);
+    return applyPauseMultiplier(500 + (jitter % 201), pauseMultiplier);
   }
 
   if (isQuestion(currentText)) {
-    return 550 + (jitter % 201);
+    return applyPauseMultiplier(550 + (jitter % 201), pauseMultiplier);
   }
 
   if (segment.speaker !== nextSegment.speaker) {
-    return 350 + (jitter % 151);
+    return applyPauseMultiplier(350 + (jitter % 151), pauseMultiplier);
   }
 
-  return 300 + (jitter % 151);
+  return applyPauseMultiplier(300 + (jitter % 151), pauseMultiplier);
 }
 
 function normalizePhoneNumbers(text: string) {
@@ -150,4 +151,8 @@ function getStableJitter(input: string) {
   }
 
   return hash;
+}
+
+function applyPauseMultiplier(pauseMs: number, pauseMultiplier: number) {
+  return Math.round(pauseMs * pauseMultiplier);
 }
