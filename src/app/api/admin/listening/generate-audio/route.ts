@@ -6,12 +6,24 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { requireAdminUser } from "@/server/services/admin-auth";
 import { parseListeningScript } from "@/server/services/listening-script-parser";
 import { generateSpeech } from "@/server/services/tts";
+import { createOrReuseVoiceMapping } from "@/server/services/tts-voices";
 
 const generateListeningAudioSchema = z.object({
   listening_set_id: z.string().uuid(),
+  regenerate_with_new_voices: z.boolean().optional().default(false),
 });
 
 const LISTENING_AUDIO_BUCKET = "listening-audio";
+
+type ListeningSetForAudio = {
+  id: string;
+  title: string;
+  script: string;
+  audio_url: string | null;
+  section: number;
+  tts_voice_mapping?: unknown;
+  hasVoiceMappingColumn: boolean;
+};
 
 export async function POST(request: Request) {
   const auth = await requireAdminUser();
@@ -41,11 +53,10 @@ export async function POST(request: Request) {
 
   const admin = createSupabaseAdminClient();
   const listeningSetId = parsed.data.listening_set_id;
-  const { data: listeningSet, error: setError } = await admin
-    .from("listening_sets")
-    .select("id,title,script,audio_url,section")
-    .eq("id", listeningSetId)
-    .maybeSingle();
+  const { listeningSet, error: setError } = await getListeningSetForAudio(
+    admin,
+    listeningSetId,
+  );
 
   if (setError) {
     return NextResponse.json({ error: setError.message }, { status: 400 });
@@ -75,11 +86,19 @@ export async function POST(request: Request) {
   try {
     await ensureListeningAudioBucket(admin);
 
+    const parsedSegments = parseListeningScript(listeningSet.script);
+    const voiceMapping = createOrReuseVoiceMapping({
+      segments: parsedSegments,
+      existingMapping: listeningSet.tts_voice_mapping,
+      forceNew: parsed.data.regenerate_with_new_voices,
+      singleNarrator: listeningSet.section === 2 || listeningSet.section === 4,
+    });
     const speech = await generateSpeech({
       provider: "openai",
       text: listeningSet.script,
-      segments: parseListeningScript(listeningSet.script),
+      segments: parsedSegments,
       section: listeningSet.section,
+      voiceMapping,
     });
     const storagePath = `listening/${listeningSetId}-${Date.now()}.mp3`;
     const { error: uploadError } = await admin.storage
@@ -97,12 +116,18 @@ export async function POST(request: Request) {
       .from(LISTENING_AUDIO_BUCKET)
       .getPublicUrl(storagePath);
     const audioUrl = publicUrlData.publicUrl;
+    const updatePayload: Record<string, unknown> = {
+      audio_url: audioUrl,
+      audio_status: "ready",
+    };
+
+    if (listeningSet.hasVoiceMappingColumn) {
+      updatePayload.tts_voice_mapping = voiceMapping;
+    }
+
     const { error: updateError } = await admin
       .from("listening_sets")
-      .update({
-        audio_url: audioUrl,
-        audio_status: "ready",
-      })
+      .update(updatePayload)
       .eq("id", listeningSetId);
 
     if (updateError) {
@@ -140,6 +165,9 @@ export async function POST(request: Request) {
         voiceStrategy: speech.voiceStrategy,
         voices: speech.voices,
         voiceMappingSummary: speech.voiceMappingSummary,
+        savedVoiceMapping: voiceMapping,
+        voiceMappingPersisted: listeningSet.hasVoiceMappingColumn,
+        regeneratedWithNewVoices: parsed.data.regenerate_with_new_voices,
         pauseSummary: speech.pauseSummary,
         pauseStrategy: speech.pauseStrategy,
         ttsProfile: speech.ttsProfile,
@@ -170,6 +198,9 @@ export async function POST(request: Request) {
         pauseStrategy: speech.pauseStrategy,
         ttsProfile: speech.ttsProfile,
         voiceMappingSummary: speech.voiceMappingSummary,
+        savedVoiceMapping: voiceMapping,
+        voiceMappingPersisted: listeningSet.hasVoiceMappingColumn,
+        regeneratedWithNewVoices: parsed.data.regenerate_with_new_voices,
         inputPreview: speech.inputPreview,
         inputContainsSpeakerLabels: speech.inputContainsSpeakerLabels,
       },
@@ -202,6 +233,70 @@ function getStoragePathFromPublicUrl(audioUrl?: string | null) {
   } catch {
     return null;
   }
+}
+
+async function getListeningSetForAudio(
+  admin: ReturnType<typeof createSupabaseAdminClient>,
+  listeningSetId: string,
+): Promise<{
+  listeningSet: ListeningSetForAudio | null;
+  error: { message: string } | null;
+}> {
+  const { data, error } = await admin
+    .from("listening_sets")
+    .select("id,title,script,audio_url,section,tts_voice_mapping")
+    .eq("id", listeningSetId)
+    .maybeSingle();
+
+  if (!error) {
+    return {
+      listeningSet: data
+        ? {
+            ...data,
+            hasVoiceMappingColumn: true,
+          }
+        : null,
+      error: null,
+    };
+  }
+
+  if (!isMissingVoiceMappingColumnError(error)) {
+    return {
+      listeningSet: null,
+      error,
+    };
+  }
+
+  const fallback = await admin
+    .from("listening_sets")
+    .select("id,title,script,audio_url,section")
+    .eq("id", listeningSetId)
+    .maybeSingle();
+
+  if (fallback.error) {
+    return {
+      listeningSet: null,
+      error: fallback.error,
+    };
+  }
+
+  return {
+    listeningSet: fallback.data
+      ? {
+          ...fallback.data,
+          tts_voice_mapping: {},
+          hasVoiceMappingColumn: false,
+        }
+      : null,
+    error: null,
+  };
+}
+
+function isMissingVoiceMappingColumnError(error: { message?: string; code?: string }) {
+  return (
+    error.code === "PGRST204" ||
+    Boolean(error.message?.includes("tts_voice_mapping"))
+  );
 }
 
 async function ensureListeningAudioBucket(

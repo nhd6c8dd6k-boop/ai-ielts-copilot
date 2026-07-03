@@ -15,8 +15,9 @@ import {
   stripSpeakerLabels,
 } from "@/server/services/listening-script-parser";
 import {
-  getVoiceForSpeaker,
+  getMappedVoiceForSpeaker,
   summarizeVoiceMapping,
+  type TtsVoiceMapping,
 } from "@/server/services/tts-voices";
 
 export type TtsProvider = "openai";
@@ -52,6 +53,7 @@ export type GenerateSpeechInput = {
   voice?: TtsVoice;
   segments?: ListeningScriptSegment[];
   section?: number | null;
+  voiceMapping?: TtsVoiceMapping;
 };
 
 export type GenerateSpeechResult = {
@@ -102,12 +104,13 @@ export async function generateSpeech({
   voice = DEFAULT_OPENAI_VOICE,
   segments,
   section,
+  voiceMapping,
 }: GenerateSpeechInput): Promise<GenerateSpeechResult> {
   if (provider !== "openai") {
     throw new Error(`Unsupported TTS provider: ${provider}`);
   }
 
-  const cleanSegments = normalizeSegments(text, segments);
+  const cleanSegments = normalizeSegments(text, segments, voiceMapping);
   const profile = getListeningTtsProfile(section);
   const naturalSegments = buildNaturalSegments(cleanSegments, profile);
   const input = naturalSegments.map((segment) => segment.speechText).join("\n\n");
@@ -227,6 +230,7 @@ async function createSpeechBuffer({
 function normalizeSegments(
   text: string,
   segments?: ListeningScriptSegment[],
+  voiceMapping?: TtsVoiceMapping,
 ): TtsSegment[] {
   if (!segments?.length) {
     const parsedSegments = parseListeningScript(text);
@@ -235,7 +239,7 @@ function normalizeSegments(
       return parsedSegments.map((segment) => ({
         speaker: segment.speaker,
         text: stripSpeakerLabels(segment.text),
-        voice: getVoiceForSpeaker(segment.speaker),
+        voice: getMappedVoiceForSpeaker(segment.speaker, voiceMapping),
       }));
     }
 
@@ -251,7 +255,7 @@ function normalizeSegments(
   return segments.map((segment) => ({
     speaker: segment.speaker,
     text: normalizeSpeechText(segment.text),
-    voice: getVoiceForSpeaker(segment.speaker),
+    voice: getMappedVoiceForSpeaker(segment.speaker, voiceMapping),
   }));
 }
 
