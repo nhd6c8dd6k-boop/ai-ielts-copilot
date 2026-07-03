@@ -4,6 +4,7 @@ import { z } from "zod";
 import { env } from "@/lib/env";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { requireAdminUser } from "@/server/services/admin-auth";
+import { parseListeningScript } from "@/server/services/listening-script-parser";
 import { generateSpeech } from "@/server/services/tts";
 
 const generateListeningAudioSchema = z.object({
@@ -77,6 +78,7 @@ export async function POST(request: Request) {
     const speech = await generateSpeech({
       provider: "openai",
       text: listeningSet.script,
+      segments: parseListeningScript(listeningSet.script),
     });
     const storagePath = `listening/${listeningSetId}.mp3`;
     const { error: uploadError } = await admin.storage
@@ -131,6 +133,9 @@ export async function POST(request: Request) {
         inputCharacters: speech.inputCharacters,
         estimatedTokens: speech.estimatedTokens,
         estimatedCost: speech.estimatedCost,
+        segmentCount: speech.segmentCount,
+        voiceStrategy: speech.voiceStrategy,
+        voices: speech.voices,
       },
     });
 
@@ -146,6 +151,8 @@ export async function POST(request: Request) {
         outputTokens: 0,
         totalTokens: speech.estimatedTokens,
         estimatedCost: speech.estimatedCost,
+        segmentCount: speech.segmentCount,
+        voiceStrategy: speech.voiceStrategy,
       },
     });
   } catch (error) {
