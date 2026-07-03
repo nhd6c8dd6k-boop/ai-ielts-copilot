@@ -1,11 +1,19 @@
 import { createOpenAIClient } from "@/lib/openai/client";
 import {
-  buildTtsDialogueText,
+  buildNaturalSpeechSegmentText,
+  getPauseDuration,
+  normalizeSpeechText,
+} from "@/server/services/listening-speech-normalizer";
+import {
   hasSpeakerLabels,
   type ListeningScriptSegment,
   parseListeningScript,
   stripSpeakerLabels,
 } from "@/server/services/listening-script-parser";
+import {
+  getVoiceForSpeaker,
+  summarizeVoiceMapping,
+} from "@/server/services/tts-voices";
 
 export type TtsProvider = "openai";
 export type TtsVoice =
@@ -29,11 +37,17 @@ export type TtsSegment = {
   text: string;
 };
 
+type NaturalTtsSegment = TtsSegment & {
+  pauseMs: number;
+  speechText: string;
+};
+
 export type GenerateSpeechInput = {
   provider?: TtsProvider;
   text: string;
   voice?: TtsVoice;
   segments?: ListeningScriptSegment[];
+  section?: number | null;
 };
 
 export type GenerateSpeechResult = {
@@ -51,6 +65,16 @@ export type GenerateSpeechResult = {
   }>;
   inputPreview: string;
   inputContainsSpeakerLabels: boolean;
+  speed: number;
+  pauseSummary: Array<{
+    speaker: string | null;
+    nextSpeaker: string | null;
+    pauseMs: number;
+  }>;
+  voiceMappingSummary: Array<{
+    speaker: string;
+    voice: TtsVoice;
+  }>;
 };
 
 const OPENAI_TTS_MODEL = "gpt-4o-mini-tts";
@@ -63,29 +87,41 @@ export async function generateSpeech({
   text,
   voice = DEFAULT_OPENAI_VOICE,
   segments,
+  section,
 }: GenerateSpeechInput): Promise<GenerateSpeechResult> {
   if (provider !== "openai") {
     throw new Error(`Unsupported TTS provider: ${provider}`);
   }
 
   const cleanSegments = normalizeSegments(text, segments);
-  const input = buildTtsDialogueText(cleanSegments);
+  const naturalSegments = buildNaturalSegments(cleanSegments);
+  const input = naturalSegments.map((segment) => segment.speechText).join("\n\n");
   assertNoSpeakerLabels(input);
   const openai = createOpenAIClient();
+  const speed = getSpeedForSection(section);
+  const voices = naturalSegments.map((segment) => ({
+    speaker: segment.speaker,
+    voice: segment.voice ?? getVoiceForSpeaker(segment.speaker),
+  }));
+  const pauseSummary = naturalSegments.map((segment, index) => ({
+    speaker: segment.speaker,
+    nextSpeaker: naturalSegments[index + 1]?.speaker ?? null,
+    pauseMs: segment.pauseMs,
+  }));
 
-  if (cleanSegments.length > 1 && cleanSegments.length <= MAX_MULTI_VOICE_SEGMENTS) {
-    const voices = cleanSegments.map((segment) => ({
-      speaker: segment.speaker,
-      voice: segment.voice ?? getVoiceForSpeaker(segment.speaker),
-    }));
+  if (
+    naturalSegments.length > 1 &&
+    naturalSegments.length <= MAX_MULTI_VOICE_SEGMENTS
+  ) {
     const audioBuffers = await mapWithConcurrency(
-      cleanSegments,
+      naturalSegments,
       3,
       async (segment) =>
         createSpeechBuffer({
-          input: segment.text,
+          input: segment.speechText,
           voice: segment.voice ?? getVoiceForSpeaker(segment.speaker),
           openai,
+          speed,
         }),
     );
 
@@ -101,6 +137,9 @@ export async function generateSpeech({
       voices,
       inputPreview: buildInputPreview(input),
       inputContainsSpeakerLabels: hasSpeakerLabels(input),
+      speed,
+      pauseSummary,
+      voiceMappingSummary: summarizeVoiceMapping(voices),
     };
   }
 
@@ -109,8 +148,9 @@ export async function generateSpeech({
     voice,
     input,
     instructions:
-      "Read this as a natural IELTS listening recording. Do not read speaker names, labels, colons, or formatting. Use clear conversational pacing and brief pauses between turns.",
+      buildTtsInstructions(),
     response_format: "mp3",
+    speed,
   });
   const audioBuffer = Buffer.from(await response.arrayBuffer());
 
@@ -126,6 +166,9 @@ export async function generateSpeech({
     voices: [{ speaker: null, voice }],
     inputPreview: buildInputPreview(input),
     inputContainsSpeakerLabels: hasSpeakerLabels(input),
+    speed,
+    pauseSummary,
+    voiceMappingSummary: summarizeVoiceMapping([{ speaker: null, voice }]),
   };
 }
 
@@ -133,10 +176,12 @@ async function createSpeechBuffer({
   input,
   voice,
   openai,
+  speed,
 }: {
   input: string;
   voice: TtsVoice;
   openai: ReturnType<typeof createOpenAIClient>;
+  speed: number;
 }) {
   const safeInput = stripSpeakerLabels(input);
   assertNoSpeakerLabels(safeInput);
@@ -145,9 +190,9 @@ async function createSpeechBuffer({
     model: OPENAI_TTS_MODEL,
     voice,
     input: safeInput,
-    instructions:
-      "Read only the spoken dialogue text. Do not add a speaker name. Use natural IELTS listening pacing.",
+    instructions: buildTtsInstructions(),
     response_format: "mp3",
+    speed,
   });
 
   return Buffer.from(await response.arrayBuffer());
@@ -179,35 +224,26 @@ function normalizeSegments(
 
   return segments.map((segment) => ({
     speaker: segment.speaker,
-    text: stripSpeakerLabels(segment.text),
+    text: normalizeSpeechText(segment.text),
     voice: getVoiceForSpeaker(segment.speaker),
   }));
 }
 
-function getVoiceForSpeaker(speaker: string | null): TtsVoice {
-  if (!speaker) {
-    return "alloy";
-  }
+function buildNaturalSegments(segments: TtsSegment[]): NaturalTtsSegment[] {
+  return segments.map((segment, index) => {
+    const pauseMs = getPauseDuration(segment, segments[index + 1]);
 
-  const normalized = speaker.toLowerCase();
-
-  if (
-    /(student|man|male|customer|applicant|visitor|daniel|david|james|john|mr\.?)/i.test(
-      normalized,
-    )
-  ) {
-    return "onyx";
-  }
-
-  if (
-    /(receptionist|woman|female|librarian|assistant|clerk|sarah|anna|ms\.?|mrs\.?)/i.test(
-      normalized,
-    )
-  ) {
-    return "nova";
-  }
-
-  return "alloy";
+    return {
+      speaker: segment.speaker,
+      text: segment.text,
+      voice: segment.voice,
+      pauseMs,
+      speechText: buildNaturalSpeechSegmentText({
+        text: segment.text,
+        pauseMs,
+      }),
+    };
+  });
 }
 
 async function mapWithConcurrency<T, R>(
@@ -239,6 +275,29 @@ function assertNoSpeakerLabels(input: string) {
       "TTS input still contains speaker labels after sanitization.",
     );
   }
+}
+
+function buildTtsInstructions() {
+  return [
+    "Speak naturally, like a real IELTS Listening recording.",
+    "Use clear pronunciation, moderate pace, realistic service-scenario intonation, and natural pauses.",
+    "Questions should sound like genuine questions, with gentle rising intonation.",
+    "Statements should settle naturally, with clear falling intonation.",
+    "Read numbers, names, addresses, dates, prices, and spelling very clearly.",
+    "Do not read speaker names, role labels, colons, formatting, or stage directions.",
+  ].join(" ");
+}
+
+function getSpeedForSection(section?: number | null) {
+  if (section === 1 || section === 3) {
+    return 0.92;
+  }
+
+  if (section === 4) {
+    return 0.9;
+  }
+
+  return 0.95;
 }
 
 function buildInputPreview(input: string) {

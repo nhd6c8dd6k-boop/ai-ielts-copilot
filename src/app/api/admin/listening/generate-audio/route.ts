@@ -43,7 +43,7 @@ export async function POST(request: Request) {
   const listeningSetId = parsed.data.listening_set_id;
   const { data: listeningSet, error: setError } = await admin
     .from("listening_sets")
-    .select("id,title,script,audio_url")
+    .select("id,title,script,audio_url,section")
     .eq("id", listeningSetId)
     .maybeSingle();
 
@@ -79,6 +79,7 @@ export async function POST(request: Request) {
       provider: "openai",
       text: listeningSet.script,
       segments: parseListeningScript(listeningSet.script),
+      section: listeningSet.section,
     });
     const storagePath = `listening/${listeningSetId}-${Date.now()}.mp3`;
     const { error: uploadError } = await admin.storage
@@ -137,6 +138,9 @@ export async function POST(request: Request) {
         segmentCount: speech.segmentCount,
         voiceStrategy: speech.voiceStrategy,
         voices: speech.voices,
+        voiceMappingSummary: speech.voiceMappingSummary,
+        pauseSummary: speech.pauseSummary,
+        speed: speech.speed,
         inputPreview: speech.inputPreview,
         inputContainsSpeakerLabels: speech.inputContainsSpeakerLabels,
       },
@@ -158,6 +162,8 @@ export async function POST(request: Request) {
         estimatedCost: speech.estimatedCost,
         segmentCount: speech.segmentCount,
         voiceStrategy: speech.voiceStrategy,
+        speed: speech.speed,
+        voiceMappingSummary: speech.voiceMappingSummary,
         inputPreview: speech.inputPreview,
         inputContainsSpeakerLabels: speech.inputContainsSpeakerLabels,
       },
