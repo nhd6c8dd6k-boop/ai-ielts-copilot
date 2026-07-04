@@ -2,9 +2,9 @@ const optionalEnv = (key: string) => process.env[key];
 
 export const env = {
   nextPublicSiteUrl:
-    optionalEnv("NEXT_PUBLIC_SITE_URL") ?? "http://localhost:3000",
-  supabaseUrl: optionalEnv("NEXT_PUBLIC_SUPABASE_URL"),
-  supabaseAnonKey: optionalEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
+    process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
+  supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+  supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   supabaseServiceRoleKey: optionalEnv("SUPABASE_SERVICE_ROLE_KEY"),
   openaiApiKey: optionalEnv("OPENAI_API_KEY"),
   stripeSecretKey: optionalEnv("STRIPE_SECRET_KEY"),
