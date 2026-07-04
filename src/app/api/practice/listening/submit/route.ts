@@ -9,6 +9,7 @@ import {
   isPracticeAnswerCorrect,
   normalizePracticeAnswer,
 } from "@/server/services/listening-practice";
+import { apiErrorResponse } from "@/server/utils/api-error";
 
 const submitListeningPracticeSchema = z.object({
   listeningSetId: z.string().uuid(),
@@ -53,7 +54,11 @@ export async function POST(request: Request) {
     .maybeSingle();
 
   if (setError) {
-    return NextResponse.json({ error: setError.message }, { status: 400 });
+    return apiErrorResponse(setError, {
+      fallback: "Failed to submit practice.",
+      status: 400,
+      context: "listening_submit_set_load_failed",
+    });
   }
 
   if (!listeningSet) {
@@ -71,7 +76,11 @@ export async function POST(request: Request) {
     .order("question_number", { ascending: true });
 
   if (questionError) {
-    return NextResponse.json({ error: questionError.message }, { status: 400 });
+    return apiErrorResponse(questionError, {
+      fallback: "Failed to submit practice.",
+      status: 400,
+      context: "listening_submit_questions_load_failed",
+    });
   }
 
   const questionRows = (questions ?? []) as QuestionRow[];
@@ -90,7 +99,11 @@ export async function POST(request: Request) {
     .in("question_id", questionIds);
 
   if (answerError) {
-    return NextResponse.json({ error: answerError.message }, { status: 400 });
+    return apiErrorResponse(answerError, {
+      fallback: "Failed to submit practice.",
+      status: 400,
+      context: "listening_submit_answers_load_failed",
+    });
   }
 
   const answerByQuestionId = new Map(
@@ -150,7 +163,11 @@ export async function POST(request: Request) {
     .single();
 
   if (attemptError) {
-    return NextResponse.json({ error: attemptError.message }, { status: 400 });
+    return apiErrorResponse(attemptError, {
+      fallback: "Failed to submit practice.",
+      status: 400,
+      context: "listening_submit_attempt_insert_failed",
+    });
   }
 
   const { error: userAnswerError } = await admin.from("user_answers").insert(
@@ -164,7 +181,11 @@ export async function POST(request: Request) {
   );
 
   if (userAnswerError) {
-    return NextResponse.json({ error: userAnswerError.message }, { status: 400 });
+    return apiErrorResponse(userAnswerError, {
+      fallback: "Failed to submit practice.",
+      status: 400,
+      context: "listening_submit_user_answers_insert_failed",
+    });
   }
 
   return NextResponse.json({

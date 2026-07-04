@@ -6,6 +6,7 @@ import {
   adminGenerateReadingInputSchema,
   generateAdminReadingContent,
 } from "@/server/services/admin-ai-content";
+import { apiErrorResponse } from "@/server/utils/api-error";
 
 export async function POST(request: Request) {
   const auth = await requireAdminUser();
@@ -30,14 +31,10 @@ export async function POST(request: Request) {
 
     return NextResponse.json(result);
   } catch (error) {
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Reading generation failed.",
-      },
-      { status: 400 },
-    );
+    return apiErrorResponse(error, {
+      fallback: "Reading generation failed.",
+      status: 400,
+      context: "admin_reading_generation_failed",
+    });
   }
 }

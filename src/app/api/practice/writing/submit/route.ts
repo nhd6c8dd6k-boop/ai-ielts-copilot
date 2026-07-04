@@ -10,6 +10,7 @@ import {
   checkAiUsageLimit,
   recordAiUsage,
 } from "@/server/services/usage-limits";
+import { apiErrorResponse } from "@/server/utils/api-error";
 
 export async function POST(request: Request) {
   if (!isSupabaseConfigured()) {
@@ -82,12 +83,25 @@ export async function POST(request: Request) {
         error instanceof Error ? error.message : "Writing feedback failed.",
     });
 
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error ? error.message : "Writing feedback failed.",
-      },
-      { status: 400 },
-    );
+    if (isUserFacingWritingError(error)) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+
+    return apiErrorResponse(error, {
+      fallback: "Writing feedback failed.",
+      status: 400,
+      context: "writing_submit_failed",
+    });
   }
+}
+
+function isUserFacingWritingError(error: unknown): error is Error {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  return (
+    error.message.startsWith("Please write at least") ||
+    error.message === "Writing task not found or not published."
+  );
 }

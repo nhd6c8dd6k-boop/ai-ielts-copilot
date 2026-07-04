@@ -7,6 +7,7 @@ import { requireAdminUser } from "@/server/services/admin-auth";
 import { parseListeningScript } from "@/server/services/listening-script-parser";
 import { generateSpeech } from "@/server/services/tts";
 import { createOrReuseVoiceMapping } from "@/server/services/tts-voices";
+import { apiErrorResponse } from "@/server/utils/api-error";
 
 const generateListeningAudioSchema = z.object({
   listening_set_id: z.string().uuid(),
@@ -59,7 +60,11 @@ export async function POST(request: Request) {
   );
 
   if (setError) {
-    return NextResponse.json({ error: setError.message }, { status: 400 });
+    return apiErrorResponse(setError, {
+      fallback: "Failed to load Listening set.",
+      status: 400,
+      context: "admin_tts_listening_set_load_failed",
+    });
   }
 
   if (!listeningSet) {
@@ -216,7 +221,11 @@ export async function POST(request: Request) {
       metadata: { error: message },
     });
 
-    return NextResponse.json({ error: message }, { status: 500 });
+    return apiErrorResponse(error, {
+      fallback: "Audio generation failed.",
+      status: 500,
+      context: "admin_tts_generation_failed",
+    });
   }
 }
 

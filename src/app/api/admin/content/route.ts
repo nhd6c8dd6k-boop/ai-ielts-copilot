@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { requireAdminUser } from "@/server/services/admin-auth";
+import { apiErrorResponse } from "@/server/utils/api-error";
 
 const adminContentMutationSchema = z.object({
   id: z.string().uuid(),
@@ -40,7 +41,11 @@ export async function PATCH(request: Request) {
     .eq("id", input.id);
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+    return apiErrorResponse(error, {
+      fallback: "Failed to update content.",
+      status: 400,
+      context: "admin_content_update_failed",
+    });
   }
 
   await writeAdminLog({
@@ -69,7 +74,11 @@ export async function DELETE(request: Request) {
     .eq("id", input.id);
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+    return apiErrorResponse(error, {
+      fallback: "Failed to delete content.",
+      status: 400,
+      context: "admin_content_delete_failed",
+    });
   }
 
   await writeAdminLog({

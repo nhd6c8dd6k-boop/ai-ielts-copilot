@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { isSupabaseConfigured } from "@/lib/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { apiErrorResponse } from "@/server/utils/api-error";
 
 const profileInputSchema = z.object({
   displayName: z.string().optional(),
@@ -33,7 +34,11 @@ export async function GET() {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+    return apiErrorResponse(error, {
+      fallback: "Failed to load profile.",
+      status: 400,
+      context: "profile_load_failed",
+    });
   }
 
   return NextResponse.json({ mode: "supabase", profile: data });
@@ -69,7 +74,11 @@ export async function PUT(request: Request) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+    return apiErrorResponse(error, {
+      fallback: "Failed to update profile.",
+      status: 400,
+      context: "profile_update_failed",
+    });
   }
 
   return NextResponse.json({ mode: "supabase", profile: data });

@@ -20,6 +20,7 @@ const loginMessages: Record<string, string> = {
 const resetMessages: Record<string, string> = {
   demo: "当前未配置 Supabase，已进入本地演示模式。",
   sent: "重置密码邮件已发送，请检查邮箱。",
+  updated: "Password updated successfully. Please log in again.",
 };
 
 const signupMessages: Record<string, string> = {
