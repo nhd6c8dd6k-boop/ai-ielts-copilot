@@ -151,6 +151,42 @@ type AdminContentDetail =
       };
     };
 
+type AdminEditDraft =
+  | {
+      type: "reading";
+      id: string;
+      title: string;
+      band: string;
+      topic: string;
+      passage: string;
+      questionsJson: string;
+    }
+  | {
+      type: "listening";
+      id: string;
+      title: string;
+      band: string;
+      topic: string;
+      section: string;
+      script: string;
+      questionsJson: string;
+      audioStatus: string;
+      audioUrl: string | null;
+      ttsVoiceMapping: unknown;
+    }
+  | {
+      type: "writing";
+      id: string;
+      taskType: string;
+      bandTarget: string;
+      topic: string;
+      prompt: string;
+      sampleAnswerBand7: string;
+      sampleAnswerBand8: string;
+      sampleAnswerBand9: string;
+      scoringNotesJson: string;
+    };
+
 const demoContent: AdminContentItem[] = [
   {
     id: "reading-urban-learning",
@@ -221,6 +257,9 @@ export function AdminConsole({
     null,
   );
   const [detailError, setDetailError] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState<AdminEditDraft | null>(null);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [isSavingDetail, setIsSavingDetail] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [generateMode, setGenerateMode] = useState<GenerateMode>("reading");
@@ -339,10 +378,34 @@ export function AdminConsole({
     setLogs((current) => [`${item.title} deleted`, ...current]);
   };
 
+  const loadContentDetail = async (item: AdminContentItem) => {
+    const response = await fetch(
+      `/api/admin/content/detail?type=${item.type}&id=${item.id}`,
+      { cache: "no-store" },
+    );
+    const payload = (await response.json()) as AdminContentDetail | { error?: string };
+
+    if (!response.ok) {
+      throw new Error(
+        "error" in payload && payload.error
+          ? payload.error
+          : "Failed to load content detail.",
+      );
+    }
+
+    if (!("content" in payload)) {
+      throw new Error("Failed to load content detail.");
+    }
+
+    return payload;
+  };
+
   const viewContentDetail = async (item: AdminContentItem) => {
     setSelectedDetailItem(item);
     setContentDetail(null);
     setDetailError(null);
+    setEditDraft(null);
+    setEditError(null);
     setIsDetailLoadingId(item.id);
 
     if (mode !== "admin") {
@@ -352,24 +415,7 @@ export function AdminConsole({
     }
 
     try {
-      const response = await fetch(
-        `/api/admin/content/detail?type=${item.type}&id=${item.id}`,
-        { cache: "no-store" },
-      );
-      const payload = (await response.json()) as AdminContentDetail | { error?: string };
-
-      if (!response.ok) {
-        throw new Error(
-          "error" in payload && payload.error
-            ? payload.error
-            : "Failed to load content detail.",
-        );
-      }
-
-      if (!("content" in payload)) {
-        throw new Error("Failed to load content detail.");
-      }
-
+      const payload = await loadContentDetail(item);
       setContentDetail(payload);
     } catch (viewError) {
       setDetailError(
@@ -379,6 +425,106 @@ export function AdminConsole({
       );
     } finally {
       setIsDetailLoadingId(null);
+    }
+  };
+
+  const editContentDetail = async (item: AdminContentItem) => {
+    setSelectedDetailItem(item);
+    setContentDetail(null);
+    setDetailError(null);
+    setEditDraft(null);
+    setEditError(null);
+    setIsDetailLoadingId(item.id);
+
+    if (mode !== "admin") {
+      setIsDetailLoadingId(null);
+      setDetailError("Content detail is available after admin login.");
+      return;
+    }
+
+    try {
+      const payload = await loadContentDetail(item);
+      setContentDetail(payload);
+      setEditDraft(createEditDraft(payload));
+    } catch (viewError) {
+      setDetailError(
+        viewError instanceof Error
+          ? viewError.message
+          : "Failed to load content detail.",
+      );
+    } finally {
+      setIsDetailLoadingId(null);
+    }
+  };
+
+  const saveContentDetail = async () => {
+    if (!editDraft || !selectedDetailItem) {
+      return;
+    }
+
+    setEditError(null);
+    setIsSavingDetail(true);
+
+    try {
+      const payload = buildEditPatchPayload(editDraft);
+      const response = await fetch("/api/admin/content/detail", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      const result = (await response.json()) as
+        | {
+            ok: true;
+            changedFields: string[];
+            audioStatus?: string | null;
+            audioUrl?: string | null;
+          }
+        | { error?: string };
+
+      if (!response.ok || !("ok" in result)) {
+        throw new Error(
+          "error" in result && result.error
+            ? result.error
+            : "Content update failed.",
+        );
+      }
+
+      const refreshed = await loadContentDetail(selectedDetailItem);
+      setContentDetail(refreshed);
+      setEditDraft(null);
+      setContent((current) =>
+        current.map((contentItem) =>
+          contentItem.id === selectedDetailItem.id
+            ? {
+                ...contentItem,
+                title: refreshed.content.title,
+                audioStatus:
+                  refreshed.type === "listening"
+                    ? refreshed.content.audioStatus
+                    : contentItem.audioStatus,
+                audioUrl:
+                  refreshed.type === "listening"
+                    ? refreshed.content.audioUrl
+                    : contentItem.audioUrl,
+              }
+            : contentItem,
+        ),
+      );
+      setLogs((current) => [
+        `${selectedDetailItem.title} updated · ${
+          result.changedFields.length ? result.changedFields.join(", ") : "saved"
+        }`,
+        ...current,
+      ]);
+      setToastMessage("Content updated. Review status was preserved.");
+    } catch (saveError) {
+      setEditError(
+        saveError instanceof Error ? saveError.message : "Content update failed.",
+      );
+    } finally {
+      setIsSavingDetail(false);
     }
   };
 
@@ -684,10 +830,8 @@ export function AdminConsole({
                     <Button
                       size="sm"
                       variant="outline"
-                      disabled={isMutatingId === item.id}
-                      onClick={() =>
-                        setToastMessage("Edit content is planned for Admin V2.")
-                      }
+                      disabled={isDetailLoadingId === item.id}
+                      onClick={() => editContentDetail(item)}
                     >
                       <Pencil className="h-4 w-4" aria-hidden="true" />
                       Edit
@@ -798,7 +942,24 @@ export function AdminConsole({
             setSelectedDetailItem(null);
             setContentDetail(null);
             setDetailError(null);
+            setEditDraft(null);
+            setEditError(null);
           }}
+          editDraft={editDraft}
+          editError={editError}
+          isSaving={isSavingDetail}
+          onEdit={() => {
+            if (contentDetail) {
+              setEditDraft(createEditDraft(contentDetail));
+              setEditError(null);
+            }
+          }}
+          onCancelEdit={() => {
+            setEditDraft(null);
+            setEditError(null);
+          }}
+          onChangeEditDraft={setEditDraft}
+          onSave={saveContentDetail}
           onPublish={() => updateContentStatus(selectedDetailItem, "published")}
           onArchive={() => updateContentStatus(selectedDetailItem, "archived")}
           onDelete={() => {
@@ -820,7 +981,14 @@ function AdminContentDetailModal({
   error,
   isLoading,
   isMutating,
+  editDraft,
+  editError,
+  isSaving,
   onClose,
+  onEdit,
+  onCancelEdit,
+  onChangeEditDraft,
+  onSave,
   onPublish,
   onArchive,
   onDelete,
@@ -830,11 +998,20 @@ function AdminContentDetailModal({
   error: string | null;
   isLoading: boolean;
   isMutating: boolean;
+  editDraft: AdminEditDraft | null;
+  editError: string | null;
+  isSaving: boolean;
   onClose: () => void;
+  onEdit: () => void;
+  onCancelEdit: () => void;
+  onChangeEditDraft: (draft: AdminEditDraft) => void;
+  onSave: () => void;
   onPublish: () => void;
   onArchive: () => void;
   onDelete: () => void;
 }) {
+  const isEditing = Boolean(editDraft);
+
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/40 p-4">
       <div className="mx-auto flex max-h-[calc(100vh-2rem)] max-w-6xl flex-col overflow-hidden rounded-md border border-slate-200 bg-white shadow-2xl">
@@ -860,20 +1037,30 @@ function AdminContentDetailModal({
               type="button"
               size="sm"
               variant="outline"
-              onClick={() => {
-                // Full edit workflow is intentionally deferred; View gives admins
-                // the required review surface for V1 publishing decisions.
-              }}
-              disabled
+              onClick={isEditing ? onCancelEdit : onEdit}
+              disabled={!detail || isLoading || isSaving}
             >
               <Pencil className="h-4 w-4" aria-hidden="true" />
-              Edit
+              {isEditing ? "Cancel Edit" : "Edit"}
             </Button>
+            {isEditing ? (
+              <Button
+                type="button"
+                size="sm"
+                disabled={isSaving}
+                onClick={onSave}
+              >
+                {isSaving ? (
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                ) : null}
+                Save
+              </Button>
+            ) : null}
             <Button
               type="button"
               size="sm"
               variant="outline"
-              disabled={isMutating}
+              disabled={isMutating || isEditing}
               onClick={onPublish}
             >
               Publish
@@ -882,7 +1069,7 @@ function AdminContentDetailModal({
               type="button"
               size="sm"
               variant="outline"
-              disabled={isMutating}
+              disabled={isMutating || isEditing}
               onClick={onArchive}
             >
               Archive
@@ -891,7 +1078,7 @@ function AdminContentDetailModal({
               type="button"
               size="sm"
               variant="ghost"
-              disabled={isMutating}
+              disabled={isMutating || isEditing}
               onClick={onDelete}
             >
               <Trash2 className="h-4 w-4" aria-hidden="true" />
@@ -918,7 +1105,20 @@ function AdminContentDetailModal({
             </div>
           ) : null}
 
-          {!isLoading && !error && detail ? (
+          {editError ? (
+            <div className="mb-4 rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+              {editError}
+            </div>
+          ) : null}
+
+          {!isLoading && !error && detail && editDraft ? (
+            <AdminContentEditForm
+              draft={editDraft}
+              onChange={onChangeEditDraft}
+            />
+          ) : null}
+
+          {!isLoading && !error && detail && !editDraft ? (
             <div className="space-y-6">
               <DetailMeta detail={detail} />
               {detail.type === "reading" ? (
@@ -934,6 +1134,261 @@ function AdminContentDetailModal({
           ) : null}
         </div>
       </div>
+    </div>
+  );
+}
+
+function AdminContentEditForm({
+  draft,
+  onChange,
+}: {
+  draft: AdminEditDraft;
+  onChange: (draft: AdminEditDraft) => void;
+}) {
+  if (draft.type === "reading") {
+    return (
+      <div className="space-y-5">
+        <div className="grid gap-4 md:grid-cols-[1fr_140px_1fr]">
+          <AdminInput
+            label="Title"
+            value={draft.title}
+            onChange={(title) => onChange({ ...draft, title })}
+          />
+          <AdminInput
+            label="Band"
+            type="number"
+            value={draft.band}
+            onChange={(band) => onChange({ ...draft, band })}
+          />
+          <AdminInput
+            label="Topic"
+            value={draft.topic}
+            onChange={(topic) => onChange({ ...draft, topic })}
+          />
+        </div>
+        <AdminTextarea
+          label="Passage"
+          value={draft.passage}
+          rows={12}
+          onChange={(passage) => onChange({ ...draft, passage })}
+        />
+        <JsonEditBlock
+          value={draft.questionsJson}
+          onChange={(questionsJson) => onChange({ ...draft, questionsJson })}
+        />
+      </div>
+    );
+  }
+
+  if (draft.type === "listening") {
+    return (
+      <div className="space-y-5">
+        <div className="grid gap-4 md:grid-cols-[1fr_120px_120px_1fr]">
+          <AdminInput
+            label="Title"
+            value={draft.title}
+            onChange={(title) => onChange({ ...draft, title })}
+          />
+          <AdminInput
+            label="Band"
+            type="number"
+            value={draft.band}
+            onChange={(band) => onChange({ ...draft, band })}
+          />
+          <AdminInput
+            label="Section"
+            type="number"
+            value={draft.section}
+            onChange={(section) => onChange({ ...draft, section })}
+          />
+          <AdminInput
+            label="Topic"
+            value={draft.topic}
+            onChange={(topic) => onChange({ ...draft, topic })}
+          />
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          <ReadOnlyField label="Audio status" value={draft.audioStatus} />
+          <ReadOnlyField label="Audio URL" value={draft.audioUrl ?? "-"} />
+        </div>
+        <AdminTextarea
+          label="Script / transcript"
+          value={draft.script}
+          rows={10}
+          onChange={(script) => onChange({ ...draft, script })}
+        />
+        <div>
+          <p className="mb-2 text-sm font-medium text-slate-700">
+            Speaker / voice mapping (read only)
+          </p>
+          <JsonBlock value={draft.ttsVoiceMapping} />
+        </div>
+        <JsonEditBlock
+          value={draft.questionsJson}
+          onChange={(questionsJson) => onChange({ ...draft, questionsJson })}
+        />
+        <p className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          If you change the script, audio will be marked as pending. Use Regenerate
+          Audio after review.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-5">
+      <div className="grid gap-4 md:grid-cols-[140px_140px_1fr]">
+        <AdminInput
+          label="Task type"
+          type="number"
+          value={draft.taskType}
+          onChange={(taskType) => onChange({ ...draft, taskType })}
+        />
+        <AdminInput
+          label="Band target"
+          type="number"
+          value={draft.bandTarget}
+          onChange={(bandTarget) => onChange({ ...draft, bandTarget })}
+        />
+        <AdminInput
+          label="Topic"
+          value={draft.topic}
+          onChange={(topic) => onChange({ ...draft, topic })}
+        />
+      </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        <ReadOnlyField
+          label="Suggested time"
+          value={draft.taskType === "1" ? "20 minutes" : "40 minutes"}
+        />
+        <ReadOnlyField
+          label="Minimum words"
+          value={draft.taskType === "1" ? "150 words" : "250 words"}
+        />
+      </div>
+      <AdminTextarea
+        label="Prompt"
+        value={draft.prompt}
+        rows={6}
+        onChange={(prompt) => onChange({ ...draft, prompt })}
+      />
+      <div className="grid gap-4 lg:grid-cols-3">
+        <AdminTextarea
+          label="Band 7 sample"
+          value={draft.sampleAnswerBand7}
+          rows={10}
+          onChange={(sampleAnswerBand7) =>
+            onChange({ ...draft, sampleAnswerBand7 })
+          }
+        />
+        <AdminTextarea
+          label="Band 8 sample"
+          value={draft.sampleAnswerBand8}
+          rows={10}
+          onChange={(sampleAnswerBand8) =>
+            onChange({ ...draft, sampleAnswerBand8 })
+          }
+        />
+        <AdminTextarea
+          label="Band 9 sample"
+          value={draft.sampleAnswerBand9}
+          rows={10}
+          onChange={(sampleAnswerBand9) =>
+            onChange({ ...draft, sampleAnswerBand9 })
+          }
+        />
+      </div>
+      <AdminTextarea
+        label="Scoring notes JSON"
+        value={draft.scoringNotesJson}
+        rows={8}
+        onChange={(scoringNotesJson) => onChange({ ...draft, scoringNotesJson })}
+      />
+    </div>
+  );
+}
+
+function AdminInput({
+  label,
+  value,
+  type = "text",
+  onChange,
+}: {
+  label: string;
+  value: string;
+  type?: "text" | "number";
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className="block space-y-2">
+      <span className="text-sm font-medium text-slate-700">{label}</span>
+      <input
+        type={type}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-950 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+      />
+    </label>
+  );
+}
+
+function AdminTextarea({
+  label,
+  value,
+  rows = 6,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  rows?: number;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className="block space-y-2">
+      <span className="text-sm font-medium text-slate-700">{label}</span>
+      <textarea
+        value={value}
+        rows={rows}
+        onChange={(event) => onChange(event.target.value)}
+        className="w-full resize-y rounded-md border border-slate-200 bg-white px-3 py-2 text-sm leading-6 text-slate-950 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+      />
+    </label>
+  );
+}
+
+function JsonEditBlock({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div className="space-y-2">
+      <div>
+        <p className="text-sm font-medium text-slate-700">Questions and answers JSON</p>
+        <p className="mt-1 text-xs text-slate-500">
+          Edit questions and answers as JSON. Make sure question ids and answer keys
+          remain aligned.
+        </p>
+      </div>
+      <textarea
+        value={value}
+        rows={16}
+        onChange={(event) => onChange(event.target.value)}
+        className="w-full resize-y rounded-md border border-slate-200 bg-slate-950 px-3 py-2 font-mono text-xs leading-5 text-slate-50 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+      />
+    </div>
+  );
+}
+
+function ReadOnlyField({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
+      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+        {label}
+      </p>
+      <p className="mt-1 break-all text-sm text-slate-700">{value}</p>
     </div>
   );
 }
@@ -1504,6 +1959,141 @@ function Metric({ label, value }: { label: string; value: string }) {
       <p className="mt-1 text-sm font-semibold text-slate-950">{value}</p>
     </div>
   );
+}
+
+function createEditDraft(detail: AdminContentDetail): AdminEditDraft {
+  if (detail.type === "reading") {
+    return {
+      type: "reading",
+      id: detail.content.id,
+      title: detail.content.title,
+      band: String(detail.content.band),
+      topic: detail.content.topic,
+      passage: detail.content.passage,
+      questionsJson: JSON.stringify(detail.content.questions, null, 2),
+    };
+  }
+
+  if (detail.type === "listening") {
+    return {
+      type: "listening",
+      id: detail.content.id,
+      title: detail.content.title,
+      band: detail.content.band ? String(detail.content.band) : "",
+      topic: detail.content.topic,
+      section: String(detail.content.section),
+      script: detail.content.script,
+      questionsJson: JSON.stringify(detail.content.questions, null, 2),
+      audioStatus: detail.content.audioStatus,
+      audioUrl: detail.content.audioUrl,
+      ttsVoiceMapping: detail.content.ttsVoiceMapping,
+    };
+  }
+
+  return {
+    type: "writing",
+    id: detail.content.id,
+    taskType: String(detail.content.taskType),
+    bandTarget: detail.content.bandTarget ? String(detail.content.bandTarget) : "",
+    topic: detail.content.topic,
+    prompt: detail.content.prompt,
+    sampleAnswerBand7: detail.content.sampleAnswerBand7 ?? "",
+    sampleAnswerBand8: detail.content.sampleAnswerBand8 ?? "",
+    sampleAnswerBand9: detail.content.sampleAnswerBand9 ?? "",
+    scoringNotesJson: JSON.stringify(detail.content.scoringNotes ?? {}, null, 2),
+  };
+}
+
+function buildEditPatchPayload(draft: AdminEditDraft) {
+  if (draft.type === "reading") {
+    return {
+      type: "reading",
+      id: draft.id,
+      data: {
+        title: requireText(draft.title, "Title"),
+        band: parseRequiredInteger(draft.band, "Band"),
+        topic: requireText(draft.topic, "Topic"),
+        passage: requireText(draft.passage, "Passage"),
+        questions: parseJsonArray(draft.questionsJson, "Questions and answers JSON"),
+      },
+    };
+  }
+
+  if (draft.type === "listening") {
+    return {
+      type: "listening",
+      id: draft.id,
+      data: {
+        title: requireText(draft.title, "Title"),
+        band: parseOptionalInteger(draft.band, "Band"),
+        topic: requireText(draft.topic, "Topic"),
+        section: parseRequiredInteger(draft.section, "Section"),
+        script: requireText(draft.script, "Script"),
+        questions: parseJsonArray(draft.questionsJson, "Questions and answers JSON"),
+      },
+    };
+  }
+
+  return {
+    type: "writing",
+    id: draft.id,
+    data: {
+      taskType: parseRequiredInteger(draft.taskType, "Task type"),
+      bandTarget: parseOptionalInteger(draft.bandTarget, "Band target"),
+      topic: requireText(draft.topic, "Topic"),
+      prompt: requireText(draft.prompt, "Prompt"),
+      sampleAnswerBand7: draft.sampleAnswerBand7.trim() || null,
+      sampleAnswerBand8: draft.sampleAnswerBand8.trim() || null,
+      sampleAnswerBand9: draft.sampleAnswerBand9.trim() || null,
+      scoringNotes: parseJsonValue(draft.scoringNotesJson, "Scoring notes JSON"),
+    },
+  };
+}
+
+function requireText(value: string, label: string) {
+  const trimmed = value.trim();
+
+  if (!trimmed) {
+    throw new Error(`${label} cannot be empty.`);
+  }
+
+  return trimmed;
+}
+
+function parseRequiredInteger(value: string, label: string) {
+  const parsed = Number(value);
+
+  if (!Number.isInteger(parsed)) {
+    throw new Error(`${label} must be a whole number.`);
+  }
+
+  return parsed;
+}
+
+function parseOptionalInteger(value: string, label: string) {
+  if (!value.trim()) {
+    return null;
+  }
+
+  return parseRequiredInteger(value, label);
+}
+
+function parseJsonArray(value: string, label: string) {
+  const parsed = parseJsonValue(value, label);
+
+  if (!Array.isArray(parsed)) {
+    throw new Error(`${label} must be a JSON array.`);
+  }
+
+  return parsed;
+}
+
+function parseJsonValue(value: string, label: string) {
+  try {
+    return JSON.parse(value);
+  } catch {
+    throw new Error(`${label} is not valid JSON.`);
+  }
 }
 
 function buildGeneratePayload({

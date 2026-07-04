@@ -10,6 +10,61 @@ const contentDetailQuerySchema = z.object({
   id: z.string().uuid(),
 });
 
+const editableQuestionSchema = z.object({
+  id: z.string().uuid(),
+  number: z.number().int().positive(),
+  type: z.string().min(1),
+  prompt: z.string().min(1),
+  options: z.array(z.unknown()).default([]),
+  metadata: z.unknown().optional(),
+  correctAnswer: z.string().default(""),
+  acceptableAnswers: z.array(z.string()).default([]),
+  explanationZh: z.string().nullable().optional(),
+  explanationEn: z.string().nullable().optional(),
+  synonyms: z.array(z.unknown()).default([]),
+  vocabulary: z.array(z.unknown()).default([]),
+});
+
+const patchContentDetailSchema = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("reading"),
+    id: z.string().uuid(),
+    data: z.object({
+      title: z.string().min(1),
+      band: z.number().int().min(5).max(9),
+      topic: z.string().min(1),
+      passage: z.string().min(1),
+      questions: z.array(editableQuestionSchema).optional(),
+    }),
+  }),
+  z.object({
+    type: z.literal("listening"),
+    id: z.string().uuid(),
+    data: z.object({
+      title: z.string().min(1),
+      band: z.number().int().min(5).max(9).nullable(),
+      topic: z.string().min(1),
+      section: z.number().int().min(1).max(4),
+      script: z.string().min(1),
+      questions: z.array(editableQuestionSchema).optional(),
+    }),
+  }),
+  z.object({
+    type: z.literal("writing"),
+    id: z.string().uuid(),
+    data: z.object({
+      taskType: z.number().int().min(1).max(2),
+      bandTarget: z.number().int().min(5).max(9).nullable(),
+      topic: z.string().min(1),
+      prompt: z.string().min(1),
+      sampleAnswerBand7: z.string().nullable().optional(),
+      sampleAnswerBand8: z.string().nullable().optional(),
+      sampleAnswerBand9: z.string().nullable().optional(),
+      scoringNotes: z.unknown(),
+    }),
+  }),
+]);
+
 type QuestionRow = {
   id: string;
   question_type: string;
@@ -193,6 +248,224 @@ export async function GET(request: Request) {
   });
 }
 
+export async function PATCH(request: Request) {
+  const auth = await requireAdminUser();
+
+  if (!auth.ok) {
+    return auth.response;
+  }
+
+  let body: unknown;
+
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json(
+      { error: "Invalid content update payload." },
+      { status: 400 },
+    );
+  }
+
+  const parsed = patchContentDetailSchema.safeParse(body);
+
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Invalid content update payload." },
+      { status: 400 },
+    );
+  }
+
+  const admin = createSupabaseAdminClient();
+  const input = parsed.data;
+
+  if (input.type === "reading") {
+    const current = await loadCurrentReading(admin, input.id);
+
+    if ("response" in current) {
+      return current.response;
+    }
+
+    const changedFields = getChangedFields(
+      {
+        title: current.data.title,
+        band: current.data.band,
+        topic: current.data.topic,
+        passage: current.data.passage,
+      },
+      input.data,
+    );
+    const { error } = await admin
+      .from("reading_sets")
+      .update({
+        title: input.data.title,
+        band: input.data.band,
+        topic: input.data.topic,
+        passage: input.data.passage,
+      })
+      .eq("id", input.id);
+
+    if (error) {
+      return apiErrorResponse(error, {
+        fallback: "Failed to update content.",
+        status: 400,
+        context: "admin_reading_update_failed",
+      });
+    }
+
+    if (input.data.questions) {
+      const result = await updateQuestionsAndAnswers(
+        admin,
+        "reading",
+        input.id,
+        input.data.questions,
+      );
+
+      if (result) {
+        return result;
+      }
+
+      changedFields.push("questions");
+      changedFields.push("answers");
+    }
+
+    await writeContentUpdatedLog({
+      adminUserId: auth.userId,
+      contentType: input.type,
+      contentId: input.id,
+      changedFields,
+    });
+
+    return NextResponse.json({ ok: true, changedFields });
+  }
+
+  if (input.type === "listening") {
+    const current = await loadCurrentListening(admin, input.id);
+
+    if ("response" in current) {
+      return current.response;
+    }
+
+    const changedFields = getChangedFields(
+      {
+        title: current.data.title,
+        band: current.data.band,
+        topic: current.data.topic,
+        section: current.data.section,
+        script: current.data.script,
+      },
+      input.data,
+    );
+    const scriptChanged = current.data.script !== input.data.script;
+    const updatePayload: Record<string, unknown> = {
+      title: input.data.title,
+      band: input.data.band,
+      topic: input.data.topic,
+      section: input.data.section,
+      script: input.data.script,
+    };
+
+    if (scriptChanged) {
+      updatePayload.audio_status = "pending";
+      updatePayload.audio_url = null;
+      changedFields.push("audio_status");
+      changedFields.push("audio_url");
+    }
+
+    const { error } = await admin
+      .from("listening_sets")
+      .update(updatePayload)
+      .eq("id", input.id);
+
+    if (error) {
+      return apiErrorResponse(error, {
+        fallback: "Failed to update content.",
+        status: 400,
+        context: "admin_listening_update_failed",
+      });
+    }
+
+    if (input.data.questions) {
+      const result = await updateQuestionsAndAnswers(
+        admin,
+        "listening",
+        input.id,
+        input.data.questions,
+      );
+
+      if (result) {
+        return result;
+      }
+
+      changedFields.push("questions");
+      changedFields.push("answers");
+    }
+
+    await writeContentUpdatedLog({
+      adminUserId: auth.userId,
+      contentType: input.type,
+      contentId: input.id,
+      changedFields,
+    });
+
+    return NextResponse.json({
+      ok: true,
+      changedFields,
+      audioStatus: scriptChanged ? "pending" : current.data.audio_status,
+      audioUrl: scriptChanged ? null : current.data.audio_url,
+    });
+  }
+
+  const current = await loadCurrentWriting(admin, input.id);
+
+  if ("response" in current) {
+    return current.response;
+  }
+
+  const changedFields = getChangedFields(
+    {
+      taskType: current.data.task_type,
+      bandTarget: current.data.band_target,
+      topic: current.data.topic,
+      prompt: current.data.prompt,
+      sampleAnswerBand7: current.data.sample_answer_band_7,
+      sampleAnswerBand8: current.data.sample_answer_band_8,
+      sampleAnswerBand9: current.data.sample_answer_band_9,
+      scoringNotes: current.data.scoring_notes,
+    },
+    input.data,
+  );
+  const { error } = await admin
+    .from("writing_tasks")
+    .update({
+      task_type: input.data.taskType,
+      topic: input.data.topic,
+      prompt: input.data.prompt,
+      band_target: input.data.bandTarget,
+      sample_answer_band_7: input.data.sampleAnswerBand7 ?? null,
+      sample_answer_band_8: input.data.sampleAnswerBand8 ?? null,
+      sample_answer_band_9: input.data.sampleAnswerBand9 ?? null,
+      scoring_notes: input.data.scoringNotes,
+    })
+    .eq("id", input.id);
+
+  if (error) {
+    return apiErrorResponse(error, {
+      fallback: "Failed to update content.",
+      status: 400,
+      context: "admin_writing_update_failed",
+    });
+  }
+
+  await writeContentUpdatedLog({
+    adminUserId: auth.userId,
+    contentType: input.type,
+    contentId: input.id,
+    changedFields,
+  });
+
+  return NextResponse.json({ ok: true, changedFields });
+}
+
 async function loadQuestionsAndAnswers(
   admin: ReturnType<typeof createSupabaseAdminClient>,
   setType: "reading" | "listening",
@@ -285,4 +558,267 @@ function formatSource(source: string) {
   };
 
   return labels[source] ?? source;
+}
+
+async function loadCurrentReading(
+  admin: ReturnType<typeof createSupabaseAdminClient>,
+  id: string,
+) {
+  const { data, error } = await admin
+    .from("reading_sets")
+    .select("id,title,band,topic,passage")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) {
+    return {
+      response: apiErrorResponse(error, {
+        fallback: "Failed to load content.",
+        status: 400,
+        context: "admin_reading_current_load_failed",
+      }),
+    };
+  }
+
+  if (!data) {
+    return { response: NextResponse.json({ error: "Content not found." }, { status: 404 }) };
+  }
+
+  return { data };
+}
+
+async function loadCurrentListening(
+  admin: ReturnType<typeof createSupabaseAdminClient>,
+  id: string,
+) {
+  const { data, error } = await admin
+    .from("listening_sets")
+    .select("id,title,band,topic,section,script,audio_status,audio_url")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) {
+    return {
+      response: apiErrorResponse(error, {
+        fallback: "Failed to load content.",
+        status: 400,
+        context: "admin_listening_current_load_failed",
+      }),
+    };
+  }
+
+  if (!data) {
+    return { response: NextResponse.json({ error: "Content not found." }, { status: 404 }) };
+  }
+
+  return { data };
+}
+
+async function loadCurrentWriting(
+  admin: ReturnType<typeof createSupabaseAdminClient>,
+  id: string,
+) {
+  const { data, error } = await admin
+    .from("writing_tasks")
+    .select(
+      "id,task_type,topic,prompt,band_target,sample_answer_band_7,sample_answer_band_8,sample_answer_band_9,scoring_notes",
+    )
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) {
+    return {
+      response: apiErrorResponse(error, {
+        fallback: "Failed to load content.",
+        status: 400,
+        context: "admin_writing_current_load_failed",
+      }),
+    };
+  }
+
+  if (!data) {
+    return { response: NextResponse.json({ error: "Content not found." }, { status: 404 }) };
+  }
+
+  return { data };
+}
+
+async function updateQuestionsAndAnswers(
+  admin: ReturnType<typeof createSupabaseAdminClient>,
+  setType: "reading" | "listening",
+  setId: string,
+  questions: z.infer<typeof editableQuestionSchema>[],
+) {
+  const { data: existingQuestions, error: existingError } = await admin
+    .from("generated_questions")
+    .select("id")
+    .eq("set_type", setType)
+    .eq("set_id", setId);
+
+  if (existingError) {
+    return apiErrorResponse(existingError, {
+      fallback: "Failed to load questions.",
+      status: 400,
+      context: "admin_questions_validate_failed",
+    });
+  }
+
+  const existingQuestionIds = new Set(
+    (existingQuestions ?? []).map((question) => question.id),
+  );
+  const submittedQuestionIds = new Set<string>();
+
+  for (const question of questions) {
+    if (!existingQuestionIds.has(question.id)) {
+      return NextResponse.json(
+        { error: `Question ${question.id} does not belong to this content.` },
+        { status: 400 },
+      );
+    }
+
+    if (submittedQuestionIds.has(question.id)) {
+      return NextResponse.json(
+        { error: `Duplicate question id: ${question.id}` },
+        { status: 400 },
+      );
+    }
+
+    if (question.type === "multiple_choice" && !question.options.length) {
+      return NextResponse.json(
+        { error: `Question ${question.number} requires options.` },
+        { status: 400 },
+      );
+    }
+
+    submittedQuestionIds.add(question.id);
+  }
+
+  const { data: existingAnswers, error: answerLoadError } = await admin
+    .from("generated_answers")
+    .select("id,question_id")
+    .in(
+      "question_id",
+      questions.map((question) => question.id),
+    );
+
+  if (answerLoadError) {
+    return apiErrorResponse(answerLoadError, {
+      fallback: "Failed to load answers.",
+      status: 400,
+      context: "admin_answers_validate_failed",
+    });
+  }
+
+  const answerByQuestionId = new Map(
+    (existingAnswers ?? []).map((answer) => [answer.question_id, answer.id]),
+  );
+
+  for (const question of questions) {
+    const { error: questionError } = await admin
+      .from("generated_questions")
+      .update({
+        question_type: question.type,
+        question_number: question.number,
+        prompt: question.prompt,
+        options: question.options,
+        metadata: question.metadata ?? {},
+      })
+      .eq("id", question.id)
+      .eq("set_type", setType)
+      .eq("set_id", setId);
+
+    if (questionError) {
+      return apiErrorResponse(questionError, {
+        fallback: "Failed to update questions.",
+        status: 400,
+        context: "admin_question_update_failed",
+      });
+    }
+
+    const correctAnswer = buildCorrectAnswer(question);
+    const answerPayload = {
+      correct_answer: correctAnswer,
+      explanation_zh: question.explanationZh ?? null,
+      explanation_en: question.explanationEn ?? null,
+      synonyms: question.synonyms,
+      vocabulary: question.vocabulary,
+    };
+    const answerId = answerByQuestionId.get(question.id);
+
+    if (answerId) {
+      const { error: answerError } = await admin
+        .from("generated_answers")
+        .update(answerPayload)
+        .eq("id", answerId);
+
+      if (answerError) {
+        return apiErrorResponse(answerError, {
+          fallback: "Failed to update answers.",
+          status: 400,
+          context: "admin_answer_update_failed",
+        });
+      }
+    } else {
+      const { error: answerError } = await admin
+        .from("generated_answers")
+        .insert({
+          question_id: question.id,
+          ...answerPayload,
+        });
+
+      if (answerError) {
+        return apiErrorResponse(answerError, {
+          fallback: "Failed to update answers.",
+          status: 400,
+          context: "admin_answer_insert_failed",
+        });
+      }
+    }
+  }
+
+  return null;
+}
+
+function buildCorrectAnswer(question: z.infer<typeof editableQuestionSchema>) {
+  const answers = [question.correctAnswer, ...question.acceptableAnswers]
+    .map((answer) => answer.trim())
+    .filter(Boolean);
+  const uniqueAnswers = Array.from(new Set(answers));
+
+  return uniqueAnswers.join("||");
+}
+
+function getChangedFields(
+  before: Record<string, unknown>,
+  after: Record<string, unknown>,
+) {
+  return Object.keys(after).filter(
+    (key) => JSON.stringify(before[key]) !== JSON.stringify(after[key]),
+  );
+}
+
+async function writeContentUpdatedLog({
+  adminUserId,
+  contentType,
+  contentId,
+  changedFields,
+}: {
+  adminUserId: string;
+  contentType: string;
+  contentId: string;
+  changedFields: string[];
+}) {
+  const admin = createSupabaseAdminClient();
+
+  await admin.from("admin_logs").insert({
+    admin_user_id: adminUserId,
+    action: "content_updated",
+    target_type: contentType,
+    target_id: contentId,
+    metadata: {
+      content_type: contentType,
+      content_id: contentId,
+      changed_fields: Array.from(new Set(changedFields)),
+    },
+  });
 }
