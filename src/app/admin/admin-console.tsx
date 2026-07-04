@@ -1,17 +1,21 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 import {
   Activity,
+  Eye,
   FileCheck2,
   Headphones,
   ListChecks,
   Loader2,
   MessageSquareText,
+  Pencil,
   ShieldCheck,
   Trash2,
   Users,
   WandSparkles,
+  X,
 } from "lucide-react";
 
 import { AppShell } from "@/components/layout/app-shell";
@@ -72,6 +76,79 @@ type GenerateAudioApiResponse =
     }
   | {
       error?: string;
+    };
+
+type AdminReviewQuestion = {
+  id: string;
+  number: number;
+  type: string;
+  prompt: string;
+  options: unknown[];
+  metadata: unknown;
+  correctAnswer: string;
+  acceptableAnswers: string[];
+  explanationZh: string | null;
+  explanationEn: string | null;
+  synonyms: unknown[];
+  vocabulary: unknown[];
+};
+
+type AdminContentDetail =
+  | {
+      type: "reading";
+      content: {
+        id: string;
+        title: string;
+        topic: string;
+        band: number;
+        lengthWords: number;
+        passage: string;
+        source: string;
+        status: AdminContentStatus;
+        createdAt: string;
+        updatedAt: string;
+        questions: AdminReviewQuestion[];
+      };
+    }
+  | {
+      type: "listening";
+      content: {
+        id: string;
+        title: string;
+        topic: string;
+        band: number | null;
+        section: number;
+        script: string;
+        audioUrl: string | null;
+        audioStatus: string;
+        ttsVoiceMapping: unknown;
+        source: string;
+        status: AdminContentStatus;
+        createdAt: string;
+        updatedAt: string;
+        questions: AdminReviewQuestion[];
+      };
+    }
+  | {
+      type: "writing";
+      content: {
+        id: string;
+        title: string;
+        taskType: number;
+        topic: string;
+        prompt: string;
+        bandTarget: number | null;
+        suggestedTimeMinutes: number;
+        minimumWords: number;
+        sampleAnswerBand7: string | null;
+        sampleAnswerBand8: string | null;
+        sampleAnswerBand9: string | null;
+        scoringNotes: unknown;
+        source: string;
+        status: AdminContentStatus;
+        createdAt: string;
+        updatedAt: string;
+      };
     };
 
 const demoContent: AdminContentItem[] = [
@@ -137,6 +214,13 @@ export function AdminConsole({
   const [isAudioGeneratingId, setIsAudioGeneratingId] = useState<string | null>(
     null,
   );
+  const [isDetailLoadingId, setIsDetailLoadingId] = useState<string | null>(null);
+  const [selectedDetailItem, setSelectedDetailItem] =
+    useState<AdminContentItem | null>(null);
+  const [contentDetail, setContentDetail] = useState<AdminContentDetail | null>(
+    null,
+  );
+  const [detailError, setDetailError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [generateMode, setGenerateMode] = useState<GenerateMode>("reading");
@@ -253,6 +337,49 @@ export function AdminConsole({
       current.filter((contentItem) => contentItem.id !== item.id),
     );
     setLogs((current) => [`${item.title} deleted`, ...current]);
+  };
+
+  const viewContentDetail = async (item: AdminContentItem) => {
+    setSelectedDetailItem(item);
+    setContentDetail(null);
+    setDetailError(null);
+    setIsDetailLoadingId(item.id);
+
+    if (mode !== "admin") {
+      setIsDetailLoadingId(null);
+      setDetailError("Content detail is available after admin login.");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `/api/admin/content/detail?type=${item.type}&id=${item.id}`,
+        { cache: "no-store" },
+      );
+      const payload = (await response.json()) as AdminContentDetail | { error?: string };
+
+      if (!response.ok) {
+        throw new Error(
+          "error" in payload && payload.error
+            ? payload.error
+            : "Failed to load content detail.",
+        );
+      }
+
+      if (!("content" in payload)) {
+        throw new Error("Failed to load content detail.");
+      }
+
+      setContentDetail(payload);
+    } catch (viewError) {
+      setDetailError(
+        viewError instanceof Error
+          ? viewError.message
+          : "Failed to load content detail.",
+      );
+    } finally {
+      setIsDetailLoadingId(null);
+    }
   };
 
   const generateListeningAudio = async (item: AdminContentItem) => {
@@ -538,6 +665,33 @@ export function AdminConsole({
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={isDetailLoadingId === item.id}
+                      onClick={() => viewContentDetail(item)}
+                    >
+                      {isDetailLoadingId === item.id ? (
+                        <Loader2
+                          className="h-4 w-4 animate-spin"
+                          aria-hidden="true"
+                        />
+                      ) : (
+                        <Eye className="h-4 w-4" aria-hidden="true" />
+                      )}
+                      View
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={isMutatingId === item.id}
+                      onClick={() =>
+                        setToastMessage("Edit content is planned for Admin V2.")
+                      }
+                    >
+                      <Pencil className="h-4 w-4" aria-hidden="true" />
+                      Edit
+                    </Button>
                     {item.type === "listening" ? (
                       <Button
                         size="sm"
@@ -633,8 +787,398 @@ export function AdminConsole({
           {toastMessage}
         </div>
       ) : null}
+
+      {selectedDetailItem ? (
+        <AdminContentDetailModal
+          item={selectedDetailItem}
+          detail={contentDetail}
+          error={detailError}
+          isLoading={isDetailLoadingId === selectedDetailItem.id}
+          onClose={() => {
+            setSelectedDetailItem(null);
+            setContentDetail(null);
+            setDetailError(null);
+          }}
+          onPublish={() => updateContentStatus(selectedDetailItem, "published")}
+          onArchive={() => updateContentStatus(selectedDetailItem, "archived")}
+          onDelete={() => {
+            void deleteContent(selectedDetailItem);
+            setSelectedDetailItem(null);
+            setContentDetail(null);
+            setDetailError(null);
+          }}
+          isMutating={isMutatingId === selectedDetailItem.id}
+        />
+      ) : null}
     </AppShell>
   );
+}
+
+function AdminContentDetailModal({
+  item,
+  detail,
+  error,
+  isLoading,
+  isMutating,
+  onClose,
+  onPublish,
+  onArchive,
+  onDelete,
+}: {
+  item: AdminContentItem;
+  detail: AdminContentDetail | null;
+  error: string | null;
+  isLoading: boolean;
+  isMutating: boolean;
+  onClose: () => void;
+  onPublish: () => void;
+  onArchive: () => void;
+  onDelete: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 bg-slate-950/40 p-4">
+      <div className="mx-auto flex max-h-[calc(100vh-2rem)] max-w-6xl flex-col overflow-hidden rounded-md border border-slate-200 bg-white shadow-2xl">
+        <div className="flex flex-col gap-4 border-b border-slate-200 p-4 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge>{item.skill}</Badge>
+              <Badge className="bg-white">{item.source}</Badge>
+              <Badge className="bg-amber-50 text-amber-800">
+                {detail ? formatContentStatus(detail.content.status) : item.status}
+              </Badge>
+            </div>
+            <h2 className="mt-3 text-lg font-semibold text-slate-950">
+              {detail?.content.title ?? item.title}
+            </h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Admin review detail · {item.type}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                // Full edit workflow is intentionally deferred; View gives admins
+                // the required review surface for V1 publishing decisions.
+              }}
+              disabled
+            >
+              <Pencil className="h-4 w-4" aria-hidden="true" />
+              Edit
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={isMutating}
+              onClick={onPublish}
+            >
+              Publish
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={isMutating}
+              onClick={onArchive}
+            >
+              Archive
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              disabled={isMutating}
+              onClick={onDelete}
+            >
+              <Trash2 className="h-4 w-4" aria-hidden="true" />
+              Delete
+            </Button>
+            <Button type="button" size="sm" variant="ghost" onClick={onClose}>
+              <X className="h-4 w-4" aria-hidden="true" />
+            </Button>
+          </div>
+        </div>
+
+        <div className="overflow-y-auto p-4">
+          {isLoading ? (
+            <div className="space-y-3">
+              <div className="h-6 w-48 rounded-md bg-slate-100" />
+              <div className="h-28 rounded-md bg-slate-100" />
+              <div className="h-28 rounded-md bg-slate-100" />
+            </div>
+          ) : null}
+
+          {error ? (
+            <div className="rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+              {error}
+            </div>
+          ) : null}
+
+          {!isLoading && !error && detail ? (
+            <div className="space-y-6">
+              <DetailMeta detail={detail} />
+              {detail.type === "reading" ? (
+                <ReadingDetail detail={detail} />
+              ) : null}
+              {detail.type === "listening" ? (
+                <ListeningDetail detail={detail} />
+              ) : null}
+              {detail.type === "writing" ? (
+                <WritingDetail detail={detail} />
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DetailMeta({ detail }: { detail: AdminContentDetail }) {
+  const content = detail.content;
+
+  return (
+    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+      <Metric label="Status" value={formatContentStatus(content.status)} />
+      <Metric label="Source" value={content.source} />
+      <Metric label="Created" value={formatDateTime(content.createdAt)} />
+      <Metric label="Updated" value={formatDateTime(content.updatedAt)} />
+    </div>
+  );
+}
+
+function ReadingDetail({
+  detail,
+}: {
+  detail: Extract<AdminContentDetail, { type: "reading" }>;
+}) {
+  return (
+    <>
+      <div className="grid gap-3 md:grid-cols-3">
+        <Metric label="Band" value={`Band ${detail.content.band}`} />
+        <Metric label="Topic" value={detail.content.topic} />
+        <Metric label="Length" value={`${detail.content.lengthWords} words`} />
+      </div>
+      <ReviewSection title="Passage">
+        <div className="max-h-[420px] overflow-auto whitespace-pre-wrap rounded-md border border-slate-200 bg-slate-50 p-4 text-sm leading-7 text-slate-700">
+          {detail.content.passage}
+        </div>
+      </ReviewSection>
+      <QuestionReview questions={detail.content.questions} />
+    </>
+  );
+}
+
+function ListeningDetail({
+  detail,
+}: {
+  detail: Extract<AdminContentDetail, { type: "listening" }>;
+}) {
+  const hasAudio = detail.content.audioStatus === "ready" && detail.content.audioUrl;
+
+  return (
+    <>
+      <div className="grid gap-3 md:grid-cols-4">
+        <Metric
+          label="Band"
+          value={detail.content.band ? `Band ${detail.content.band}` : "-"}
+        />
+        <Metric label="Topic" value={detail.content.topic} />
+        <Metric label="Section" value={`Section ${detail.content.section}`} />
+        <Metric label="Audio" value={formatAudioStatus(detail.content.audioStatus)} />
+      </div>
+      <ReviewSection title="Audio">
+        {hasAudio ? (
+          <div className="space-y-3">
+            <audio
+              className="w-full"
+              controls
+              src={detail.content.audioUrl ?? undefined}
+            />
+            <p className="break-all text-xs text-slate-500">
+              {detail.content.audioUrl}
+            </p>
+          </div>
+        ) : (
+          <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            Audio pending. Script review available.
+          </div>
+        )}
+      </ReviewSection>
+      <ReviewSection title="Script / transcript">
+        <div className="max-h-[360px] overflow-auto whitespace-pre-wrap rounded-md border border-slate-200 bg-slate-50 p-4 text-sm leading-7 text-slate-700">
+          {detail.content.script}
+        </div>
+      </ReviewSection>
+      <ReviewSection title="Speaker / voice mapping">
+        <JsonBlock value={detail.content.ttsVoiceMapping} />
+      </ReviewSection>
+      <QuestionReview questions={detail.content.questions} />
+    </>
+  );
+}
+
+function WritingDetail({
+  detail,
+}: {
+  detail: Extract<AdminContentDetail, { type: "writing" }>;
+}) {
+  return (
+    <>
+      <div className="grid gap-3 md:grid-cols-4">
+        <Metric label="Task Type" value={`Task ${detail.content.taskType}`} />
+        <Metric
+          label="Band Target"
+          value={
+            detail.content.bandTarget ? `Band ${detail.content.bandTarget}` : "-"
+          }
+        />
+        <Metric label="Time" value={`${detail.content.suggestedTimeMinutes} min`} />
+        <Metric label="Minimum" value={`${detail.content.minimumWords} words`} />
+      </div>
+      <ReviewSection title="Prompt">
+        <div className="whitespace-pre-wrap rounded-md border border-slate-200 bg-slate-50 p-4 text-sm leading-7 text-slate-700">
+          {detail.content.prompt}
+        </div>
+      </ReviewSection>
+      <div className="grid gap-4 lg:grid-cols-3">
+        <ReviewSection title="Band 7 sample">
+          <TextBlock value={detail.content.sampleAnswerBand7} />
+        </ReviewSection>
+        <ReviewSection title="Band 8 sample">
+          <TextBlock value={detail.content.sampleAnswerBand8} />
+        </ReviewSection>
+        <ReviewSection title="Band 9 sample">
+          <TextBlock value={detail.content.sampleAnswerBand9} />
+        </ReviewSection>
+      </div>
+      <ReviewSection title="Scoring notes">
+        <JsonBlock value={detail.content.scoringNotes} />
+      </ReviewSection>
+    </>
+  );
+}
+
+function QuestionReview({ questions }: { questions: AdminReviewQuestion[] }) {
+  return (
+    <ReviewSection title={`Questions and answer keys (${questions.length})`}>
+      {questions.length ? (
+        <div className="space-y-4">
+          {questions.map((question) => (
+            <div
+              key={question.id}
+              className="rounded-md border border-slate-200 bg-white p-4"
+            >
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge>Question {question.number}</Badge>
+                <Badge className="bg-white">{formatQuestionType(question.type)}</Badge>
+              </div>
+              <dl className="mt-4 space-y-3 text-sm">
+                <DetailRow label="Question text" value={question.prompt} />
+                <DetailRow label="Options" value={formatList(question.options)} />
+                <DetailRow label="Correct answer" value={question.correctAnswer} />
+                <DetailRow
+                  label="Acceptable answers"
+                  value={formatList(question.acceptableAnswers)}
+                />
+                <DetailRow label="中文解析" value={question.explanationZh ?? "-"} />
+                <DetailRow
+                  label="English explanation"
+                  value={question.explanationEn ?? "-"}
+                />
+                <DetailRow label="Synonyms" value={formatList(question.synonyms)} />
+              </dl>
+              {question.vocabulary.length ? (
+                <div className="mt-4">
+                  <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                    Vocabulary
+                  </p>
+                  <JsonBlock value={question.vocabulary} />
+                </div>
+              ) : null}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-md border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-sm text-slate-500">
+          No questions found for this content.
+        </div>
+      )}
+    </ReviewSection>
+  );
+}
+
+function ReviewSection({
+  title,
+  children,
+}: {
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <section>
+      <h3 className="mb-3 text-sm font-semibold text-slate-950">{title}</h3>
+      {children}
+    </section>
+  );
+}
+
+function DetailRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">
+        {label}
+      </dt>
+      <dd className="mt-1 whitespace-pre-wrap leading-6 text-slate-700">{value}</dd>
+    </div>
+  );
+}
+
+function TextBlock({ value }: { value?: string | null }) {
+  return (
+    <div className="max-h-[320px] overflow-auto whitespace-pre-wrap rounded-md border border-slate-200 bg-slate-50 p-4 text-sm leading-7 text-slate-700">
+      {value || "No content returned."}
+    </div>
+  );
+}
+
+function JsonBlock({ value }: { value: unknown }) {
+  return (
+    <pre className="max-h-[260px] overflow-auto rounded-md border border-slate-200 bg-slate-50 p-4 text-xs leading-5 text-slate-700">
+      {JSON.stringify(value ?? {}, null, 2)}
+    </pre>
+  );
+}
+
+function formatDateTime(value: string) {
+  return new Date(value).toLocaleString();
+}
+
+function formatQuestionType(value: string) {
+  return value
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function formatList(value: unknown[]) {
+  if (!value.length) {
+    return "-";
+  }
+
+  return value
+    .map((item) => {
+      if (typeof item === "string") {
+        return item;
+      }
+
+      return JSON.stringify(item);
+    })
+    .join("; ");
 }
 
 function GeneratePanel({
