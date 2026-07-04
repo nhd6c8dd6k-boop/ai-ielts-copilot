@@ -187,6 +187,22 @@ type AdminEditDraft =
       scoringNotesJson: string;
     };
 
+type PublishValidationResponse =
+  | { ok: true }
+  | {
+      error?: string;
+      validation?: {
+        errors: string[];
+        warnings: string[];
+      };
+    };
+
+type PublishChecklistItem = {
+  label: string;
+  status: "pass" | "warning" | "fail";
+  message: string;
+};
+
 const demoContent: AdminContentItem[] = [
   {
     id: "reading-urban-learning",
@@ -314,15 +330,34 @@ export function AdminConsole({
           }),
         });
 
-        if (!response.ok) {
-          throw new Error("Content update failed.");
+        const payload = (await response.json()) as PublishValidationResponse;
+
+        if (!response.ok || !("ok" in payload)) {
+          const validationMessage =
+            "validation" in payload && payload.validation
+              ? [
+                  ...(payload.validation.errors ?? []),
+                  ...(payload.validation.warnings ?? []).map(
+                    (warning) => `Warning: ${warning}`,
+                  ),
+                ].join(" ")
+              : "";
+
+          throw new Error(
+            validationMessage ||
+              ("error" in payload && payload.error
+                ? payload.error
+                : "Content update failed."),
+          );
         }
       } catch (mutationError) {
-        setError(
+        const message =
           mutationError instanceof Error
             ? mutationError.message
-            : "Content update failed.",
-        );
+            : "Content update failed.";
+
+        setError(message);
+        setToastMessage(message);
         setIsMutatingId(null);
         return;
       }
@@ -1112,15 +1147,19 @@ function AdminContentDetailModal({
           ) : null}
 
           {!isLoading && !error && detail && editDraft ? (
-            <AdminContentEditForm
-              draft={editDraft}
-              onChange={onChangeEditDraft}
-            />
+            <div className="space-y-6">
+              <PublishChecklist detail={detail} />
+              <AdminContentEditForm
+                draft={editDraft}
+                onChange={onChangeEditDraft}
+              />
+            </div>
           ) : null}
 
           {!isLoading && !error && detail && !editDraft ? (
             <div className="space-y-6">
               <DetailMeta detail={detail} />
+              <PublishChecklist detail={detail} />
               {detail.type === "reading" ? (
                 <ReadingDetail detail={detail} />
               ) : null}
@@ -1135,6 +1174,37 @@ function AdminContentDetailModal({
         </div>
       </div>
     </div>
+  );
+}
+
+function PublishChecklist({ detail }: { detail: AdminContentDetail }) {
+  const checklist = getPublishChecklist(detail);
+
+  return (
+    <ReviewSection title="Publish safety checklist">
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        {checklist.map((item) => (
+          <div
+            key={item.label}
+            className="rounded-md border border-slate-200 bg-white p-3"
+          >
+            <div className="flex items-center gap-2">
+              <span
+                className={`h-2.5 w-2.5 rounded-full ${
+                  item.status === "pass"
+                    ? "bg-teal-500"
+                    : item.status === "warning"
+                      ? "bg-amber-500"
+                      : "bg-rose-500"
+                }`}
+              />
+              <p className="text-sm font-medium text-slate-950">{item.label}</p>
+            </div>
+            <p className="mt-2 text-xs leading-5 text-slate-500">{item.message}</p>
+          </div>
+        ))}
+      </div>
+    </ReviewSection>
   );
 }
 
@@ -1959,6 +2029,230 @@ function Metric({ label, value }: { label: string; value: string }) {
       <p className="mt-1 text-sm font-semibold text-slate-950">{value}</p>
     </div>
   );
+}
+
+function getPublishChecklist(detail: AdminContentDetail): PublishChecklistItem[] {
+  if (detail.type === "reading") {
+    const basicsComplete =
+      hasAdminText(detail.content.title) &&
+      Boolean(detail.content.band) &&
+      hasAdminText(detail.content.topic) &&
+      hasAdminText(detail.content.passage) &&
+      countAdminWords(detail.content.passage) >= 100;
+    const questionsComplete =
+      detail.content.questions.length > 0 &&
+      detail.content.questions.every((question) => hasAdminText(question.prompt));
+    const answersComplete =
+      detail.content.questions.length > 0 &&
+      detail.content.questions.every((question) =>
+        hasQuestionAnswer(question),
+      );
+    const explanationsComplete =
+      detail.content.questions.length > 0 &&
+      detail.content.questions.every(
+        (question) =>
+          hasAdminText(question.explanationZh) ||
+          hasAdminText(question.explanationEn),
+      );
+    const ready = basicsComplete && questionsComplete && answersComplete;
+
+    return [
+      checklistItem(
+        "Content basics complete",
+        basicsComplete,
+        "Title, band, topic and passage are present.",
+      ),
+      checklistItem(
+        "Questions complete",
+        questionsComplete,
+        "At least one question exists and all question text is filled.",
+      ),
+      checklistItem(
+        "Answers complete",
+        answersComplete,
+        "Every question has an answer key.",
+      ),
+      checklistItem(
+        "Explanations available",
+        explanationsComplete,
+        "Missing explanations are allowed, but should be reviewed.",
+        true,
+      ),
+      {
+        label: "Audio ready / Script preview only",
+        status: "pass",
+        message: "Not required for Reading content.",
+      },
+      checklistItem(
+        "Ready to publish",
+        ready,
+        ready
+          ? "This Reading set passes required publish checks."
+          : "Fix required Reading fields before publishing.",
+      ),
+    ];
+  }
+
+  if (detail.type === "listening") {
+    const basicsComplete =
+      hasAdminText(detail.content.title) &&
+      Boolean(detail.content.band) &&
+      hasAdminText(detail.content.topic) &&
+      Boolean(detail.content.section) &&
+      hasAdminText(detail.content.script);
+    const questionsComplete =
+      detail.content.questions.length > 0 &&
+      detail.content.questions.every((question) => hasAdminText(question.prompt));
+    const answersComplete =
+      detail.content.questions.length > 0 &&
+      detail.content.questions.every((question) =>
+        hasQuestionAnswer(question),
+      );
+    const explanationsComplete =
+      detail.content.questions.length > 0 &&
+      detail.content.questions.every(
+        (question) =>
+          hasAdminText(question.explanationZh) ||
+          hasAdminText(question.explanationEn),
+      );
+    const audioStatus = getListeningAudioChecklistStatus(detail);
+    const ready =
+      basicsComplete &&
+      questionsComplete &&
+      answersComplete &&
+      audioStatus.status !== "fail";
+
+    return [
+      checklistItem(
+        "Content basics complete",
+        basicsComplete,
+        "Title, band, topic, section and script are present.",
+      ),
+      checklistItem(
+        "Questions complete",
+        questionsComplete,
+        "At least one question exists and all question text is filled.",
+      ),
+      checklistItem(
+        "Answers complete",
+        answersComplete,
+        "Every question has an answer key.",
+      ),
+      checklistItem(
+        "Explanations available",
+        explanationsComplete,
+        "Missing explanations are allowed, but should be reviewed.",
+        true,
+      ),
+      audioStatus,
+      checklistItem(
+        "Ready to publish",
+        ready,
+        ready
+          ? "This Listening set passes required publish checks."
+          : "Fix required Listening fields before publishing.",
+      ),
+    ];
+  }
+
+  const basicsComplete =
+    Boolean(detail.content.taskType) &&
+    hasAdminText(detail.content.topic) &&
+    hasAdminText(detail.content.prompt) &&
+    detail.content.minimumWords >= 100 &&
+    detail.content.suggestedTimeMinutes >= 10;
+  const samplesAreText = [
+    detail.content.sampleAnswerBand7,
+    detail.content.sampleAnswerBand8,
+    detail.content.sampleAnswerBand9,
+  ].every((value) => value === null || typeof value === "string");
+
+  return [
+    checklistItem(
+      "Content basics complete",
+      basicsComplete,
+      "Task type, topic, prompt, time and word guidance are present.",
+    ),
+    {
+      label: "Questions complete",
+      status: "pass",
+      message: "Not required for Writing tasks.",
+    },
+    {
+      label: "Answers complete",
+      status: samplesAreText ? "pass" : "fail",
+      message: "Sample answers are optional, but must be text when present.",
+    },
+    {
+      label: "Explanations available",
+      status: "pass",
+      message: "Writing review uses prompt and scoring notes instead of answer explanations.",
+    },
+    {
+      label: "Audio ready / Script preview only",
+      status: "pass",
+      message: "Not required for Writing tasks.",
+    },
+    checklistItem(
+      "Ready to publish",
+      basicsComplete && samplesAreText,
+      basicsComplete && samplesAreText
+        ? "This Writing task passes required publish checks."
+        : "Fix required Writing fields before publishing.",
+    ),
+  ];
+}
+
+function checklistItem(
+  label: string,
+  passed: boolean,
+  message: string,
+  warningOnly = false,
+): PublishChecklistItem {
+  if (passed) {
+    return { label, status: "pass", message };
+  }
+
+  return {
+    label,
+    status: warningOnly ? "warning" : "fail",
+    message,
+  };
+}
+
+function getListeningAudioChecklistStatus(
+  detail: Extract<AdminContentDetail, { type: "listening" }>,
+): PublishChecklistItem {
+  if (detail.content.audioStatus === "ready") {
+    return {
+      label: "Audio ready / Script preview only",
+      status: hasAdminText(detail.content.audioUrl) ? "pass" : "fail",
+      message: hasAdminText(detail.content.audioUrl)
+        ? "Audio is ready and audio_url exists."
+        : "Audio is marked ready but audio_url is missing.",
+    };
+  }
+
+  return {
+    label: "Audio ready / Script preview only",
+    status: "warning",
+    message: "Audio is pending. Publishing is allowed with script preview.",
+  };
+}
+
+function hasQuestionAnswer(question: AdminReviewQuestion) {
+  return (
+    hasAdminText(question.correctAnswer) ||
+    question.acceptableAnswers.some((answer) => hasAdminText(answer))
+  );
+}
+
+function hasAdminText(value: unknown) {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+function countAdminWords(value: string) {
+  return value.trim().split(/\s+/).filter(Boolean).length;
 }
 
 function createEditDraft(detail: AdminContentDetail): AdminEditDraft {
