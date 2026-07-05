@@ -1,5 +1,6 @@
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { AppSidebarNav } from "@/components/layout/app-sidebar-nav";
+import { SupportFooter } from "@/components/layout/support-footer";
 import { AccountStatus } from "@/features/auth/account-status";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -22,6 +23,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <AccountStatus />
           </div>
           {children}
+          <div className="mt-10">
+            <SupportFooter />
+          </div>
         </div>
       </main>
     </div>

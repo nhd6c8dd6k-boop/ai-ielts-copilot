@@ -18,6 +18,7 @@ import { useState } from "react";
 
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { MarketingHeader } from "@/components/layout/marketing-header";
+import { SupportFooter } from "@/components/layout/support-footer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -602,6 +603,7 @@ export default function Home() {
           </div>
         </section>
       </main>
+      <SupportFooter />
     </div>
   );
 }
