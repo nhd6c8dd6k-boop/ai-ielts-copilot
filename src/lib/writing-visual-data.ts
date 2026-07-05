@@ -1,20 +1,13 @@
 export type WritingVisualData =
-  | {
-      type: "table";
-      label: "Table" | "Chart";
-      instruction: string;
-      title: string;
-      columns: string[];
-      rows: string[][];
-      raw: string;
-    }
-  | {
-      type: "process" | "map" | "text";
-      label: "Process" | "Map" | "Visual information";
-      instruction: string;
-      title: string;
-      body: string;
-    };
+  {
+    type: "table";
+    label: "Table" | "Chart";
+    instruction: string;
+    title: string;
+    columns: string[];
+    rows: string[][];
+    raw: string;
+  };
 
 export function parseWritingVisualData({
   prompt,
@@ -33,36 +26,7 @@ export function parseWritingVisualData({
     return table;
   }
 
-  const lowerPrompt = prompt.toLowerCase();
-  const fallback = splitInstructionAndVisualText(prompt);
-
-  if (/\b(process|stages|steps|recycling)\b/.test(lowerPrompt)) {
-    return {
-      type: "process",
-      label: "Process",
-      instruction: fallback.instruction,
-      title: "Process information",
-      body: fallback.visualText,
-    };
-  }
-
-  if (/\b(map|plan|layout|location|area)\b/.test(lowerPrompt)) {
-    return {
-      type: "map",
-      label: "Map",
-      instruction: fallback.instruction,
-      title: "Map information",
-      body: fallback.visualText,
-    };
-  }
-
-  return {
-    type: "text",
-    label: "Visual information",
-    instruction: fallback.instruction,
-    title: "Visual information",
-    body: fallback.visualText,
-  };
+  return null;
 }
 
 export function getWritingVisualTypeLabel({
@@ -93,7 +57,7 @@ function parseTablePrompt(prompt: string): WritingVisualData | null {
     .slice(tableStart, tableEnd)
     .filter((line) => !isMarkdownSeparatorLine(line));
 
-  if (tableLines.length < 2) {
+  if (tableLines.length < 3) {
     return null;
   }
 
@@ -103,7 +67,7 @@ function parseTablePrompt(prompt: string): WritingVisualData | null {
     .map(splitTableLine)
     .filter((row) => row.length > 1);
 
-  if (columns.length < 2 || !rows.length) {
+  if (columns.length < 2 || rows.length < 2) {
     return null;
   }
 
@@ -121,40 +85,6 @@ function parseTablePrompt(prompt: string): WritingVisualData | null {
     columns,
     rows,
     raw,
-  };
-}
-
-function splitInstructionAndVisualText(prompt: string) {
-  const paragraphs = prompt
-    .split(/\n{2,}/)
-    .map((paragraph) => paragraph.trim())
-    .filter(Boolean);
-
-  if (paragraphs.length < 2) {
-    return {
-      instruction: prompt,
-      visualText: prompt,
-    };
-  }
-
-  const instructionParagraphs = paragraphs.filter((paragraph) =>
-    /\b(summarise|summarize|selecting|reporting|comparisons?|write at least)\b/i.test(
-      paragraph,
-    ),
-  );
-  const visualParagraphs = paragraphs.filter(
-    (paragraph) => !instructionParagraphs.includes(paragraph),
-  );
-
-  return {
-    instruction: (instructionParagraphs.length
-      ? instructionParagraphs
-      : [paragraphs[0]]
-    ).join("\n\n"),
-    visualText: (visualParagraphs.length
-      ? visualParagraphs
-      : paragraphs.slice(1)
-    ).join("\n\n"),
   };
 }
 
