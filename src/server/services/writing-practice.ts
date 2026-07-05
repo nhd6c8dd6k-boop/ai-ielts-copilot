@@ -4,6 +4,7 @@ import { z } from "zod";
 import { isSupabaseConfigured } from "@/lib/env";
 import { createOpenAIClient } from "@/lib/openai/client";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getWritingVisualTypeLabel } from "@/lib/writing-visual-data";
 
 export type PublishedWritingTaskSummary = {
   id: string;
@@ -11,6 +12,7 @@ export type PublishedWritingTaskSummary = {
   topic: string;
   title: string;
   promptSummary: string;
+  visualTypeLabel: string | null;
   bandTarget: number | null;
   estimatedTimeMinutes: number;
   createdAt: string;
@@ -106,6 +108,10 @@ export const getPublishedWritingTaskSummaries = cache(async () => {
       topic: task.topic,
       title: buildWritingTaskTitle(task.task_type, task.topic),
       promptSummary: summarizePrompt(task.prompt),
+      visualTypeLabel: getWritingVisualTypeLabel({
+        prompt: task.prompt,
+        taskType: normalizeTaskType(task.task_type),
+      }),
       bandTarget: task.band_target,
       estimatedTimeMinutes: getSuggestedTimeMinutes(task.task_type),
       createdAt: task.created_at,
@@ -145,6 +151,10 @@ export const getPublishedWritingTask = cache(async (id: string) => {
     title: buildWritingTaskTitle(taskType, data.topic),
     prompt: data.prompt,
     promptSummary: summarizePrompt(data.prompt),
+    visualTypeLabel: getWritingVisualTypeLabel({
+      prompt: data.prompt,
+      taskType,
+    }),
     bandTarget: data.band_target,
     estimatedTimeMinutes: getSuggestedTimeMinutes(taskType),
     minimumWords: getMinimumWords(taskType),

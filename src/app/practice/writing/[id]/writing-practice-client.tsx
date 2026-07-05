@@ -8,6 +8,7 @@ import { AppShell } from "@/components/layout/app-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { WritingTaskVisual } from "@/components/writing/writing-task-visual";
 import type { PublishedWritingTask } from "@/server/services/writing-practice";
 
 type WritingPracticeClientProps = {
@@ -189,9 +190,7 @@ export function WritingPracticeClient({
                 At least {task.minimumWords} words
               </Badge>
             </div>
-            <div className="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm leading-7 text-slate-700">
-              {task.prompt}
-            </div>
+            <WritingTaskVisual prompt={task.prompt} taskType={task.taskType} />
             <p className="text-xs leading-5 text-slate-500">
               AI Score is an estimate and does not represent an official IELTS
               score.

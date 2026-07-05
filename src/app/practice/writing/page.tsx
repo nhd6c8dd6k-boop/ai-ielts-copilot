@@ -18,7 +18,7 @@ export default async function WritingPracticePage() {
       <PageHeader
         eyebrow="Writing Practice"
         title="Choose a published IELTS Writing task."
-        description="Write Task 1 or Task 2 essays in the browser, save drafts, and submit for AI band feedback when scoring is available."
+        description="Write Task 1 or Task 2 essays in the browser, save drafts, and submit for AI band feedback."
       />
 
       {tasks.length ? (
@@ -31,6 +31,11 @@ export default async function WritingPracticePage() {
                     <CardTitle className="text-lg">{task.title}</CardTitle>
                     <div className="mt-3 flex flex-wrap gap-2">
                       <Badge>Task {task.taskType}</Badge>
+                      {task.visualTypeLabel ? (
+                        <Badge className="bg-slate-50">
+                          {task.visualTypeLabel}
+                        </Badge>
+                      ) : null}
                       <Badge className="bg-white">{task.topic}</Badge>
                       {task.bandTarget ? (
                         <Badge className="bg-white">
@@ -88,8 +93,8 @@ export default async function WritingPracticePage() {
               </h2>
               <p className="mt-3 text-sm leading-6 text-slate-600">
                 Published Writing tasks will appear here after admin review.
-                Writing tasks will include prompt details, draft saving, and AI
-                feedback when scoring is available.
+                Writing tasks include prompt details, draft saving, and AI
+                feedback.
               </p>
             </div>
           </CardContent>

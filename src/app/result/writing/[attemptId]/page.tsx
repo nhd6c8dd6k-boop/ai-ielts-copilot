@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { WritingTaskVisual } from "@/components/writing/writing-task-visual";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getWritingAttemptResult } from "@/server/services/writing-practice";
 
@@ -81,9 +82,10 @@ export default async function WritingResultPage({
             </div>
           </CardHeader>
           <CardContent>
-            <div className="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm leading-7 text-slate-700">
-              {result.prompt}
-            </div>
+            <WritingTaskVisual
+              prompt={result.prompt}
+              taskType={result.taskType}
+            />
           </CardContent>
         </Card>
 
