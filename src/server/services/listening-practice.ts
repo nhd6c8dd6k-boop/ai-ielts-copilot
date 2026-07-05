@@ -1,10 +1,14 @@
 import { cache } from "react";
 
 import { isSupabaseConfigured } from "@/lib/env";
+import {
+  getDisplayAnswerParts,
+  getListeningAnswerPartCount,
+  isListeningAnswerCorrect,
+} from "@/lib/listening-answer-parts";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import {
   getAcceptedAnswers,
-  isPracticeAnswerCorrect,
   normalizePracticeAnswer,
 } from "@/server/services/reading-practice";
 
@@ -26,6 +30,7 @@ export type ListeningPracticeQuestion = {
   type: string;
   prompt: string;
   options: string[];
+  answerCount: number;
 };
 
 export type ListeningPracticeSet = {
@@ -61,6 +66,8 @@ export type ListeningAttemptResult = {
     isCorrect: boolean;
     explanationZh: string | null;
     explanationEn: string | null;
+    userAnswerParts: string[];
+    correctAnswerParts: string[];
   }>;
 };
 
@@ -70,6 +77,7 @@ type RawQuestionRow = {
   question_number: number;
   prompt: string;
   options: unknown;
+  metadata?: unknown;
 };
 
 type RawAnswerRow = {
@@ -156,7 +164,7 @@ export const getPublishedListeningPracticeSet = cache(async (id: string) => {
 
   const { data: questions, error: questionError } = await admin
     .from("generated_questions")
-    .select("id,question_type,question_number,prompt,options")
+    .select("id,question_type,question_number,prompt,options,metadata")
     .eq("set_type", "listening")
     .eq("set_id", set.id)
     .order("question_number", { ascending: true });
@@ -164,6 +172,26 @@ export const getPublishedListeningPracticeSet = cache(async (id: string) => {
   if (questionError) {
     throw new Error(questionError.message);
   }
+
+  const questionIds = ((questions ?? []) as RawQuestionRow[]).map(
+    (question) => question.id,
+  );
+  const { data: answers, error: answerError } = questionIds.length
+    ? await admin
+        .from("generated_answers")
+        .select("question_id,correct_answer")
+        .in("question_id", questionIds)
+    : { data: [], error: null };
+
+  if (answerError) {
+    throw new Error(answerError.message);
+  }
+
+  const answerByQuestionId = new Map(
+    ((answers ?? []) as Pick<RawAnswerRow, "question_id" | "correct_answer">[]).map(
+      (answer) => [answer.question_id, answer.correct_answer],
+    ),
+  );
 
   return {
     id: set.id,
@@ -175,7 +203,9 @@ export const getPublishedListeningPracticeSet = cache(async (id: string) => {
     audioUrl: set.audio_url,
     audioStatus: set.audio_status ?? "pending",
     estimatedTimeMinutes: estimateListeningTime(set.section),
-    questions: ((questions ?? []) as RawQuestionRow[]).map(mapQuestionRow),
+    questions: ((questions ?? []) as RawQuestionRow[]).map((question) =>
+      mapQuestionRow(question, answerByQuestionId.get(question.id)),
+    ),
   } satisfies ListeningPracticeSet;
 });
 
@@ -222,7 +252,7 @@ export async function getListeningAttemptResult({
   const { data: questions, error: questionError } = questionIds.length
     ? await admin
         .from("generated_questions")
-        .select("id,question_type,question_number,prompt,options")
+        .select("id,question_type,question_number,prompt,options,metadata")
         .in("id", questionIds)
     : { data: [], error: null };
 
@@ -284,6 +314,8 @@ export async function getListeningAttemptResult({
           isCorrect: answer.is_correct,
           explanationZh: detail?.explanation_zh ?? null,
           explanationEn: detail?.explanation_en ?? null,
+          userAnswerParts: getDisplayAnswerParts(answer.user_answer),
+          correctAnswerParts: getDisplayAnswerParts(answer.correct_answer),
         };
       })
       .filter((item): item is ListeningAttemptResult["questions"][number] =>
@@ -318,7 +350,7 @@ export function estimateListeningBand(
 
 export {
   getAcceptedAnswers,
-  isPracticeAnswerCorrect,
+  isListeningAnswerCorrect,
   normalizePracticeAnswer,
 };
 
@@ -326,13 +358,21 @@ function estimateListeningTime(section: number) {
   return section === 4 ? 12 : 10;
 }
 
-function mapQuestionRow(question: RawQuestionRow): ListeningPracticeQuestion {
+function mapQuestionRow(
+  question: RawQuestionRow,
+  correctAnswer?: string,
+): ListeningPracticeQuestion {
   return {
     id: question.id,
     number: question.question_number,
     type: question.question_type,
     prompt: question.prompt,
     options: normalizeStringArray(question.options),
+    answerCount: getListeningAnswerPartCount({
+      prompt: question.prompt,
+      metadata: question.metadata,
+      correctAnswer,
+    }),
   };
 }
 

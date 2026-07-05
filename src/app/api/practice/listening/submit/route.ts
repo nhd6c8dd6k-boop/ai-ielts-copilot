@@ -6,7 +6,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
   estimateListeningBand,
-  isPracticeAnswerCorrect,
+  isListeningAnswerCorrect,
   normalizePracticeAnswer,
 } from "@/server/services/listening-practice";
 import { apiErrorResponse } from "@/server/utils/api-error";
@@ -116,7 +116,7 @@ export async function POST(request: Request) {
     const userAnswer = normalizePracticeAnswer(input.answers[question.id] ?? "");
     const correctAnswer = answerByQuestionId.get(question.id) ?? "";
     const isCorrect = correctAnswer
-      ? isPracticeAnswerCorrect({ userAnswer, correctAnswer })
+      ? isListeningAnswerCorrect({ userAnswer, correctAnswer })
       : false;
 
     return {

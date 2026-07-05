@@ -15,6 +15,7 @@ import { AppShell } from "@/components/layout/app-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { joinAnswerParts } from "@/lib/listening-answer-parts";
 import { cn } from "@/lib/utils";
 import type { ListeningPracticeSet } from "@/server/services/listening-practice";
 
@@ -62,7 +63,7 @@ export function ListeningPracticeClient({
   const answeredCount = useMemo(
     () =>
       listeningSet.questions.filter((question) =>
-        Boolean(answers[question.id]?.trim()),
+        isQuestionAnswered(question.answerCount, answers[question.id] ?? ""),
       ).length,
     [answers, listeningSet.questions],
   );
@@ -72,6 +73,23 @@ export function ListeningPracticeClient({
       ...current,
       [questionId]: value,
     }));
+  };
+
+  const updateAnswerPart = (
+    questionId: string,
+    answerCount: number,
+    partIndex: number,
+    value: string,
+  ) => {
+    setAnswers((current) => {
+      const parts = getAnswerInputParts(current[questionId] ?? "", answerCount);
+      parts[partIndex] = value;
+
+      return {
+        ...current,
+        [questionId]: joinAnswerParts(parts),
+      };
+    });
   };
 
   const jumpToQuestion = (questionId: string) => {
@@ -252,7 +270,10 @@ export function ListeningPracticeClient({
               <div className="flex flex-wrap gap-2">
                 {listeningSet.questions.map((question) => {
                   const isActive = activeQuestionId === question.id;
-                  const isAnswered = Boolean(answers[question.id]?.trim());
+                  const isAnswered = isQuestionAnswered(
+                    question.answerCount,
+                    answers[question.id] ?? "",
+                  );
                   const isFlagged = flaggedIds.includes(question.id);
 
                   return (
@@ -339,6 +360,34 @@ export function ListeningPracticeClient({
                         </label>
                       ))}
                     </div>
+                  ) : question.answerCount > 1 ? (
+                    <div className="mt-4">
+                      <p className="mb-2 text-xs leading-5 text-slate-500">
+                        多空题请分别填写每个空。For questions with more than one
+                        blank, fill each blank separately.
+                      </p>
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        {getAnswerInputParts(
+                          answers[question.id] ?? "",
+                          question.answerCount,
+                        ).map((value, index) => (
+                          <input
+                            key={`${question.id}-${index}`}
+                            value={value}
+                            onChange={(event) =>
+                              updateAnswerPart(
+                                question.id,
+                                question.answerCount,
+                                index,
+                                event.target.value,
+                              )
+                            }
+                            placeholder={`Answer ${index + 1}`}
+                            className="h-10 min-w-0 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-950 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+                          />
+                        ))}
+                      </div>
+                    </div>
                   ) : (
                     <input
                       value={answers[question.id] ?? ""}
@@ -393,4 +442,20 @@ function formatQuestionType(type: string) {
     .split("_")
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
+}
+
+function getAnswerInputParts(value: string, answerCount: number) {
+  const parts = value.split(/\s*;\s*/);
+
+  return Array.from({ length: answerCount }, (_, index) => parts[index] ?? "");
+}
+
+function isQuestionAnswered(answerCount: number, value: string) {
+  if (answerCount <= 1) {
+    return Boolean(value.trim());
+  }
+
+  return getAnswerInputParts(value, answerCount).every((part) =>
+    Boolean(part.trim()),
+  );
 }

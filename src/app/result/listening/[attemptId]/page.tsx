@@ -116,8 +116,24 @@ export default async function ListeningResultPage({
               </div>
 
               <div className="mt-4 grid gap-3 md:grid-cols-2">
-                <AnswerBox label="Your answer" value={question.userAnswer || "-"} />
-                <AnswerBox label="Correct answer" value={question.correctAnswer} />
+                <AnswerBox
+                  label={
+                    question.userAnswerParts.length > 1
+                      ? "Your answers"
+                      : "Your answer"
+                  }
+                  value={question.userAnswer || "-"}
+                  parts={question.userAnswerParts}
+                />
+                <AnswerBox
+                  label={
+                    question.correctAnswerParts.length > 1
+                      ? "Correct answers"
+                      : "Correct answer"
+                  }
+                  value={question.correctAnswer}
+                  parts={question.correctAnswerParts}
+                />
               </div>
 
               <div className="mt-4 rounded-md bg-white p-4 text-sm leading-6 text-slate-700">
@@ -160,11 +176,32 @@ function Metric({ label, value }: { label: string; value: string }) {
   );
 }
 
-function AnswerBox({ label, value }: { label: string; value: string }) {
+function AnswerBox({
+  label,
+  value,
+  parts,
+}: {
+  label: string;
+  value: string;
+  parts?: string[];
+}) {
+  const displayParts = parts?.filter(Boolean) ?? [];
+
   return (
     <div className="rounded-md border border-slate-200 bg-white p-3">
       <p className="text-xs text-slate-500">{label}</p>
-      <p className="mt-1 text-sm font-medium text-slate-950">{value}</p>
+      {displayParts.length > 1 ? (
+        <ol className="mt-2 space-y-1 text-sm font-medium text-slate-950">
+          {displayParts.map((part, index) => (
+            <li key={`${part}-${index}`} className="flex gap-2">
+              <span className="text-slate-400">{index + 1}.</span>
+              <span>{part}</span>
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <p className="mt-1 text-sm font-medium text-slate-950">{value}</p>
+      )}
     </div>
   );
 }
