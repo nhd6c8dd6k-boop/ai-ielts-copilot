@@ -8,14 +8,14 @@ import { Button } from "@/components/ui/button";
 const betaFeatures = [
   "Reading practice with automatic scoring",
   "Listening audio practice with automatic scoring",
-  "Writing AI feedback with browser draft saving",
+  "Writing Task 1 / Task 2 with AI feedback",
   "Dashboard progress tracking",
 ];
 
 const plannedFeatures = [
   "More published practice sets",
   "Pro plans and usage limits",
-  "Domestic payment options after beta",
+  "Paid plans may be added after beta testing",
 ];
 
 export default function PricingPage() {
@@ -24,15 +24,14 @@ export default function PricingPage() {
       <MarketingHeader />
       <main className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
         <div className="max-w-3xl">
-          <Badge>Beta pricing</Badge>
+          <Badge>Beta Access</Badge>
           <h1 className="mt-5 text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
             Free during beta
           </h1>
           <p className="mt-5 text-lg leading-8 text-slate-600">
-            AI IELTS Copilot is currently open for early testing. Reading and
-            Listening practice are available now, and Writing AI feedback is
-            available for beta testing. Paid Pro plans are not active during
-            this beta stage, so there are no payment buttons.
+            AI IELTS Copilot is open for early beta testing. You can try
+            Reading, Listening, Writing, and Dashboard progress tracking for
+            free while the product is being improved with early users.
           </p>
         </div>
 
@@ -47,8 +46,8 @@ export default function PricingPage() {
                   Beta Access
                 </h2>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Use the current MVP while the product is being tested with
-                  early users.
+                  Use the current beta product while the practice experience is
+                  being tested and improved.
                 </p>
               </div>
               <div className="text-right">
@@ -84,8 +83,8 @@ export default function PricingPage() {
               Pro plans are not active during beta
             </h2>
             <p className="mt-3 text-sm leading-6 text-slate-600">
-              Paid plans will be added after the beta flow is stable. Payment
-              options are intentionally disabled for now.
+              Paid plans may be added after beta testing. Payment options are
+              intentionally disabled for now, so there are no checkout buttons.
             </p>
             <ul className="mt-6 space-y-3">
               {plannedFeatures.map((feature) => (

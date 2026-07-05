@@ -10,7 +10,6 @@ import {
   LineChart,
   PenLine,
   ShieldCheck,
-  Sparkles,
   Timer,
   type LucideIcon,
 } from "lucide-react";
@@ -18,7 +17,11 @@ import { useState } from "react";
 
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { MarketingHeader } from "@/components/layout/marketing-header";
-import { SupportFooter } from "@/components/layout/support-footer";
+import {
+  SupportFooter,
+  supportEmail,
+  xiaohongshuAccount,
+} from "@/components/layout/support-footer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -60,12 +63,18 @@ type HomeCopy = {
   previewParagraphs: string[];
   questions: string[];
   steps: string[][];
+  whoTitle: string;
+  whoEyebrow: string;
+  whoItems: string[];
+  betaFreeTitle: string;
+  betaFreeText: string;
+  emailLabel: string;
+  xiaohongshuLabel: string;
   pillars: Pillar[];
   complianceBadge: string;
   complianceTitle: string;
   complianceText: string;
   complianceItems: string[];
-  modules: string[][];
 };
 
 const copy = {
@@ -75,16 +84,16 @@ const copy = {
     badge: "面向中国雅思学生",
     title: "电脑雅思练习，从这里开始",
     subtitle:
-      "用原创英文题熟悉 Computer IELTS 的做题节奏。Reading / Listening 已开放自动判分，Writing 已支持 AI 评分与反馈。Beta 阶段免费使用。",
+      "第一次准备雅思机考，不知道考试页面长什么样？AI IELTS Copilot 帮你提前熟悉 Reading、Listening 和 Writing 的练习流程。Beta 阶段免费使用，欢迎第一批同学体验。",
     availability: [
-      "Reading / Listening 已可练习并自动判分",
-      "Writing 题目和草稿保存已开放",
-      "AI 写作批改已可测试",
+      "Reading / Listening 自动判分",
+      "Writing AI 评分与反馈",
+      "Beta 免费测试中",
     ],
     betaNotice:
-      "Beta 阶段免费使用。Reading、Listening 和 Writing 已开放给第一批用户测试。",
-    primary: "开始免费练习",
-    secondary: "查看练习中心",
+      "当前是 Beta 测试版，欢迎反馈问题和建议。",
+    primary: "Start Practicing",
+    secondary: "View Practice Options",
     languageLabel: "首页语言",
     oneLine: "Practice Reading, Listening, and Writing in one place.",
     practiceCards: [
@@ -132,6 +141,19 @@ const copy = {
       ["完成做题", "在电脑雅思风格界面中计时、答题、标记和提交。"],
       ["查看复盘", "提交后查看分数、正确答案、解析和练习记录。"],
     ],
+    whoEyebrow: "Who is this for?",
+    whoTitle: "适合这些同学",
+    whoItems: [
+      "第一次考雅思，不知道机考长什么样",
+      "想自己练 Reading / Listening / Writing",
+      "想让 AI 帮忙看作文问题",
+      "想先免费体验雅思练习流程",
+    ],
+    betaFreeTitle: "Beta 免费测试中",
+    betaFreeText:
+      "AI IELTS Copilot 目前还在 Beta 测试阶段。你可以免费体验 Reading、Listening 和 Writing 练习功能。如果遇到问题、页面不好用，或者有建议，欢迎通过邮箱或小红书反馈。",
+    emailLabel: "Email",
+    xiaohongshuLabel: "小红书",
     pillars: [
       {
         title: "电脑雅思风格界面",
@@ -169,11 +191,6 @@ const copy = {
     complianceText:
       "AI IELTS Copilot 使用原创 IELTS 风格练习内容，不提供盗版真题或考试回忆。",
     complianceItems: ["原创练习内容", "管理员审核发布", "不提供盗版真题"],
-    modules: [
-      ["阅读", "练习已发布的英文文章和题目，提交后自动判分并查看解析。"],
-      ["听力", "练习已发布的英文听力题，使用音频播放器完成答题并自动判分。"],
-      ["写作", "选择已发布的 Task 1 / Task 2 题目，完成作文并获取 AI 反馈。"],
-    ],
   },
   en: {
     beta: "Beta",
@@ -181,16 +198,16 @@ const copy = {
     badge: "Built for Chinese IELTS candidates",
     title: "Computer IELTS practice starts here",
     subtitle:
-      "Practice with original English content in a Computer IELTS-style interface. Reading and Listening support automatic scoring, and Writing supports AI band feedback. Free during beta.",
+      "New to the computer test and not sure what the practice flow looks like? AI IELTS Copilot helps you practise Reading, Listening, and Writing with original English tasks. Free during beta for early testers.",
     availability: [
-      "Reading / Listening practice and auto scoring are available.",
-      "Writing prompts and draft saving are open.",
-      "AI Writing Feedback is available for beta testing.",
+      "Reading / Listening auto scoring",
+      "Writing AI scoring and feedback",
+      "Free beta testing",
     ],
     betaNotice:
-      "Free during beta. Reading, Listening, and Writing are open for early user testing.",
-    primary: "Start free practice",
-    secondary: "View Practice center",
+      "This is a beta version. Your feedback helps us improve the practice experience.",
+    primary: "Start Practicing",
+    secondary: "View Practice Options",
     languageLabel: "Homepage language",
     oneLine: "Practice Reading, Listening, and Writing in one place.",
     practiceCards: [
@@ -238,6 +255,19 @@ const copy = {
       ["Complete the test flow", "Use a Computer IELTS-style interface with timer, answers, flags, and submit."],
       ["Review your result", "See score, correct answers, explanations, and practice history."],
     ],
+    whoEyebrow: "Who is this for?",
+    whoTitle: "Built for these students",
+    whoItems: [
+      "First-time IELTS candidates who want to understand the computer test flow",
+      "Students who want to practise Reading, Listening, and Writing independently",
+      "Writers who want AI help identifying essay problems",
+      "Learners who want to try the practice experience for free during beta",
+    ],
+    betaFreeTitle: "Free beta testing",
+    betaFreeText:
+      "AI IELTS Copilot is currently in beta. You can try Reading, Listening, and Writing practice for free. If something feels unclear or inconvenient, please send feedback by email or Xiaohongshu.",
+    emailLabel: "Email",
+    xiaohongshuLabel: "Xiaohongshu",
     pillars: [
       {
         title: "Computer IELTS-style interface",
@@ -273,13 +303,8 @@ const copy = {
     complianceBadge: "Compliance first",
     complianceTitle: "Built for original IELTS style training",
     complianceText:
-      "AI IELTS Copilot uses original IELTS-style practice content and does not provide pirated official tests or exam recalls.",
+      "AI IELTS Copilot uses original IELTS-style practice content and does not provide pirated test materials or exam recalls.",
     complianceItems: ["Original practice", "Admin reviewed", "No pirated tests"],
-    modules: [
-      ["Reading", "Published passages and questions with automatic scoring."],
-      ["Listening", "Published audio practice with answer inputs and automatic scoring."],
-      ["Writing", "Published Task 1 and Task 2 prompts with draft saving and AI feedback."],
-    ],
   },
 } satisfies Record<Locale, HomeCopy>;
 
@@ -366,7 +391,7 @@ export default function Home() {
 
             <div className="mt-10 grid gap-4 md:grid-cols-3">
               {t.practiceCards.map((card, index) => {
-                const Icon = practiceIcons[index] ?? Sparkles;
+                const Icon = practiceIcons[index] ?? BookOpen;
 
                 return (
                   <div
@@ -388,6 +413,33 @@ export default function Home() {
                   </div>
                 );
               })}
+            </div>
+          </div>
+        </section>
+
+        <section className="border-b border-slate-200 bg-white">
+          <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+            <div className="max-w-2xl">
+              <Badge>{t.whoEyebrow}</Badge>
+              <h2 className="mt-5 text-3xl font-semibold tracking-tight text-slate-950">
+                {t.whoTitle}
+              </h2>
+            </div>
+            <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              {t.whoItems.map((item) => (
+                <div
+                  key={item}
+                  className="rounded-lg border border-slate-200 bg-[#fbfbf8] p-5"
+                >
+                  <CheckCircle2
+                    className="h-5 w-5 text-teal-700"
+                    aria-hidden="true"
+                  />
+                  <p className="mt-4 text-sm leading-6 text-slate-700">
+                    {item}
+                  </p>
+                </div>
+              ))}
             </div>
           </div>
         </section>
@@ -529,6 +581,45 @@ export default function Home() {
           </div>
         </section>
 
+        <section className="border-t border-slate-200 bg-[#f8faf8]">
+          <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+            <div className="rounded-lg border border-teal-200 bg-white p-6">
+              <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr] lg:items-start">
+                <div>
+                  <Badge className="bg-teal-50 text-teal-800">
+                    {t.beta}
+                  </Badge>
+                  <h2 className="mt-4 text-2xl font-semibold tracking-tight text-slate-950">
+                    {t.betaFreeTitle}
+                  </h2>
+                  <p className="mt-3 text-sm leading-6 text-slate-600">
+                    {t.betaFreeText}
+                  </p>
+                </div>
+                <div className="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-700">
+                  <p>
+                    <span className="font-medium text-slate-950">
+                      {t.emailLabel}:
+                    </span>{" "}
+                    <a
+                      href={`mailto:${supportEmail}`}
+                      className="font-medium text-teal-800 underline-offset-4 hover:underline"
+                    >
+                      {supportEmail}
+                    </a>
+                  </p>
+                  <p className="mt-2">
+                    <span className="font-medium text-slate-950">
+                      {t.xiaohongshuLabel}:
+                    </span>{" "}
+                    {xiaohongshuAccount}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section className="mx-auto grid max-w-7xl gap-4 px-4 pb-16 sm:px-6 md:grid-cols-2 xl:grid-cols-5 lg:px-8">
           {t.pillars.map((pillar) => {
             const Icon = pillar.icon;
@@ -548,29 +639,6 @@ export default function Home() {
               </div>
             );
           })}
-        </section>
-
-        <section className="mx-auto grid max-w-7xl gap-6 border-t border-slate-200 px-4 py-16 sm:px-6 lg:grid-cols-3 lg:px-8">
-          {t.modules.map(([title, description], index) => (
-            <div
-              key={title}
-              className="rounded-lg border border-slate-200 bg-white p-6"
-            >
-              <div className="mb-5 flex h-10 w-10 items-center justify-center rounded-md bg-slate-950 text-white">
-                {index === 1 ? (
-                  <Headphones className="h-5 w-5" aria-hidden="true" />
-                ) : index === 2 ? (
-                  <PenLine className="h-5 w-5" aria-hidden="true" />
-                ) : (
-                  <Sparkles className="h-5 w-5" aria-hidden="true" />
-                )}
-              </div>
-              <h2 className="text-lg font-semibold text-slate-950">{title}</h2>
-              <p className="mt-3 text-sm leading-6 text-slate-600">
-                {description}
-              </p>
-            </div>
-          ))}
         </section>
 
         <section className="border-y border-slate-200 bg-white">
