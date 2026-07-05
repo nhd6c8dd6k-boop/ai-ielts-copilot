@@ -7,13 +7,12 @@ import { Button } from "@/components/ui/button";
 
 const betaFeatures = [
   "Reading practice with automatic scoring",
-  "Listening practice with script preview and automatic scoring",
-  "Writing practice mode with browser draft saving",
+  "Listening audio practice with automatic scoring",
+  "Writing AI feedback with browser draft saving",
   "Dashboard progress tracking",
 ];
 
-const comingSoon = [
-  "AI Writing feedback",
+const plannedFeatures = [
   "More published practice sets",
   "Pro plans and usage limits",
   "Domestic payment options after beta",
@@ -31,9 +30,9 @@ export default function PricingPage() {
           </h1>
           <p className="mt-5 text-lg leading-8 text-slate-600">
             AI IELTS Copilot is currently open for early testing. Reading and
-            Listening practice are available now. Writing AI feedback and paid
-            Pro plans are coming soon, so there are no payment buttons during
-            this beta stage.
+            Listening practice are available now, and Writing AI feedback is
+            available for beta testing. Paid Pro plans are not active during
+            this beta stage, so there are no payment buttons.
           </p>
         </div>
 
@@ -82,14 +81,14 @@ export default function PricingPage() {
               <Clock className="h-5 w-5" aria-hidden="true" />
             </div>
             <h2 className="mt-5 text-xl font-semibold text-slate-950">
-              Pro plans coming soon
+              Pro plans are not active during beta
             </h2>
             <p className="mt-3 text-sm leading-6 text-slate-600">
               Paid plans will be added after the beta flow is stable. Payment
               options are intentionally disabled for now.
             </p>
             <ul className="mt-6 space-y-3">
-              {comingSoon.map((feature) => (
+              {plannedFeatures.map((feature) => (
                 <li key={feature} className="flex gap-3 text-sm text-slate-600">
                   <ShieldCheck
                     className="mt-0.5 h-4 w-4 text-slate-400"

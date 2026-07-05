@@ -18,7 +18,7 @@ export default async function ListeningPracticePage() {
       <PageHeader
         eyebrow="Listening Practice"
         title="Choose a published IELTS Listening practice set."
-        description="V1 使用后台审核发布后的原创 Listening 内容。音频未准备好时，也可以先用 script-based practice 预览完整答题流程。"
+        description="练习已发布的 IELTS-style 听力音频题，提交后自动判分并查看答案解析。"
       />
 
       {listeningSets.length ? (
@@ -38,7 +38,7 @@ export default async function ListeningPracticePage() {
                       </Badge>
                       {set.audioStatus === "pending" ? (
                         <Badge className="bg-amber-50 text-amber-800">
-                          Script preview available
+                          Transcript fallback available
                         </Badge>
                       ) : null}
                     </div>
@@ -95,8 +95,8 @@ export default async function ListeningPracticePage() {
               </h2>
               <p className="mt-3 text-sm leading-6 text-slate-600">
                 Published original Listening sets will appear here after admin
-                review. If audio is still pending, students can use the script
-                preview to test the full practice flow.
+                review. If audio is still pending, a transcript-based fallback
+                can keep the practice flow available.
               </p>
               <Button asChild variant="outline" className="mt-5">
                 <Link href="/admin">Go to Admin</Link>

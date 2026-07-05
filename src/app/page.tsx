@@ -3,6 +3,7 @@
 import Link from "next/link";
 import {
   ArrowRight,
+  BookOpen,
   CheckCircle2,
   Circle,
   Headphones,
@@ -28,6 +29,13 @@ type Pillar = {
   icon: LucideIcon;
 };
 
+type PracticeCard = {
+  title: string;
+  description: string;
+  cta: string;
+  href: string;
+};
+
 type HomeCopy = {
   beta: string;
   brand: string;
@@ -39,6 +47,10 @@ type HomeCopy = {
   primary: string;
   secondary: string;
   languageLabel: string;
+  oneLine: string;
+  practiceCards: PracticeCard[];
+  previewHeading: string;
+  previewDescription: string;
   passageTitle: string;
   timer: string;
   answerSheet: string;
@@ -61,7 +73,7 @@ const copy = {
     badge: "面向中国雅思学生",
     title: "电脑雅思练习，从这里开始",
     subtitle:
-      "用原创英文题熟悉 Computer IELTS 的做题节奏。Reading / Listening 已开放练习并自动判分；Writing 题目、草稿保存和 AI 批改已可测试。Beta 阶段免费使用。",
+      "用原创英文题熟悉 Computer IELTS 的做题节奏。Reading / Listening 已开放自动判分，Writing 已支持 AI 评分与反馈。Beta 阶段免费使用。",
     availability: [
       "Reading / Listening 已可练习并自动判分",
       "Writing 题目和草稿保存已开放",
@@ -72,6 +84,33 @@ const copy = {
     primary: "开始免费练习",
     secondary: "查看练习中心",
     languageLabel: "首页语言",
+    oneLine: "Practice Reading, Listening, and Writing in one place.",
+    practiceCards: [
+      {
+        title: "Reading Practice",
+        description:
+          "练习原创英文文章和题目，提交后自动判分并查看答案解析。",
+        cta: "Start Reading",
+        href: "/practice/reading",
+      },
+      {
+        title: "Listening Practice",
+        description:
+          "播放 IELTS-style 听力音频，完成题目后自动判分并查看复盘。",
+        cta: "Start Listening",
+        href: "/practice/listening",
+      },
+      {
+        title: "Writing Practice",
+        description:
+          "完成 Task 1 / Task 2 写作，提交后获得 AI band feedback、四项评分和改进建议。",
+        cta: "Start Writing",
+        href: "/practice/writing",
+      },
+    ],
+    previewHeading: "Computer IELTS-style interface preview",
+    previewDescription:
+      "左右分栏、计时器、答题卡和题号导航，帮助学生熟悉机考操作感。",
     passageTitle: "Reading Passage 2",
     timer: "36:42",
     answerSheet: "答题卡",
@@ -117,9 +156,9 @@ const copy = {
         icon: LineChart,
       },
       {
-        title: "Writing practice",
+        title: "Writing AI Feedback",
         description:
-          "选择已发布的 Task 1 / Task 2 题目，在浏览器中写作、保存草稿并测试 AI 批改。",
+          "选择 Task 1 / Task 2 题目完成写作，提交后获得 AI 评分、四项标准反馈、语法建议、词汇升级和 sample answer。",
         icon: PenLine,
       },
     ],
@@ -140,7 +179,7 @@ const copy = {
     badge: "Built for Chinese IELTS candidates",
     title: "Computer IELTS practice starts here",
     subtitle:
-      "Practice with original English content in a Computer IELTS-style interface. Reading and Listening are available with automatic scoring; Writing tasks, draft saving, and AI feedback are available for beta testing.",
+      "Practice with original English content in a Computer IELTS-style interface. Reading and Listening support automatic scoring, and Writing supports AI band feedback. Free during beta.",
     availability: [
       "Reading / Listening practice and auto scoring are available.",
       "Writing prompts and draft saving are open.",
@@ -151,6 +190,33 @@ const copy = {
     primary: "Start free practice",
     secondary: "View Practice center",
     languageLabel: "Homepage language",
+    oneLine: "Practice Reading, Listening, and Writing in one place.",
+    practiceCards: [
+      {
+        title: "Reading Practice",
+        description:
+          "Practice original English passages and questions, then review your score, answers, and explanations.",
+        cta: "Start Reading",
+        href: "/practice/reading",
+      },
+      {
+        title: "Listening Practice",
+        description:
+          "Play IELTS-style listening audio, answer questions, and review your score after submitting.",
+        cta: "Start Listening",
+        href: "/practice/listening",
+      },
+      {
+        title: "Writing Practice",
+        description:
+          "Complete Task 1 or Task 2 and receive AI band feedback, criteria scores, and improvement advice.",
+        cta: "Start Writing",
+        href: "/practice/writing",
+      },
+    ],
+    previewHeading: "Computer IELTS-style interface preview",
+    previewDescription:
+      "Split panes, timer, answer sheet, and question navigation help students get comfortable with the computer test flow.",
     passageTitle: "Reading Passage 2",
     timer: "36:42",
     answerSheet: "Answer Sheet",
@@ -196,9 +262,9 @@ const copy = {
         icon: LineChart,
       },
       {
-        title: "Writing practice",
+        title: "Writing AI Feedback",
         description:
-          "Published Task 1 and Task 2 prompts, draft saving, and AI feedback are available for beta testing.",
+          "Choose a Task 1 or Task 2 prompt, submit your essay, and receive AI scoring, criteria feedback, grammar advice, vocabulary upgrades, and a sample answer.",
         icon: PenLine,
       },
     ],
@@ -218,6 +284,7 @@ const copy = {
 export default function Home() {
   const [locale, setLocale] = useState<Locale>("zh");
   const t = copy[locale];
+  const practiceIcons = [BookOpen, Headphones, PenLine];
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-background">
@@ -225,9 +292,9 @@ export default function Home() {
       <main>
         <section className="relative overflow-hidden border-b border-slate-200 bg-[#f8faf8]">
           <div className="absolute inset-0 bg-[linear-gradient(to_right,#e5e7eb_1px,transparent_1px),linear-gradient(to_bottom,#e5e7eb_1px,transparent_1px)] bg-[size:72px_72px] opacity-40" />
-          <div className="relative mx-auto grid min-h-[calc(100vh-4rem)] max-w-7xl items-center gap-10 px-4 py-14 sm:px-6 lg:grid-cols-[0.88fr_1.12fr] lg:px-8">
-            <div className="min-w-0 max-w-2xl">
-              <div className="flex flex-wrap items-center gap-3">
+          <div className="relative mx-auto flex min-h-[calc(100vh-4rem)] max-w-7xl flex-col justify-center px-4 py-14 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-4xl text-center">
+              <div className="flex flex-wrap items-center justify-center gap-3">
                 <Badge className="border-slate-950 bg-slate-950 text-white">
                   {t.beta}
                 </Badge>
@@ -254,13 +321,16 @@ export default function Home() {
                   ))}
                 </div>
               </div>
-              <h1 className="mt-6 max-w-4xl break-words text-5xl font-semibold tracking-tight text-slate-950 sm:text-6xl lg:text-7xl">
+              <h1 className="mt-6 break-words text-5xl font-semibold tracking-tight text-slate-950 sm:text-6xl lg:text-7xl">
                 {t.title}
               </h1>
-              <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">
+              <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-slate-600">
                 {t.subtitle}
               </p>
-              <div className="mt-6 grid max-w-2xl gap-2 sm:grid-cols-3">
+              <p className="mt-3 text-sm font-medium text-teal-800">
+                {t.oneLine}
+              </p>
+              <div className="mx-auto mt-6 grid max-w-3xl gap-2 sm:grid-cols-3">
                 {t.availability.map((item) => (
                   <div
                     key={item}
@@ -270,13 +340,13 @@ export default function Home() {
                   </div>
                 ))}
               </div>
-              <div className="mt-5 rounded-lg border border-teal-200 bg-white/85 p-4 text-sm leading-6 text-slate-700">
+              <div className="mx-auto mt-5 max-w-3xl rounded-lg border border-teal-200 bg-white/85 p-4 text-sm leading-6 text-slate-700">
                 <span className="font-medium text-teal-800">{t.beta}</span>
                 <span className="ml-2">{t.betaNotice}</span>
               </div>
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
                 <Button asChild size="lg">
-                  <Link href="/practice/reading">
+                  <Link href="/practice">
                     {t.primary}
                     <ArrowRight className="h-4 w-4" aria-hidden="true" />
                   </Link>
@@ -287,7 +357,44 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="min-w-0 max-w-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xl">
+            <div className="mt-10 grid gap-4 md:grid-cols-3">
+              {t.practiceCards.map((card, index) => {
+                const Icon = practiceIcons[index] ?? Sparkles;
+
+                return (
+                  <div
+                    key={card.title}
+                    className="flex min-w-0 flex-col rounded-lg border border-slate-200 bg-white/90 p-5 text-left shadow-sm"
+                  >
+                    <div className="flex h-10 w-10 items-center justify-center rounded-md bg-slate-950 text-white">
+                      <Icon className="h-5 w-5" aria-hidden="true" />
+                    </div>
+                    <h2 className="mt-5 text-lg font-semibold text-slate-950">
+                      {card.title}
+                    </h2>
+                    <p className="mt-3 flex-1 text-sm leading-6 text-slate-600">
+                      {card.description}
+                    </p>
+                    <Button asChild className="mt-5 w-full">
+                      <Link href={card.href}>{card.cta}</Link>
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        <section className="border-b border-slate-200 bg-white">
+          <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-3xl text-center">
+              <Badge>{t.previewHeading}</Badge>
+              <p className="mt-4 text-sm leading-6 text-slate-600">
+                {t.previewDescription}
+              </p>
+            </div>
+
+            <div className="mx-auto mt-8 min-w-0 max-w-5xl overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg">
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-slate-950 px-5 py-3 text-white">
                 <div className="flex min-w-0 flex-wrap items-center gap-3">
                   <Badge className="border-white/20 bg-white/10 text-white">

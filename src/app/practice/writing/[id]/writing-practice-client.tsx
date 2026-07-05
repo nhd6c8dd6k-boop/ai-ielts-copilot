@@ -65,7 +65,7 @@ export function WritingPracticeClient({
     if (!isAiFeedbackAvailable) {
       setError(null);
       setNotice(
-        "AI Writing feedback is not available yet. You can still practice writing, but scoring is coming soon.",
+        "AI Writing feedback is temporarily unavailable. You can still practice writing and save your draft.",
       );
       return;
     }
@@ -166,8 +166,8 @@ export function WritingPracticeClient({
 
       {!isAiFeedbackAvailable ? (
         <div className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-800">
-          AI Writing feedback is not available yet. You can still practice
-          writing, but scoring is coming soon.
+          AI Writing feedback is temporarily unavailable. You can still practice
+          writing and save your draft.
         </div>
       ) : null}
 

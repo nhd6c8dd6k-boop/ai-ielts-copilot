@@ -205,8 +205,8 @@ export function ListeningPracticeClient({
                 </div>
               ) : (
                 <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-800">
-                  Audio is not ready yet. You can use the script preview for
-                  testing.
+                  Audio is not ready yet. A transcript-based practice fallback
+                  is available for this set.
                 </div>
               )}
             </div>
@@ -234,7 +234,7 @@ export function ListeningPracticeClient({
             ) : (
               <article className="p-6 text-[15px] leading-8 text-slate-700">
                 <h2 className="mb-4 text-sm font-semibold text-slate-950">
-                  Script Preview
+                  Transcript Practice
                 </h2>
                 {listeningSet.script.split(/\n{2,}/).map((paragraph, index) => (
                   <p key={`${paragraph.slice(0, 24)}-${index}`} className="mb-5">

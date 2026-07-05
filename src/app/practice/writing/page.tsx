@@ -18,7 +18,7 @@ export default async function WritingPracticePage() {
       <PageHeader
         eyebrow="Writing Practice"
         title="Choose a published IELTS Writing task."
-        description="Writing practice mode is available now. You can write in the browser and save a draft; AI feedback is coming soon once OpenAI is configured."
+        description="Write Task 1 or Task 2 essays in the browser, save drafts, and submit for AI band feedback when scoring is available."
       />
 
       {tasks.length ? (
@@ -37,8 +37,8 @@ export default async function WritingPracticePage() {
                           Band {task.bandTarget}
                         </Badge>
                       ) : null}
-                      <Badge className="bg-amber-50 text-amber-800">
-                        AI Feedback Coming Soon
+                      <Badge className="bg-teal-50 text-teal-800">
+                        AI Feedback available
                       </Badge>
                     </div>
                   </div>
@@ -88,8 +88,8 @@ export default async function WritingPracticePage() {
               </h2>
               <p className="mt-3 text-sm leading-6 text-slate-600">
                 Published Writing tasks will appear here after admin review.
-                Until AI feedback is configured, Writing remains a safe
-                practice-and-draft workspace.
+                Writing tasks will include prompt details, draft saving, and AI
+                feedback when scoring is available.
               </p>
             </div>
           </CardContent>

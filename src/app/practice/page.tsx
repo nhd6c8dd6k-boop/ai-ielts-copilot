@@ -28,7 +28,7 @@ export default async function PracticePage() {
     {
       title: "Listening Practice",
       description:
-        "Work through published listening sets with answer inputs, timer, automatic scoring, and script preview while audio is pending.",
+        "Work through published IELTS-style listening audio with answer inputs, timer, automatic scoring, and result review.",
       count: stats.listeningCount,
       countLabel: "published sets",
       href: "/practice/listening",
@@ -36,19 +36,19 @@ export default async function PracticePage() {
       icon: Headphones,
       badge:
         stats.pendingListeningCount > 0
-          ? "Script preview available"
+          ? "Transcript fallback available"
           : "Audio-ready when available",
     },
     {
       title: "Writing Practice",
       description:
-        "Choose a published Task 1 or Task 2 prompt, write in the browser, and save your draft during beta.",
+        "Choose a published Task 1 or Task 2 prompt, write in the browser, and submit for AI band feedback.",
       count: stats.writingCount,
       countLabel: "published tasks",
       href: "/practice/writing",
       cta: "Practice Writing",
       icon: PenLine,
-      badge: "AI Feedback Coming Soon",
+      badge: "AI Feedback available",
     },
     {
       title: "Full Exam",
@@ -68,7 +68,7 @@ export default async function PracticePage() {
       <PageHeader
         eyebrow="Practice"
         title="Choose a beta practice mode"
-        description="Reading and Listening are ready for real practice with published original content. Writing is available for timed drafting, with AI feedback coming soon."
+        description="Reading, Listening, and Writing are ready for beta practice with published original content, automatic scoring, and AI Writing feedback."
       />
 
       <div className="grid gap-4 xl:grid-cols-4">
