@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import {
   BookOpen,
   CalendarDays,
@@ -38,6 +39,12 @@ const skillLabels: Record<PracticeSkill, string> = {
   listening: "Listening",
 };
 
+const recentPracticeTabs = [
+  { skill: "reading", label: "Reading", href: "/practice/reading" },
+  { skill: "listening", label: "Listening", href: "/practice/listening" },
+  { skill: "writing", label: "Writing", href: "/practice/writing" },
+] as const;
+
 const syncLabels = {
   loading: "正在同步学习记录",
   local: "本地记录",
@@ -48,6 +55,8 @@ const syncLabels = {
 
 export default function DashboardPage() {
   const { history, syncMode } = useSyncedPracticeHistory();
+  const [activeRecentSkill, setActiveRecentSkill] =
+    useState<PracticeSkill>("reading");
 
   const completedSets = history.length;
   const latestAttempt = history[0];
@@ -67,15 +76,18 @@ export default function DashboardPage() {
     }),
   );
   const skillRows = buildSkillRows(history);
-  const readingAttempts = history
-    .filter((item) => item.skill === "reading")
-    .slice(0, 5);
-  const listeningAttempts = history
-    .filter((item) => item.skill === "listening")
-    .slice(0, 5);
-  const writingAttempts = history
-    .filter((item) => item.skill === "writing")
-    .slice(0, 5);
+  const recentAttemptsBySkill = recentPracticeTabs.reduce(
+    (groups, tab) => ({
+      ...groups,
+      [tab.skill]: history.filter((item) => item.skill === tab.skill),
+    }),
+    {} as Record<PracticeSkill, PracticeHistoryItem[]>,
+  );
+  const activeRecentAttempts =
+    recentAttemptsBySkill[activeRecentSkill].slice(0, 6);
+  const activeRecentTab = recentPracticeTabs.find(
+    (tab) => tab.skill === activeRecentSkill,
+  );
 
   const stats = [
     {
@@ -227,11 +239,33 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Recent practice</CardTitle>
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <CardTitle>Recent practice</CardTitle>
+              <div className="flex max-w-full gap-2 overflow-x-auto rounded-md bg-slate-100 p-1">
+                {recentPracticeTabs.map((tab) => {
+                  const isActive = activeRecentSkill === tab.skill;
+
+                  return (
+                    <button
+                      key={tab.skill}
+                      type="button"
+                      className={
+                        isActive
+                          ? "whitespace-nowrap rounded px-3 py-2 text-sm font-medium text-white bg-slate-950"
+                          : "whitespace-nowrap rounded px-3 py-2 text-sm font-medium text-slate-600 hover:bg-white hover:text-slate-950"
+                      }
+                      onClick={() => setActiveRecentSkill(tab.skill)}
+                    >
+                      {tab.label} ({recentAttemptsBySkill[tab.skill].length})
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </CardHeader>
           <CardContent className="space-y-3">
-            {history.length ? (
-              history.slice(0, 6).map((item) => (
+            {activeRecentAttempts.length ? (
+              activeRecentAttempts.map((item) => (
                 <div
                   key={item.id}
                   className="flex flex-col gap-2 rounded-md border border-slate-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between"
@@ -252,147 +286,34 @@ export default function DashboardPage() {
                     <p className="mt-1 text-xs text-slate-500">
                       {new Date(item.createdAt).toLocaleDateString()}
                     </p>
+                    {item.resultUrl ? (
+                      <Button asChild variant="outline" size="sm" className="mt-2">
+                        <Link href={item.resultUrl}>View Result</Link>
+                      </Button>
+                    ) : null}
                   </div>
                 </div>
               ))
             ) : (
               <div className="rounded-md border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
-                <p className="text-sm text-slate-500">
-                  完成一次 Reading、Listening 或 Writing 后，这里会显示学习记录。
+                <p className="text-sm font-medium text-slate-950">
+                  No {skillLabels[activeRecentSkill]} practice yet.
                 </p>
+                <p className="mt-2 text-sm text-slate-500">
+                  暂时没有 {skillLabels[activeRecentSkill]} 练习记录。
+                </p>
+                {activeRecentTab ? (
+                  <Button asChild className="mt-5">
+                    <Link href={activeRecentTab.href}>
+                      Start {activeRecentTab.label}
+                    </Link>
+                  </Button>
+                ) : null}
               </div>
             )}
           </CardContent>
         </Card>
       </div>
-
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle>Recent Reading attempts</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {readingAttempts.length ? (
-            readingAttempts.map((item) => (
-              <div
-                key={item.id}
-                className="flex flex-col gap-3 rounded-md border border-slate-200 bg-white p-4 lg:flex-row lg:items-center lg:justify-between"
-              >
-                <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge>Reading</Badge>
-                    <Badge className="bg-white">
-                      Band {item.bandEstimate.toFixed(1)}
-                    </Badge>
-                    <p className="text-sm font-medium text-slate-950">
-                      {getDisplayTitle(item.title)}
-                    </p>
-                  </div>
-                  <p className="mt-2 text-xs text-slate-500">
-                    {item.scoreLabel} ·{" "}
-                    {new Date(item.createdAt).toLocaleDateString()}
-                  </p>
-                </div>
-                {item.resultUrl ? (
-                  <Button asChild variant="outline" size="sm">
-                    <Link href={item.resultUrl}>View Result</Link>
-                  </Button>
-                ) : null}
-              </div>
-            ))
-          ) : (
-            <div className="rounded-md border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
-              <p className="text-sm text-slate-500">
-                完成一次真实 Reading Practice 后，这里会显示成绩和结果入口。
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle>Recent Writing attempts</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {writingAttempts.length ? (
-            writingAttempts.map((item) => (
-              <div
-                key={item.id}
-                className="flex flex-col gap-3 rounded-md border border-slate-200 bg-white p-4 lg:flex-row lg:items-center lg:justify-between"
-              >
-                <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge>Writing</Badge>
-                    <Badge className="bg-white">
-                      Band {item.bandEstimate.toFixed(1)}
-                    </Badge>
-                    <p className="text-sm font-medium text-slate-950">
-                      {getDisplayTitle(item.title)}
-                    </p>
-                  </div>
-                  <p className="mt-2 text-xs text-slate-500">
-                    {item.detail} · {new Date(item.createdAt).toLocaleDateString()}
-                  </p>
-                </div>
-                {item.resultUrl ? (
-                  <Button asChild variant="outline" size="sm">
-                    <Link href={item.resultUrl}>View Result</Link>
-                  </Button>
-                ) : null}
-              </div>
-            ))
-          ) : (
-            <div className="rounded-md border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
-              <p className="text-sm text-slate-500">
-                完成一次真实 Writing Practice 后，这里会显示 AI 批改结果入口。
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle>Recent Listening attempts</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {listeningAttempts.length ? (
-            listeningAttempts.map((item) => (
-              <div
-                key={item.id}
-                className="flex flex-col gap-3 rounded-md border border-slate-200 bg-white p-4 lg:flex-row lg:items-center lg:justify-between"
-              >
-                <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge>Listening</Badge>
-                    <Badge className="bg-white">
-                      Band {item.bandEstimate.toFixed(1)}
-                    </Badge>
-                    <p className="text-sm font-medium text-slate-950">
-                      {getDisplayTitle(item.title)}
-                    </p>
-                  </div>
-                  <p className="mt-2 text-xs text-slate-500">
-                    {item.scoreLabel} ·{" "}
-                    {new Date(item.createdAt).toLocaleDateString()}
-                  </p>
-                </div>
-                {item.resultUrl ? (
-                  <Button asChild variant="outline" size="sm">
-                    <Link href={item.resultUrl}>View Result</Link>
-                  </Button>
-                ) : null}
-              </div>
-            ))
-          ) : (
-            <div className="rounded-md border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
-              <p className="text-sm text-slate-500">
-                完成一次真实 Listening Practice 后，这里会显示成绩和结果入口。
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
     </AppShell>
   );
 }

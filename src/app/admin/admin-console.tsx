@@ -26,6 +26,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type {
   AdminContentItem,
   AdminContentStatus,
+  AdminContentType,
   AdminDashboardData,
 } from "@/server/services/admin-dashboard";
 import { readingBands, readingQuestionTypes, readingTopics } from "@/features/ai-reading/constants";
@@ -41,6 +42,15 @@ import {
 
 type AdminTab = "generate" | "content" | "users" | "prompts" | "logs";
 type GenerateMode = "reading" | "listening" | "writing";
+
+const contentTypeTabs: Array<{
+  type: AdminContentType;
+  label: string;
+}> = [
+  { type: "reading", label: "Reading" },
+  { type: "listening", label: "Listening" },
+  { type: "writing", label: "Writing" },
+];
 
 type GenerateApiResponse = {
   results: Array<{
@@ -261,6 +271,8 @@ export function AdminConsole({
 }) {
   const [activeTab, setActiveTab] = useState<AdminTab>("generate");
   const [content, setContent] = useState(data.content);
+  const [activeContentType, setActiveContentType] =
+    useState<AdminContentType>("reading");
   const [logs, setLogs] = useState<string[]>(data.logs);
   const [isMutatingId, setIsMutatingId] = useState<string | null>(null);
   const [isAudioGeneratingId, setIsAudioGeneratingId] = useState<string | null>(
@@ -306,6 +318,21 @@ export function AdminConsole({
       prompts: data.prompts.length,
     }),
     [content, data.prompts.length, data.users.length],
+  );
+  const contentTypeCounts = useMemo(
+    () =>
+      contentTypeTabs.reduce(
+        (result, tab) => ({
+          ...result,
+          [tab.type]: content.filter((item) => item.type === tab.type).length,
+        }),
+        {} as Record<AdminContentType, number>,
+      ),
+    [content],
+  );
+  const filteredContent = useMemo(
+    () => content.filter((item) => item.type === activeContentType),
+    [activeContentType, content],
   );
 
   const updateContentStatus = async (
@@ -811,116 +838,159 @@ export function AdminConsole({
         {activeTab === "content" ? (
           <Card>
             <CardHeader>
-              <CardTitle>Content review queue</CardTitle>
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <CardTitle>Content review queue</CardTitle>
+                <div className="flex max-w-full gap-2 overflow-x-auto rounded-md bg-slate-100 p-1">
+                  {contentTypeTabs.map((tab) => {
+                    const isActive = activeContentType === tab.type;
+
+                    return (
+                      <button
+                        key={tab.type}
+                        type="button"
+                        className={
+                          isActive
+                            ? "whitespace-nowrap rounded px-3 py-2 text-sm font-medium text-white bg-slate-950"
+                            : "whitespace-nowrap rounded px-3 py-2 text-sm font-medium text-slate-600 hover:bg-white hover:text-slate-950"
+                        }
+                        onClick={() => setActiveContentType(tab.type)}
+                      >
+                        {tab.label} ({contentTypeCounts[tab.type]})
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="space-y-3">
-              {content.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex flex-col gap-3 rounded-md border border-slate-200 bg-white p-4 lg:flex-row lg:items-center lg:justify-between"
-                >
-                  <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Badge>{item.skill}</Badge>
-                      <Badge className="bg-white">{item.source}</Badge>
-                      <Badge
-                        className={
-                          item.status === "published"
-                            ? "bg-teal-50 text-teal-800"
-                            : item.status === "archived"
-                              ? "bg-slate-100 text-slate-500"
-                              : "bg-amber-50 text-amber-800"
-                        }
-                      >
-                        {formatContentStatus(item.status)}
-                      </Badge>
-                      {item.type === "listening" ? (
-                        <Badge className="bg-slate-50 text-slate-700">
-                          <Headphones className="h-3.5 w-3.5" aria-hidden="true" />
-                          {formatAudioStatus(item.audioStatus)}
+              {filteredContent.length ? (
+                filteredContent.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex flex-col gap-3 rounded-md border border-slate-200 bg-white p-4 lg:flex-row lg:items-center lg:justify-between"
+                  >
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge>{item.skill}</Badge>
+                        <Badge className="bg-white">{item.source}</Badge>
+                        <Badge
+                          className={
+                            item.status === "published"
+                              ? "bg-teal-50 text-teal-800"
+                              : item.status === "archived"
+                                ? "bg-slate-100 text-slate-500"
+                                : "bg-amber-50 text-amber-800"
+                          }
+                        >
+                          {formatContentStatus(item.status)}
                         </Badge>
-                      ) : null}
+                        {item.type === "listening" ? (
+                          <Badge className="bg-slate-50 text-slate-700">
+                            <Headphones
+                              className="h-3.5 w-3.5"
+                              aria-hidden="true"
+                            />
+                            {formatAudioStatus(item.audioStatus)}
+                          </Badge>
+                        ) : null}
+                      </div>
+                      <p className="mt-3 text-sm font-medium text-slate-950">
+                        {item.title}
+                      </p>
                     </div>
-                    <p className="mt-3 text-sm font-medium text-slate-950">
-                      {item.title}
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={isDetailLoadingId === item.id}
-                      onClick={() => viewContentDetail(item)}
-                    >
-                      {isDetailLoadingId === item.id ? (
-                        <Loader2
-                          className="h-4 w-4 animate-spin"
-                          aria-hidden="true"
-                        />
-                      ) : (
-                        <Eye className="h-4 w-4" aria-hidden="true" />
-                      )}
-                      View
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={isDetailLoadingId === item.id}
-                      onClick={() => editContentDetail(item)}
-                    >
-                      <Pencil className="h-4 w-4" aria-hidden="true" />
-                      Edit
-                    </Button>
-                    {item.type === "listening" ? (
+                    <div className="flex flex-wrap gap-2">
                       <Button
                         size="sm"
                         variant="outline"
-                        disabled={
-                          isMutatingId === item.id ||
-                          isAudioGeneratingId === item.id
-                        }
-                        onClick={() => generateListeningAudio(item)}
+                        disabled={isDetailLoadingId === item.id}
+                        onClick={() => viewContentDetail(item)}
                       >
-                        {isAudioGeneratingId === item.id ? (
+                        {isDetailLoadingId === item.id ? (
                           <Loader2
                             className="h-4 w-4 animate-spin"
                             aria-hidden="true"
                           />
                         ) : (
-                          <Headphones className="h-4 w-4" aria-hidden="true" />
+                          <Eye className="h-4 w-4" aria-hidden="true" />
                         )}
-                        {item.audioStatus === "ready"
-                          ? "Regenerate Audio"
-                          : "Generate Audio"}
+                        View
                       </Button>
-                    ) : null}
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={isMutatingId === item.id}
-                      onClick={() => updateContentStatus(item, "published")}
-                    >
-                      Publish
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={isMutatingId === item.id}
-                      onClick={() => updateContentStatus(item, "archived")}
-                    >
-                      Archive
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      disabled={isMutatingId === item.id}
-                      onClick={() => deleteContent(item)}
-                    >
-                      <Trash2 className="h-4 w-4" aria-hidden="true" />
-                    </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={isDetailLoadingId === item.id}
+                        onClick={() => editContentDetail(item)}
+                      >
+                        <Pencil className="h-4 w-4" aria-hidden="true" />
+                        Edit
+                      </Button>
+                      {item.type === "listening" ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={
+                            isMutatingId === item.id ||
+                            isAudioGeneratingId === item.id
+                          }
+                          onClick={() => generateListeningAudio(item)}
+                        >
+                          {isAudioGeneratingId === item.id ? (
+                            <Loader2
+                              className="h-4 w-4 animate-spin"
+                              aria-hidden="true"
+                            />
+                          ) : (
+                            <Headphones className="h-4 w-4" aria-hidden="true" />
+                          )}
+                          {item.audioStatus === "ready"
+                            ? "Regenerate Audio"
+                            : "Generate Audio"}
+                        </Button>
+                      ) : null}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={isMutatingId === item.id}
+                        onClick={() => updateContentStatus(item, "published")}
+                      >
+                        Publish
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={isMutatingId === item.id}
+                        onClick={() => updateContentStatus(item, "archived")}
+                      >
+                        Archive
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={isMutatingId === item.id}
+                        onClick={() => deleteContent(item)}
+                      >
+                        <Trash2 className="h-4 w-4" aria-hidden="true" />
+                      </Button>
+                    </div>
                   </div>
+                ))
+              ) : (
+                <div className="rounded-md border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
+                  <p className="text-sm font-medium text-slate-950">
+                    No{" "}
+                    {
+                      contentTypeTabs.find(
+                        (tab) => tab.type === activeContentType,
+                      )?.label
+                    }{" "}
+                    content yet.
+                  </p>
+                  <p className="mt-2 text-sm text-slate-500">
+                    Generate or create content, then it will appear in this
+                    category.
+                  </p>
                 </div>
-              ))}
+              )}
             </CardContent>
           </Card>
         ) : null}

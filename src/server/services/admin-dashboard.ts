@@ -104,7 +104,7 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
         source: formatSource(item.source_type),
         status: item.status as AdminContentStatus,
       })),
-    ].slice(0, 30),
+    ],
     users: (users.data ?? []).map((user) => {
       const subscription = subscriptionByUserId.get(user.id);
 
