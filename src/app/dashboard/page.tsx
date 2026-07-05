@@ -240,7 +240,7 @@ export default function DashboardPage() {
                     <div className="flex flex-wrap items-center gap-2">
                       <Badge>{skillLabels[item.skill]}</Badge>
                       <p className="text-sm font-medium text-slate-950">
-                        {item.title}
+                        {getDisplayTitle(item.title)}
                       </p>
                     </div>
                     <p className="mt-2 text-xs text-slate-500">{item.detail}</p>
@@ -284,7 +284,7 @@ export default function DashboardPage() {
                       Band {item.bandEstimate.toFixed(1)}
                     </Badge>
                     <p className="text-sm font-medium text-slate-950">
-                      {item.title}
+                      {getDisplayTitle(item.title)}
                     </p>
                   </div>
                   <p className="mt-2 text-xs text-slate-500">
@@ -327,7 +327,7 @@ export default function DashboardPage() {
                       Band {item.bandEstimate.toFixed(1)}
                     </Badge>
                     <p className="text-sm font-medium text-slate-950">
-                      {item.title}
+                      {getDisplayTitle(item.title)}
                     </p>
                   </div>
                   <p className="mt-2 text-xs text-slate-500">
@@ -369,7 +369,7 @@ export default function DashboardPage() {
                       Band {item.bandEstimate.toFixed(1)}
                     </Badge>
                     <p className="text-sm font-medium text-slate-950">
-                      {item.title}
+                      {getDisplayTitle(item.title)}
                     </p>
                   </div>
                   <p className="mt-2 text-xs text-slate-500">
@@ -459,4 +459,24 @@ function getAverageAccuracy(
     items.reduce((total, item) => total + (item.accuracy ?? 0), 0) /
       items.length,
   );
+}
+
+function getDisplayTitle(title: string) {
+  const normalizedTitle = title.trim();
+  const legacyTitles: Record<string, string> = {
+    "Test Reading Set - Urban Green Spaces":
+      "Urban Green Spaces and Public Health",
+    "Test Listening Set - Library Membership": "Library Membership Application",
+  };
+
+  if (legacyTitles[normalizedTitle]) {
+    return legacyTitles[normalizedTitle];
+  }
+
+  return normalizedTitle
+    .replace(/^Test\s+/i, "")
+    .replace(/^Demo\s+/i, "")
+    .replace(/^Sample\s+/i, "")
+    .replace(/\s+-\s+Demo$/i, "")
+    .replace(/\s+-\s+Sample$/i, "");
 }

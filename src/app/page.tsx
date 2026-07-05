@@ -61,14 +61,14 @@ const copy = {
     badge: "面向中国雅思学生",
     title: "电脑雅思练习，从这里开始",
     subtitle:
-      "用原创英文题熟悉 Computer IELTS 的做题节奏。Reading / Listening 已开放练习并自动判分；Writing 练习模式已开放，AI Writing Feedback coming soon。Beta 阶段免费使用。",
+      "用原创英文题熟悉 Computer IELTS 的做题节奏。Reading / Listening 已开放练习并自动判分；Writing 题目、草稿保存和 AI 批改已可测试。Beta 阶段免费使用。",
     availability: [
       "Reading / Listening 已可练习并自动判分",
-      "Writing 练习模式已开放",
-      "AI 写作批改即将上线",
+      "Writing 题目和草稿保存已开放",
+      "AI 写作批改已可测试",
     ],
     betaNotice:
-      "Beta 阶段免费使用。Reading 和 Listening 已开放，Writing 练习已开放，AI 写作批改即将上线。",
+      "Beta 阶段免费使用。Reading、Listening 和 Writing 已开放给第一批用户测试。",
     primary: "开始免费练习",
     secondary: "查看练习中心",
     languageLabel: "首页语言",
@@ -119,7 +119,7 @@ const copy = {
       {
         title: "Writing practice",
         description:
-          "写作题目和草稿保存已开放，AI Writing Feedback 将在后续版本上线。",
+          "选择已发布的 Task 1 / Task 2 题目，在浏览器中写作、保存草稿并测试 AI 批改。",
         icon: PenLine,
       },
     ],
@@ -130,8 +130,8 @@ const copy = {
     complianceItems: ["原创练习内容", "管理员审核发布", "不提供盗版真题"],
     modules: [
       ["阅读", "练习已发布的英文文章和题目，提交后自动判分并查看解析。"],
-      ["听力", "练习已发布的英文听力题；音频未就绪时可用 script preview 测试流程。"],
-      ["写作", "选择已发布的 Task 1 / Task 2 题目，在浏览器中写作并保存草稿。"],
+      ["听力", "练习已发布的英文听力题，使用音频播放器完成答题并自动判分。"],
+      ["写作", "选择已发布的 Task 1 / Task 2 题目，完成作文并获取 AI 反馈。"],
     ],
   },
   en: {
@@ -140,14 +140,14 @@ const copy = {
     badge: "Built for Chinese IELTS candidates",
     title: "Computer IELTS practice starts here",
     subtitle:
-      "Practice with original English content in a Computer IELTS-style interface. Reading and Listening are available with automatic scoring; Writing practice mode is open, and AI Writing Feedback is coming soon. Free during beta.",
+      "Practice with original English content in a Computer IELTS-style interface. Reading and Listening are available with automatic scoring; Writing tasks, draft saving, and AI feedback are available for beta testing.",
     availability: [
       "Reading / Listening practice and auto scoring are available.",
-      "Writing practice mode is open.",
-      "AI Writing Feedback is coming soon.",
+      "Writing prompts and draft saving are open.",
+      "AI Writing Feedback is available for beta testing.",
     ],
     betaNotice:
-      "Free during beta. Reading and Listening are available, Writing practice is open, and AI Writing Feedback is coming soon.",
+      "Free during beta. Reading, Listening, and Writing are open for early user testing.",
     primary: "Start free practice",
     secondary: "View Practice center",
     languageLabel: "Homepage language",
@@ -198,7 +198,7 @@ const copy = {
       {
         title: "Writing practice",
         description:
-          "Published Writing prompts and draft saving are open now. AI Writing Feedback is coming soon.",
+          "Published Task 1 and Task 2 prompts, draft saving, and AI feedback are available for beta testing.",
         icon: PenLine,
       },
     ],
@@ -209,8 +209,8 @@ const copy = {
     complianceItems: ["Original practice", "Admin reviewed", "No pirated tests"],
     modules: [
       ["Reading", "Published passages and questions with automatic scoring."],
-      ["Listening", "Published scripts and questions with script preview when audio is pending."],
-      ["Writing", "Published Task 1 and Task 2 prompts with draft saving."],
+      ["Listening", "Published audio practice with answer inputs and automatic scoring."],
+      ["Writing", "Published Task 1 and Task 2 prompts with draft saving and AI feedback."],
     ],
   },
 } satisfies Record<Locale, HomeCopy>;
@@ -220,13 +220,13 @@ export default function Home() {
   const t = copy[locale];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen overflow-x-hidden bg-background">
       <MarketingHeader />
       <main>
         <section className="relative overflow-hidden border-b border-slate-200 bg-[#f8faf8]">
           <div className="absolute inset-0 bg-[linear-gradient(to_right,#e5e7eb_1px,transparent_1px),linear-gradient(to_bottom,#e5e7eb_1px,transparent_1px)] bg-[size:72px_72px] opacity-40" />
           <div className="relative mx-auto grid min-h-[calc(100vh-4rem)] max-w-7xl items-center gap-10 px-4 py-14 sm:px-6 lg:grid-cols-[0.88fr_1.12fr] lg:px-8">
-            <div className="max-w-2xl">
+            <div className="min-w-0 max-w-2xl">
               <div className="flex flex-wrap items-center gap-3">
                 <Badge className="border-slate-950 bg-slate-950 text-white">
                   {t.beta}
@@ -254,7 +254,7 @@ export default function Home() {
                   ))}
                 </div>
               </div>
-              <h1 className="mt-6 max-w-4xl text-5xl font-semibold tracking-tight text-slate-950 sm:text-6xl lg:text-7xl">
+              <h1 className="mt-6 max-w-4xl break-words text-5xl font-semibold tracking-tight text-slate-950 sm:text-6xl lg:text-7xl">
                 {t.title}
               </h1>
               <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">
@@ -287,22 +287,22 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xl">
+            <div className="min-w-0 max-w-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xl">
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-slate-950 px-5 py-3 text-white">
-                <div className="flex items-center gap-3">
+                <div className="flex min-w-0 flex-wrap items-center gap-3">
                   <Badge className="border-white/20 bg-white/10 text-white">
                     Computer IELTS-style
                   </Badge>
                   <span className="text-sm font-medium">{t.passageTitle}</span>
                 </div>
-                <div className="flex items-center gap-2 rounded-md bg-white px-3 py-2 text-sm font-semibold text-slate-950">
+                <div className="flex shrink-0 items-center gap-2 rounded-md bg-white px-3 py-2 text-sm font-semibold text-slate-950">
                   <Timer className="h-4 w-4" aria-hidden="true" />
                   {t.timer}
                 </div>
               </div>
 
-              <div className="grid min-h-[460px] lg:grid-cols-[1.08fr_0.92fr]">
-                <div className="border-b border-slate-200 p-5 lg:border-b-0 lg:border-r">
+              <div className="grid min-h-[460px] min-w-0 lg:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)]">
+                <div className="min-w-0 border-b border-slate-200 p-5 lg:border-b-0 lg:border-r">
                   <div className="mb-4 flex items-center justify-between border-b border-slate-200 pb-3 text-sm">
                     <div className="font-medium text-slate-950">
                       Reading passage
@@ -322,7 +322,7 @@ export default function Home() {
                   </div>
                 </div>
 
-                <div className="bg-slate-50 p-5">
+                <div className="min-w-0 bg-slate-50 p-5">
                   <div className="mb-4 flex items-center justify-between">
                     <div className="text-sm font-medium text-slate-950">
                       {t.answerSheet}
@@ -374,11 +374,13 @@ export default function Home() {
                       </div>
                     ))}
                   </div>
-                  <div className="mt-5 flex items-center justify-between gap-3 border-t border-slate-200 pt-4">
-                    <div className="text-xs text-slate-500">
+                  <div className="mt-5 flex flex-col gap-3 border-t border-slate-200 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0 text-xs text-slate-500">
                       Flag, review, then submit when ready.
                     </div>
-                    <Button size="sm">Submit Practice</Button>
+                    <Button className="shrink-0" size="sm">
+                      Submit Practice
+                    </Button>
                   </div>
                 </div>
               </div>
