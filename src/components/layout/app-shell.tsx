@@ -1,5 +1,4 @@
-import Link from "next/link";
-
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { AppSidebarNav } from "@/components/layout/app-sidebar-nav";
 import { AccountStatus } from "@/features/auth/account-status";
 
@@ -9,15 +8,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <aside className="fixed inset-y-0 left-0 hidden w-64 border-r border-slate-200 bg-white px-4 py-5 lg:block">
         <div className="flex h-full flex-col">
           <div>
-            <Link
-              href="/"
-              className="flex items-center gap-2 px-2 text-sm font-semibold"
-            >
-              <span className="flex h-8 w-8 items-center justify-center rounded-md bg-slate-950 text-white">
-                AI
-              </span>
-              IELTS Copilot
-            </Link>
+            <BrandLogo className="px-2" />
             <AppSidebarNav />
           </div>
           <div className="mt-auto">

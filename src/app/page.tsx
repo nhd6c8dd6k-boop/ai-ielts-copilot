@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { MarketingHeader } from "@/components/layout/marketing-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -298,7 +299,6 @@ export default function Home() {
                 <Badge className="border-slate-950 bg-slate-950 text-white">
                   {t.beta}
                 </Badge>
-                <Badge className="bg-white/80">{t.brand}</Badge>
                 <Badge className="bg-white/80">{t.badge}</Badge>
                 <div
                   className="inline-flex rounded-md border border-slate-200 bg-white p-1"
@@ -320,6 +320,12 @@ export default function Home() {
                     </button>
                   ))}
                 </div>
+              </div>
+              <div className="mt-6 flex justify-center">
+                <BrandLogo
+                  className="rounded-lg border border-slate-200 bg-white/80 px-3 py-2 shadow-sm"
+                  textClassName="text-base"
+                />
               </div>
               <h1 className="mt-6 break-words text-5xl font-semibold tracking-tight text-slate-950 sm:text-6xl lg:text-7xl">
                 {t.title}

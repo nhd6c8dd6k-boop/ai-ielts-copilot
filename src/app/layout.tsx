@@ -9,6 +9,11 @@ export const metadata: Metadata = {
   },
   description:
     "AI generated IELTS practice, estimated scoring, and Computer IELTS simulation.",
+  icons: {
+    icon: "/icon.svg",
+    shortcut: "/icon.svg",
+    apple: "/icon.svg",
+  },
 };
 
 export default function RootLayout({
