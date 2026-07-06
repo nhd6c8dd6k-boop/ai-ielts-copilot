@@ -55,8 +55,8 @@ export function WritingTaskVisual({
   }
 
   return (
-    <div className="space-y-4">
-      <section>
+    <div className="min-w-0 space-y-4 overflow-hidden">
+      <section className="min-w-0">
         <div className="mb-2 flex items-center gap-2">
           <Badge className="bg-white">Task instruction</Badge>
         </div>
@@ -80,14 +80,14 @@ function StructuredVisual({ visual }: { visual: StructuredWritingVisualData }) {
   const label = getStructuredVisualLabel(visual.type);
 
   return (
-    <section>
+    <section className="min-w-0">
       <div className="mb-2 flex items-center gap-2">
         <Badge className="bg-teal-50 text-teal-800">{label}</Badge>
         <span className="text-xs font-medium text-slate-500">
           Visual information
         </span>
       </div>
-      <div className="rounded-md border border-slate-200 bg-white p-4">
+      <div className="min-w-0 overflow-hidden rounded-md border border-slate-200 bg-white p-4">
         <div className="mb-4">
           <h3 className="font-medium text-slate-950">{visual.title}</h3>
           {visual.description ? (
@@ -193,7 +193,7 @@ function StructuredTable({ visual }: { visual: StructuredWritingVisualData }) {
   ];
 
   return (
-    <div className="max-w-full overflow-x-auto rounded-md border border-slate-200">
+    <div className="w-full min-w-0 max-w-full overflow-x-auto rounded-md border border-slate-200">
       <table className="min-w-[640px] border-collapse text-sm sm:min-w-full">
         <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
           <tr>
@@ -237,7 +237,7 @@ function StructuredTable({ visual }: { visual: StructuredWritingVisualData }) {
 
 function MarkdownTableVisual({ table }: { table: MarkdownTableVisualData }) {
   return (
-    <section>
+    <section className="min-w-0">
       <div className="mb-2 flex items-center gap-2">
         <Badge className="bg-teal-50 text-teal-800">{table.label}</Badge>
         <span className="text-xs font-medium text-slate-500">
@@ -245,7 +245,7 @@ function MarkdownTableVisual({ table }: { table: MarkdownTableVisualData }) {
         </span>
       </div>
 
-      <div className="max-w-full overflow-x-auto rounded-md border border-slate-200 bg-white">
+      <div className="w-full min-w-0 max-w-full overflow-x-auto rounded-md border border-slate-200 bg-white">
         <table className="min-w-[640px] border-collapse text-sm sm:min-w-full">
           <caption className="caption-top border-b border-slate-200 bg-slate-50 px-4 py-3 text-left font-medium text-slate-950">
             {table.title}
