@@ -1,5 +1,6 @@
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { AppSidebarNav } from "@/components/layout/app-sidebar-nav";
+import { MobileAppNav } from "@/components/layout/mobile-app-nav";
 import { SupportFooter } from "@/components/layout/support-footer";
 import { AccountStatus } from "@/features/auth/account-status";
 
@@ -19,7 +20,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </aside>
       <main className="lg:pl-64">
         <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-          <div className="mb-4 lg:hidden">
+          <div className="mb-4 space-y-4 lg:hidden">
+            <div className="flex items-center justify-between gap-3">
+              <BrandLogo compact />
+              <MobileAppNav />
+            </div>
             <AccountStatus />
           </div>
           {children}
