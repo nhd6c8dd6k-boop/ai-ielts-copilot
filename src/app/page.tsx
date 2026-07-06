@@ -52,6 +52,12 @@ type HomeCopy = {
   practiceCards: PracticeCard[];
   previewHeading: string;
   previewDescription: string;
+  previewPassageLabel: string;
+  previewScrollableBadge: string;
+  previewAutoScoringBadge: string;
+  previewAnswerPlaceholder: string;
+  previewSubmitHint: string;
+  previewSubmit: string;
   passageTitle: string;
   timer: string;
   answerSheet: string;
@@ -90,36 +96,42 @@ const copy = {
     ],
     betaNotice:
       "当前是 Beta 测试版，欢迎反馈问题和建议。",
-    primary: "Start Practicing",
-    secondary: "View Practice Options",
+    primary: "开始练习",
+    secondary: "查看练习项目",
     languageLabel: "首页语言",
-    oneLine: "Practice Reading, Listening, and Writing in one place.",
+    oneLine: "一站式练习 Reading、Listening 和 Writing。",
     practiceCards: [
       {
         title: "Reading Practice",
         description:
           "练习原创英文文章和题目，提交后自动判分并查看答案解析。",
-        cta: "Start Reading",
+        cta: "开始 Reading",
         href: "/practice/reading",
       },
       {
         title: "Listening Practice",
         description:
           "播放 IELTS-style 听力音频，完成题目后自动判分并查看复盘。",
-        cta: "Start Listening",
+        cta: "开始 Listening",
         href: "/practice/listening",
       },
       {
         title: "Writing Practice",
         description:
           "完成 Task 1 / Task 2 写作，提交后获得 AI band feedback、四项评分和改进建议。",
-        cta: "Start Writing",
+        cta: "开始 Writing",
         href: "/practice/writing",
       },
     ],
-    previewHeading: "Computer IELTS-style interface preview",
+    previewHeading: "机考风格界面预览",
     previewDescription:
       "左右分栏、计时器、答题卡和题号导航，帮助学生熟悉机考操作感。",
+    previewPassageLabel: "阅读文章",
+    previewScrollableBadge: "可滚动文章",
+    previewAutoScoringBadge: "自动判分预览",
+    previewAnswerPlaceholder: "输入答案",
+    previewSubmitHint: "标记、检查，然后提交练习。",
+    previewSubmit: "提交练习",
     passageTitle: "Reading Passage 2",
     timer: "36:42",
     answerSheet: "答题卡",
@@ -134,14 +146,14 @@ const copy = {
       "3. Complete the sentence below.",
       "4. Choose the correct answer.",
     ],
-    stepsBadge: "3 steps",
+    stepsBadge: "三步开始",
     stepsTitle: "三步开始练习",
     steps: [
       ["选择练习项目", "选择 Reading、Listening 或 Writing。"],
       ["完成练习", "在接近机考的页面中完成题目或写作任务。"],
       ["查看结果", "查看分数、答案解析，以及 Writing AI 反馈。"],
     ],
-    whoEyebrow: "Who is this for?",
+    whoEyebrow: "适合谁",
     whoTitle: "适合这些同学",
     whoItems: [
       "第一次考雅思，不知道机考长什么样",
@@ -152,7 +164,7 @@ const copy = {
     betaFreeTitle: "Beta 免费测试中",
     betaFreeText:
       "AI IELTS Copilot 目前还在 Beta 测试阶段。你可以免费体验 Reading、Listening 和 Writing 练习功能。如果遇到问题、页面不好用，或者有建议，欢迎通过邮箱或小红书反馈。",
-    emailLabel: "Email",
+    emailLabel: "邮箱",
     xiaohongshuLabel: "小红书",
     pillars: [
       {
@@ -174,15 +186,15 @@ const copy = {
         icon: ShieldCheck,
       },
       {
-        title: "Dashboard 学习记录",
+        title: "学习记录 Dashboard",
         description:
           "自动记录最近练习、分数和学习轨迹，帮助学生看见自己的进度。",
         icon: LineChart,
       },
       {
-        title: "Writing AI Feedback",
+        title: "Writing AI 反馈",
         description:
-          "选择 Task 1 / Task 2 题目完成写作，提交后获得 AI 评分、四项标准反馈、语法建议、词汇升级和 sample answer。",
+          "选择 Task 1 / Task 2 题目完成写作，提交后获得 AI 评分、四项标准反馈、语法建议、词汇升级和参考范文。",
         icon: PenLine,
       },
     ],
@@ -236,6 +248,12 @@ const copy = {
     previewHeading: "Computer IELTS-style interface preview",
     previewDescription:
       "Split panes, timer, answer sheet, and question navigation help students get comfortable with the computer test flow.",
+    previewPassageLabel: "Reading passage",
+    previewScrollableBadge: "Scrollable passage",
+    previewAutoScoringBadge: "Auto scoring preview",
+    previewAnswerPlaceholder: "Type your answer",
+    previewSubmitHint: "Flag, review, then submit when ready.",
+    previewSubmit: "Submit Practice",
     passageTitle: "Reading Passage 2",
     timer: "36:42",
     answerSheet: "Answer Sheet",
@@ -467,9 +485,11 @@ export default function Home() {
                 <div className="min-w-0 border-b border-slate-200 p-5 lg:border-b-0 lg:border-r">
                   <div className="mb-4 flex items-center justify-between border-b border-slate-200 pb-3 text-sm">
                     <div className="font-medium text-slate-950">
-                      Reading passage
+                      {t.previewPassageLabel}
                     </div>
-                    <Badge className="bg-slate-50">Scrollable passage</Badge>
+                    <Badge className="bg-slate-50">
+                      {t.previewScrollableBadge}
+                    </Badge>
                   </div>
                   <div className="space-y-4 text-sm leading-7 text-slate-700">
                     <p className="font-medium text-slate-950">{t.previewTitle}</p>
@@ -489,7 +509,9 @@ export default function Home() {
                     <div className="text-sm font-medium text-slate-950">
                       {t.answerSheet}
                     </div>
-                    <Badge className="bg-white">Auto scoring preview</Badge>
+                    <Badge className="bg-white">
+                      {t.previewAutoScoringBadge}
+                    </Badge>
                   </div>
                   <div className="space-y-3">
                     {t.questions.map((question, index) => (
@@ -528,7 +550,7 @@ export default function Home() {
                               </div>
                             ) : (
                               <div className="mt-3 h-9 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-400">
-                                Type your answer
+                                {t.previewAnswerPlaceholder}
                               </div>
                             )}
                           </div>
@@ -538,10 +560,10 @@ export default function Home() {
                   </div>
                   <div className="mt-5 flex flex-col gap-3 border-t border-slate-200 pt-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0 text-xs text-slate-500">
-                      Flag, review, then submit when ready.
+                      {t.previewSubmitHint}
                     </div>
                     <Button className="shrink-0" size="sm">
-                      Submit Practice
+                      {t.previewSubmit}
                     </Button>
                   </div>
                 </div>

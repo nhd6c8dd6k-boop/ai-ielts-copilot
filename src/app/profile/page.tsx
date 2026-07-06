@@ -286,9 +286,15 @@ export default function ProfilePage() {
                   }
                   className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-950 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
                 >
-                  <option>Free</option>
-                  <option>Pro Monthly</option>
-                  <option>Pro Yearly</option>
+                  <option value="Free">
+                    {t("profile.plan.free", "Free during beta")}
+                  </option>
+                  <option value="Pro Monthly">
+                    {t("profile.plan.proMonthly", "Pro Monthly")}
+                  </option>
+                  <option value="Pro Yearly">
+                    {t("profile.plan.proYearly", "Pro Yearly")}
+                  </option>
                 </select>
               </div>
               <div className="sm:col-span-2">
