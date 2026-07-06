@@ -12,9 +12,9 @@ import {
 import {
   getMessage,
   languageStorageKey,
-  languages,
   type Language,
 } from "@/lib/i18n/messages";
+import { getHtmlLang, languageCookieName } from "@/lib/i18n/language";
 
 type LanguageContextValue = {
   language: Language;
@@ -24,33 +24,26 @@ type LanguageContextValue = {
 
 const LanguageContext = createContext<LanguageContextValue | null>(null);
 
-function getInitialLanguage(): Language {
-  if (typeof window === "undefined") {
-    return "zh";
-  }
-
-  const stored = window.localStorage.getItem(languageStorageKey);
-
-  if (stored && languages.includes(stored as Language)) {
-    return stored as Language;
-  }
-
-  return window.navigator.language.toLowerCase().startsWith("zh") ? "zh" : "en";
-}
-
-export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguageState] =
-    useState<Language>(getInitialLanguage);
+export function LanguageProvider({
+  children,
+  initialLanguage,
+}: {
+  children: React.ReactNode;
+  initialLanguage: Language;
+}) {
+  const [language, setLanguageState] = useState<Language>(initialLanguage);
 
   const setLanguage = useCallback((nextLanguage: Language) => {
     setLanguageState(nextLanguage);
     window.localStorage.setItem(languageStorageKey, nextLanguage);
-    document.cookie = `ai_ielts_lang=${nextLanguage}; path=/; max-age=31536000; SameSite=Lax`;
-    document.documentElement.lang = nextLanguage === "zh" ? "zh-CN" : "en";
+    document.cookie = `${languageCookieName}=${nextLanguage}; path=/; max-age=31536000; SameSite=Lax`;
+    document.documentElement.lang = getHtmlLang(nextLanguage);
   }, []);
 
   useEffect(() => {
-    document.documentElement.lang = language === "zh" ? "zh-CN" : "en";
+    window.localStorage.setItem(languageStorageKey, language);
+    document.cookie = `${languageCookieName}=${language}; path=/; max-age=31536000; SameSite=Lax`;
+    document.documentElement.lang = getHtmlLang(language);
   }, [language]);
 
   const value = useMemo<LanguageContextValue>(

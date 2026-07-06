@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { LogOut, UserRound } from "lucide-react";
 
+import { useI18n } from "@/components/i18n/language-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -28,6 +29,7 @@ const planLabels: Record<string, string> = {
 };
 
 export function AccountStatus() {
+  const { t } = useI18n();
   const [mode, setMode] = useState<AuthMode>("loading");
   const [user, setUser] = useState<SessionUser | null>(null);
   const [isSigningOut, setIsSigningOut] = useState(false);
@@ -96,14 +98,16 @@ export function AccountStatus() {
     return (
       <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
         <p className="text-xs text-slate-500">
-          {mode === "error" ? "账号状态暂时不可用" : "未登录，当前使用本地记录"}
+          {mode === "error"
+            ? t("auth.statusUnavailable", "Account status is temporarily unavailable")
+            : t("auth.localRecords", "Not signed in, using local records")}
         </p>
         <div className="mt-3 grid grid-cols-2 gap-2">
           <Button asChild size="sm" variant="outline">
-            <Link href="/login">登录</Link>
+            <Link href="/login">{t("auth.signIn", "Sign in")}</Link>
           </Button>
           <Button asChild size="sm">
-            <Link href="/register">注册</Link>
+            <Link href="/register">{t("auth.register", "Register")}</Link>
           </Button>
         </div>
       </div>
@@ -121,7 +125,7 @@ export function AccountStatus() {
             {displayName}
           </p>
           <p className="truncate text-xs text-slate-500">
-            {mode === "demo" ? "Demo account" : user?.email}
+            {mode === "demo" ? t("auth.demoAccount", "Demo account") : user?.email}
           </p>
         </div>
       </div>
@@ -135,7 +139,9 @@ export function AccountStatus() {
           disabled={isSigningOut}
         >
           <LogOut className="h-4 w-4" aria-hidden="true" />
-          {isSigningOut ? "退出中" : "退出"}
+          {isSigningOut
+            ? t("nav.signingOut", "Signing out")
+            : t("nav.signOut", "Sign out")}
         </Button>
       </div>
     </div>

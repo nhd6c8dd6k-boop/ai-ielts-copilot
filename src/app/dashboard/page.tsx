@@ -77,7 +77,7 @@ export default function DashboardPage() {
       band: Number((getSkillAverage(history, skill) ?? 0).toFixed(1)),
     }),
   );
-  const skillRows = buildSkillRows(history);
+  const skillRows = buildSkillRows(history, t);
   const recentAttemptsBySkill = recentPracticeTabs.reduce(
     (groups, tab) => ({
       ...groups,
@@ -360,7 +360,10 @@ function capitalize(value: string) {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
-function buildSkillRows(history: PracticeHistoryItem[]) {
+function buildSkillRows(
+  history: PracticeHistoryItem[],
+  t: (key: string, fallback?: string) => string,
+) {
   const readingAverage = getSkillAverage(history, "reading");
   const writingAverage = getSkillAverage(history, "writing");
   const listeningAverage = getSkillAverage(history, "listening");
@@ -368,24 +371,48 @@ function buildSkillRows(history: PracticeHistoryItem[]) {
   return [
     {
       skill: "Reading",
-      status: readingAverage ? `Band ${readingAverage.toFixed(1)}` : "未开始",
+      status: readingAverage
+        ? `Band ${readingAverage.toFixed(1)}`
+        : t("dashboard.skill.notStarted", "Not started"),
       action: readingAverage
-        ? "继续做一套不同题型的阅读，观察正确率是否稳定。"
-        : "先选择一套已发布的 Reading 练习，建立初始阅读水平。",
+        ? t(
+            "dashboard.skill.readingActionActive",
+            "Review answer explanations and focus on question types you missed most often.",
+          )
+        : t(
+            "dashboard.skill.readingActionEmpty",
+            "Start with one Reading practice set to build your initial reading baseline.",
+          ),
     },
     {
       skill: "Writing",
-      status: writingAverage ? `Band ${writingAverage.toFixed(1)}` : "未开始",
+      status: writingAverage
+        ? `Band ${writingAverage.toFixed(1)}`
+        : t("dashboard.skill.notStarted", "Not started"),
       action: writingAverage
-        ? "根据 AI 反馈重写 introduction 和一个主体段。"
-        : "选择一篇已发布的 Writing 题目，先完成作文练习。",
+        ? t(
+            "dashboard.skill.writingActionActive",
+            "Use AI feedback to identify repeated grammar, vocabulary, and structure issues.",
+          )
+        : t(
+            "dashboard.skill.writingActionEmpty",
+            "Choose a Writing task and complete your first essay practice.",
+          ),
     },
     {
       skill: "Listening",
-      status: listeningAverage ? `Band ${listeningAverage.toFixed(1)}` : "未开始",
+      status: listeningAverage
+        ? `Band ${listeningAverage.toFixed(1)}`
+        : t("dashboard.skill.notStarted", "Not started"),
       action: listeningAverage
-        ? "继续练习不同 Section，特别关注拼写和数字信息。"
-        : "选择一套已发布的 Listening 练习，建立听力基线。",
+        ? t(
+            "dashboard.skill.listeningActionActive",
+            "Practise with audio and review spelling, numbers, and short-answer accuracy.",
+          )
+        : t(
+            "dashboard.skill.listeningActionEmpty",
+            "Start with one Listening practice set to build your listening baseline.",
+          ),
     },
   ];
 }

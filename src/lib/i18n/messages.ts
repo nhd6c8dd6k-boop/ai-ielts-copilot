@@ -160,6 +160,10 @@ export const messages: Record<Language, Record<string, string>> = {
     "auth.sendResetEmail": "Send reset email",
     "auth.backToLogin": "Back to login",
     "auth.remembered": "Remembered it?",
+    "auth.statusUnavailable": "Account status is temporarily unavailable",
+    "auth.localRecords": "Not signed in, using local records",
+    "auth.register": "Register",
+    "auth.demoAccount": "Demo account",
 
     "dashboard.recentPractice": "Recent Practice",
     "dashboard.readingEmpty": "No Reading practice yet.",
@@ -188,6 +192,19 @@ export const messages: Record<Language, Record<string, string>> = {
     "dashboard.viewResult": "View Result",
     "dashboard.emptyChart":
       "Your chart will appear after your first practice attempt.",
+    "dashboard.skill.notStarted": "Not started",
+    "dashboard.skill.readingActionActive":
+      "Review answer explanations and focus on question types you missed most often.",
+    "dashboard.skill.readingActionEmpty":
+      "Start with one Reading practice set to build your initial reading baseline.",
+    "dashboard.skill.writingActionActive":
+      "Use AI feedback to identify repeated grammar, vocabulary, and structure issues.",
+    "dashboard.skill.writingActionEmpty":
+      "Choose a Writing task and complete your first essay practice.",
+    "dashboard.skill.listeningActionActive":
+      "Practise with audio and review spelling, numbers, and short-answer accuracy.",
+    "dashboard.skill.listeningActionEmpty":
+      "Start with one Listening practice set to build your listening baseline.",
 
     "result.score": "Score",
     "result.correctAnswers": "Correct answers",
@@ -408,6 +425,10 @@ export const messages: Record<Language, Record<string, string>> = {
     "auth.sendResetEmail": "发送重置邮件",
     "auth.backToLogin": "返回登录",
     "auth.remembered": "想起来了？",
+    "auth.statusUnavailable": "账号状态暂时不可用",
+    "auth.localRecords": "未登录，当前使用本地记录",
+    "auth.register": "注册",
+    "auth.demoAccount": "Demo account",
 
     "dashboard.recentPractice": "最近练习",
     "dashboard.readingEmpty": "暂时没有 Reading 练习记录。",
@@ -435,6 +456,13 @@ export const messages: Record<Language, Record<string, string>> = {
     "dashboard.skillFocus": "技能重点",
     "dashboard.viewResult": "查看结果",
     "dashboard.emptyChart": "完成第一次练习后，图表会自动出现。",
+    "dashboard.skill.notStarted": "未开始",
+    "dashboard.skill.readingActionActive": "继续做一套不同题型的阅读，观察正确率是否稳定。",
+    "dashboard.skill.readingActionEmpty": "先选择一套已发布的 Reading 练习，建立初始阅读水平。",
+    "dashboard.skill.writingActionActive": "根据 AI 反馈重写 introduction 和一个主体段。",
+    "dashboard.skill.writingActionEmpty": "选择一篇已发布的 Writing 题目，先完成作文练习。",
+    "dashboard.skill.listeningActionActive": "继续练习不同 Section，特别关注拼写和数字信息。",
+    "dashboard.skill.listeningActionEmpty": "选择一套已发布的 Listening 练习，建立听力基线。",
 
     "result.score": "分数",
     "result.correctAnswers": "正确答案",
