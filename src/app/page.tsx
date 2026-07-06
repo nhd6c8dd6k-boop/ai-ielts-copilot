@@ -58,6 +58,8 @@ type HomeCopy = {
   previewTitle: string;
   previewParagraphs: string[];
   questions: string[];
+  stepsBadge: string;
+  stepsTitle: string;
   steps: string[][];
   whoTitle: string;
   whoEyebrow: string;
@@ -132,10 +134,12 @@ const copy = {
       "3. Complete the sentence below.",
       "4. Choose the correct answer.",
     ],
+    stepsBadge: "3 steps",
+    stepsTitle: "三步开始练习",
     steps: [
-      ["选择练习", "进入 Practice，选择 Reading、Listening 或 Writing。"],
-      ["完成做题", "在电脑雅思风格界面中计时、答题、标记和提交。"],
-      ["查看复盘", "提交后查看分数、正确答案、解析和练习记录。"],
+      ["选择练习项目", "选择 Reading、Listening 或 Writing。"],
+      ["完成练习", "在接近机考的页面中完成题目或写作任务。"],
+      ["查看结果", "查看分数、答案解析，以及 Writing AI 反馈。"],
     ],
     whoEyebrow: "Who is this for?",
     whoTitle: "适合这些同学",
@@ -246,10 +250,21 @@ const copy = {
       "3. Complete the sentence below.",
       "4. Choose the correct answer.",
     ],
+    stepsBadge: "3 steps",
+    stepsTitle: "Start practicing in 3 steps",
     steps: [
-      ["Choose a practice mode", "Open Practice and select Reading, Listening, or Writing."],
-      ["Complete the test flow", "Use a Computer IELTS-style interface with timer, answers, flags, and submit."],
-      ["Review your result", "See score, correct answers, explanations, and practice history."],
+      [
+        "Choose a skill",
+        "Pick Reading, Listening, or Writing based on what you want to practise.",
+      ],
+      [
+        "Complete the practice",
+        "Work through the questions or writing task in a computer-based IELTS-style interface.",
+      ],
+      [
+        "Review your results",
+        "Check your score, answers, explanations, and AI writing feedback where available.",
+      ],
     ],
     whoEyebrow: "Who is this for?",
     whoTitle: "Built for these students",
@@ -537,9 +552,9 @@ export default function Home() {
 
         <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
           <div className="max-w-2xl">
-            <Badge>3 steps</Badge>
+            <Badge>{t.stepsBadge}</Badge>
             <h2 className="mt-5 text-3xl font-semibold tracking-tight text-slate-950">
-              从选择练习到查看复盘，一条流程完成
+              {t.stepsTitle}
             </h2>
           </div>
           <div className="mt-8 grid gap-4 md:grid-cols-3">

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { CalendarDays, CheckCircle2, Crown, Save, Target } from "lucide-react";
 
+import { useI18n } from "@/components/i18n/language-provider";
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -32,14 +33,6 @@ type ProfileApiResponse = {
   error?: string;
 };
 
-const syncLabels: Record<ProfileSyncMode, string> = {
-  loading: "正在检查同步状态",
-  local: "本地保存",
-  supabase: "已同步到账号",
-  anonymous: "未登录，本地保存",
-  error: "云端同步失败",
-};
-
 function mergeApiProfile(
   currentProfile: StudyProfile,
   apiProfile: ApiProfile | null | undefined,
@@ -62,6 +55,7 @@ function mergeApiProfile(
 }
 
 export default function ProfilePage() {
+  const { t } = useI18n();
   const [profile, setProfile] = useState<StudyProfile>(() => readStudyProfile());
   const [saved, setSaved] = useState(false);
   const [syncMode, setSyncMode] = useState<ProfileSyncMode>("loading");
@@ -135,6 +129,23 @@ export default function ProfilePage() {
     }));
   };
 
+  const syncLabels: Record<ProfileSyncMode, string> = {
+    loading: t("profile.sync.loading", "Checking sync status"),
+    local: t("profile.sync.local", "Saved locally"),
+    supabase: t("profile.sync.supabase", "Synced to account"),
+    anonymous: t("profile.sync.anonymous", "Not signed in, saved locally"),
+    error: t("profile.sync.error", "Cloud sync failed"),
+  };
+
+  const learningPreferences = [
+    t("profile.preference.englishContent", "Practice content stays in English"),
+    t("profile.preference.chineseSupport", "Chinese explanations and study advice"),
+    t(
+      "profile.preference.computerIelts",
+      "Computer IELTS-style practice first",
+    ),
+  ];
+
   const submitProfile = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     saveStudyProfile(profile);
@@ -178,16 +189,21 @@ export default function ProfilePage() {
   return (
     <AppShell>
       <PageHeader
-        eyebrow="Profile"
-        title="个人学习资料"
-        description="保存目标分、考试日期、地区和会员状态。未登录时保存在本机，登录后会同步到账号。"
+        eyebrow={t("profile.eyebrow", "Profile")}
+        title={t("profile.title", "Profile")}
+        description={t(
+          "profile.description",
+          "Manage your target band, exam date, region, and beta access. When signed in, your profile syncs to your account.",
+        )}
       />
 
       <div className="grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between gap-3">
-              <CardTitle>Candidate details</CardTitle>
+              <CardTitle>
+                {t("profile.accountInformation", "Account information")}
+              </CardTitle>
               <Badge
                 className={
                   syncMode === "error"
@@ -202,7 +218,9 @@ export default function ProfilePage() {
           <CardContent>
             <form className="grid gap-4 sm:grid-cols-2" onSubmit={submitProfile}>
               <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="displayName">Display name</Label>
+                <Label htmlFor="displayName">
+                  {t("profile.displayName", "Display name")}
+                </Label>
                 <Input
                   id="displayName"
                   value={profile.displayName}
@@ -212,7 +230,9 @@ export default function ProfilePage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="targetBand">Target band</Label>
+                <Label htmlFor="targetBand">
+                  {t("profile.targetBand", "Target band")}
+                </Label>
                 <Input
                   id="targetBand"
                   value={profile.targetBand}
@@ -222,7 +242,9 @@ export default function ProfilePage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="examDate">Exam date</Label>
+                <Label htmlFor="examDate">
+                  {t("profile.examDate", "Exam date")}
+                </Label>
                 <Input
                   id="examDate"
                   type="date"
@@ -231,7 +253,9 @@ export default function ProfilePage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="country">Country</Label>
+                <Label htmlFor="country">
+                  {t("profile.country", "Country")}
+                </Label>
                 <Input
                   id="country"
                   value={profile.country}
@@ -239,7 +263,9 @@ export default function ProfilePage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="timezone">Timezone</Label>
+                <Label htmlFor="timezone">
+                  {t("profile.timezone", "Timezone")}
+                </Label>
                 <Input
                   id="timezone"
                   value={profile.timezone}
@@ -249,7 +275,9 @@ export default function ProfilePage() {
                 />
               </div>
               <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="plan">Membership</Label>
+                <Label htmlFor="plan">
+                  {t("profile.subscription", "Subscription")}
+                </Label>
                 <select
                   id="plan"
                   value={profile.plan}
@@ -266,12 +294,16 @@ export default function ProfilePage() {
               <div className="sm:col-span-2">
                 <Button type="submit" disabled={isSaving}>
                   <Save className="h-4 w-4" aria-hidden="true" />
-                  {isSaving ? "保存中" : "保存资料"}
+                  {isSaving
+                    ? t("profile.saving", "Saving")
+                    : t("profile.saveProfile", "Save profile")}
                 </Button>
                 {saved ? (
                   <span className="ml-3 inline-flex items-center gap-1 text-sm text-teal-700">
                     <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-                    {syncMode === "supabase" ? "已保存并同步" : "已保存到本地"}
+                    {syncMode === "supabase"
+                      ? t("profile.savedSynced", "Saved and synced")
+                      : t("profile.savedLocal", "Saved locally")}
                   </span>
                 ) : null}
               </div>
@@ -281,27 +313,42 @@ export default function ProfilePage() {
 
         <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-1">
           <ProfileStat
-            title="Target Band"
+            title={t("profile.targetBand", "Target band")}
             value={profile.targetBand || "-"}
-            detail="目标分会用于后续自适应推荐"
+            detail={t(
+              "profile.targetBandDetail",
+              "Your target band helps shape future practice recommendations.",
+            )}
             icon={Target}
           />
           <ProfileStat
-            title="Exam Countdown"
+            title={t("profile.examCountdown", "Exam countdown")}
             value={
               daysUntilExam === null
-                ? "Not set"
+                ? t("profile.notSet", "Not set")
                 : daysUntilExam >= 0
-                  ? `${daysUntilExam} days`
-                  : "Past"
+                  ? t("profile.days", "{count} days").replace(
+                      "{count}",
+                      String(daysUntilExam),
+                    )
+                  : t("profile.past", "Past")
             }
-            detail={profile.examDate || "设置考试日期后显示倒计时"}
+            detail={
+              profile.examDate ||
+              t(
+                "profile.examDateDetail",
+                "Set an exam date to show the countdown.",
+              )
+            }
             icon={CalendarDays}
           />
           <ProfileStat
-            title="Membership"
+            title={t("profile.subscription", "Subscription")}
             value={profile.plan}
-            detail="Stripe 接入后会自动同步真实订阅状态"
+            detail={t(
+              "profile.subscriptionDetail",
+              "Beta access is free. Paid plans may be added after beta testing.",
+            )}
             icon={Crown}
           />
         </div>
@@ -309,15 +356,13 @@ export default function ProfilePage() {
 
       <Card className="mt-6">
         <CardHeader>
-          <CardTitle>Learning preferences</CardTitle>
+          <CardTitle>
+            {t("profile.practiceProgress", "Practice progress")}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-3 md:grid-cols-3">
-            {[
-              "题目保持英文",
-              "中文解析和学习建议",
-              "优先电脑雅思模拟体验",
-            ].map((item) => (
+            {learningPreferences.map((item) => (
               <div
                 key={item}
                 className="rounded-md border border-slate-200 bg-slate-50 p-4"
