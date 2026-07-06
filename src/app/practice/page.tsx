@@ -22,9 +22,9 @@ export default async function PracticePage() {
     {
       title: "Reading Practice",
       description:
-        "Practice published original passages in a split-screen Computer IELTS-style workspace with automatic scoring.",
+        "Practise IELTS-style Reading sets with automatic scoring and explanations.",
       count: stats.readingCount,
-      countLabel: "published sets",
+      countLabel: "sets available",
       href: "/practice/reading",
       cta: "Start Reading Practice",
       icon: BookOpen,
@@ -33,23 +33,20 @@ export default async function PracticePage() {
     {
       title: "Listening Practice",
       description:
-        "Work through published IELTS-style listening audio with answer inputs, timer, automatic scoring, and result review.",
+        "Practise with audio-based Listening sets, then review your answers and explanations.",
       count: stats.listeningCount,
-      countLabel: "published sets",
+      countLabel: "sets available",
       href: "/practice/listening",
       cta: "Start Listening Practice",
       icon: Headphones,
-      badge:
-        stats.pendingListeningCount > 0
-          ? "Transcript fallback available"
-          : "Audio-ready when available",
+      badge: "Audio practice",
     },
     {
       title: "Writing Practice",
       description:
-        "Choose a published Task 1 or Task 2 prompt, write in the browser, and submit for AI band feedback.",
+        "Write Task 1 or Task 2 responses and get AI feedback on band score, criteria, grammar, and vocabulary.",
       count: stats.writingCount,
-      countLabel: "published tasks",
+      countLabel: "tasks available",
       href: "/practice/writing",
       cta: "Practice Writing",
       icon: PenLine,
@@ -73,7 +70,7 @@ export default async function PracticePage() {
       <PageHeader
         eyebrow="Practice"
         title="Choose a beta practice mode"
-        description="Reading, Listening, and Writing are ready for beta practice with published original content, automatic scoring, and AI Writing feedback."
+        description="Choose Reading, Listening, or Writing practice and build familiarity with the computer-based IELTS workflow."
       />
 
       <div className="mb-5 rounded-md border border-teal-200 bg-teal-50 px-4 py-3 text-sm leading-6 text-teal-800">

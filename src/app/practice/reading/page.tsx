@@ -22,8 +22,8 @@ export default async function ReadingPracticePage() {
     <AppShell>
       <PageHeader
         eyebrow="Reading Practice"
-        title="Published IELTS Reading practice"
-        description="Choose an admin-reviewed original Reading set. The practice screen uses a Computer IELTS-style split layout with timer, question navigation, and automatic scoring."
+        title="IELTS Reading practice sets"
+        description="Practise IELTS-style Reading questions with a computer-based test layout, timer, automatic scoring, and answer explanations."
       />
 
       <div className="mb-5 rounded-md border border-teal-200 bg-teal-50 px-4 py-3 text-sm leading-6 text-teal-800">
@@ -64,7 +64,7 @@ export default async function ReadingPracticePage() {
                   />
                   <InfoMetric
                     icon={BookOpen}
-                    label="Published"
+                    label="Added"
                     value={new Date(set.createdAt).toLocaleDateString()}
                   />
                 </div>
@@ -93,15 +93,15 @@ export default async function ReadingPracticePage() {
                 aria-hidden="true"
               />
               <h2 className="mt-5 text-lg font-semibold text-slate-950">
-                No published Reading sets yet.
+                No Reading practice sets yet.
               </h2>
               <p className="mt-3 text-sm leading-6 text-slate-600">
-                Published original Reading sets will appear here after admin
-                review. Draft, review, archived, and deleted content stays
-                hidden from students.
+                New Reading practice sets will appear here soon. You can come
+                back later to practise with timer, question navigation, and
+                answer explanations.
               </p>
               <Button asChild variant="outline" className="mt-5">
-                <Link href="/admin">Go to Admin</Link>
+                <Link href="/practice">Back to Practice</Link>
               </Button>
             </div>
           </CardContent>

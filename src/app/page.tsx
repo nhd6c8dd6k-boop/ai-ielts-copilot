@@ -304,7 +304,11 @@ const copy = {
     complianceTitle: "Built for original IELTS style training",
     complianceText:
       "AI IELTS Copilot uses original IELTS-style practice content and does not provide pirated test materials or exam recalls.",
-    complianceItems: ["Original practice", "Admin reviewed", "No pirated tests"],
+    complianceItems: [
+      "Original practice",
+      "Checked before release",
+      "No pirated tests",
+    ],
   },
 } satisfies Record<Locale, HomeCopy>;
 

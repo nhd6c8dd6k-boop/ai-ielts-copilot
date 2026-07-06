@@ -22,8 +22,8 @@ export default async function WritingPracticePage() {
     <AppShell>
       <PageHeader
         eyebrow="Writing Practice"
-        title="Choose a published IELTS Writing task."
-        description="Write Task 1 or Task 2 essays in the browser, save drafts, and submit for AI band feedback."
+        title="IELTS Writing practice tasks"
+        description="Practise IELTS Writing Task 1 and Task 2, then get AI band feedback, scoring criteria comments, and improvement suggestions."
       />
 
       <div className="mb-5 rounded-md border border-teal-200 bg-teal-50 px-4 py-3 text-sm leading-6 text-teal-800">
@@ -78,7 +78,7 @@ export default async function WritingPracticePage() {
                   />
                   <InfoMetric
                     icon={PenLine}
-                    label="Published"
+                    label="Added"
                     value={new Date(task.createdAt).toLocaleDateString()}
                   />
                 </div>
@@ -105,14 +105,13 @@ export default async function WritingPracticePage() {
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-md bg-slate-100 text-slate-500">
                 <PenLine className="h-6 w-6" aria-hidden="true" />
               </div>
-              <Badge className="mt-5 bg-slate-50">Published content only</Badge>
+              <Badge className="mt-5 bg-slate-50">Writing practice</Badge>
               <h2 className="mt-4 text-lg font-semibold text-slate-950">
-                No published Writing tasks yet. Please check back later.
+                No Writing practice tasks yet. Please check back later.
               </h2>
               <p className="mt-3 text-sm leading-6 text-slate-600">
-                Published Writing tasks will appear here after admin review.
-                Writing tasks include prompt details, draft saving, and AI
-                feedback.
+                New Writing tasks will appear here soon. You can practise Task 1
+                and Task 2 responses, save drafts, and get AI feedback.
               </p>
             </div>
           </CardContent>

@@ -22,8 +22,8 @@ export default async function ListeningPracticePage() {
     <AppShell>
       <PageHeader
         eyebrow="Listening Practice"
-        title="Choose a published IELTS Listening practice set."
-        description="练习已发布的 IELTS-style 听力音频题，提交后自动判分并查看答案解析。"
+        title="IELTS Listening practice sets"
+        description="Practise IELTS-style Listening with audio, question navigation, automatic scoring, and answer explanations."
       />
 
       <div className="mb-5 rounded-md border border-teal-200 bg-teal-50 px-4 py-3 text-sm leading-6 text-teal-800">
@@ -46,11 +46,6 @@ export default async function ListeningPracticePage() {
                       <Badge className="bg-slate-50">
                         {set.questionCount} questions
                       </Badge>
-                      {set.audioStatus === "pending" ? (
-                        <Badge className="bg-amber-50 text-amber-800">
-                          Transcript fallback available
-                        </Badge>
-                      ) : null}
                     </div>
                   </div>
                   <Headphones
@@ -68,8 +63,8 @@ export default async function ListeningPracticePage() {
                   />
                   <InfoMetric
                     icon={Radio}
-                    label="Audio status"
-                    value={formatAudioStatus(set.audioStatus)}
+                    label="Audio"
+                    value={formatAudioAvailability(set.audioStatus)}
                   />
                   <InfoMetric
                     icon={Clock3}
@@ -80,7 +75,7 @@ export default async function ListeningPracticePage() {
 
                 <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <p className="text-xs text-slate-500">
-                    Published {new Date(set.createdAt).toLocaleDateString()}
+                    Added {new Date(set.createdAt).toLocaleDateString()}
                   </p>
                   <Button asChild className="w-full sm:w-auto">
                     <Link
@@ -107,17 +102,17 @@ export default async function ListeningPracticePage() {
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-md bg-slate-100 text-slate-500">
                 <Headphones className="h-6 w-6" aria-hidden="true" />
               </div>
-              <Badge className="mt-5 bg-slate-50">Published content only</Badge>
+              <Badge className="mt-5 bg-slate-50">Listening practice</Badge>
               <h2 className="mt-4 text-lg font-semibold text-slate-950">
-                No published Listening sets yet. Please check back later.
+                No Listening practice sets yet. Please check back later.
               </h2>
               <p className="mt-3 text-sm leading-6 text-slate-600">
-                Published original Listening sets will appear here after admin
-                review. If audio is still pending, a transcript-based fallback
-                can keep the practice flow available.
+                New Listening practice sets will appear here soon. You can come
+                back later to practise with audio, answer inputs, and automatic
+                scoring.
               </p>
               <Button asChild variant="outline" className="mt-5">
-                <Link href="/admin">Go to Admin</Link>
+                <Link href="/practice">Back to Practice</Link>
               </Button>
             </div>
           </CardContent>
@@ -147,9 +142,6 @@ function InfoMetric({
   );
 }
 
-function formatAudioStatus(status: string) {
-  return status
-    .split("_")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
+function formatAudioAvailability(status: string) {
+  return status === "ready" ? "Ready to play" : "Available soon";
 }
