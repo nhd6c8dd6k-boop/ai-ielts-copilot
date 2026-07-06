@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Mail } from "lucide-react";
 
 const supportEmail = "982765506@qq.com";
-const xiaohongshuAccount = "63082746176";
+const xiaohongshuAccount = "1112899125";
 
 export function SupportFooter() {
   return (
