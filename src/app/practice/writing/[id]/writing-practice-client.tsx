@@ -190,7 +190,11 @@ export function WritingPracticeClient({
                 At least {task.minimumWords} words
               </Badge>
             </div>
-            <WritingTaskVisual prompt={task.prompt} taskType={task.taskType} />
+            <WritingTaskVisual
+              prompt={task.prompt}
+              taskType={task.taskType}
+              visualData={task.visualData}
+            />
             <p className="text-xs leading-5 text-slate-500">
               AI Score is an estimate and does not represent an official IELTS
               score.

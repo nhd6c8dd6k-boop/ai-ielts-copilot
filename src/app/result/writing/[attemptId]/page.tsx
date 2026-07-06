@@ -85,6 +85,7 @@ export default async function WritingResultPage({
             <WritingTaskVisual
               prompt={result.prompt}
               taskType={result.taskType}
+              visualData={result.visualData}
             />
           </CardContent>
         </Card>

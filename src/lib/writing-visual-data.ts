@@ -1,29 +1,82 @@
+import { z } from "zod";
+
+const visualDatumSchema = z.record(
+  z.string(),
+  z.union([z.string(), z.number(), z.null()]),
+);
+
+export const writingVisualDataSchema = z.object({
+  type: z.enum(["bar_chart", "line_chart", "pie_chart", "table"]),
+  title: z.string().min(1),
+  description: z.string().optional().default(""),
+  xKey: z.string().min(1),
+  series: z
+    .array(
+      z.object({
+        key: z.string().min(1),
+        label: z.string().min(1),
+      }),
+    )
+    .min(1),
+  data: z.array(visualDatumSchema).min(1),
+  unit: z.string().optional().default(""),
+});
+
+export type StructuredWritingVisualData = z.infer<
+  typeof writingVisualDataSchema
+>;
+
+export type MarkdownTableVisualData = {
+  type: "markdown_table";
+  label: "Table" | "Chart";
+  instruction: string;
+  title: string;
+  columns: string[];
+  rows: string[][];
+  raw: string;
+};
+
 export type WritingVisualData =
-  {
-    type: "table";
-    label: "Table" | "Chart";
-    instruction: string;
-    title: string;
-    columns: string[];
-    rows: string[][];
-    raw: string;
-  };
+  | {
+      source: "structured";
+      instruction: string;
+      visual: StructuredWritingVisualData;
+    }
+  | {
+      source: "markdown";
+      table: MarkdownTableVisualData;
+    };
 
 export function parseWritingVisualData({
   prompt,
   taskType,
+  visualData,
 }: {
   prompt: string;
   taskType: number;
+  visualData?: unknown;
 }): WritingVisualData | null {
   if (taskType !== 1) {
     return null;
   }
 
+  const structured = normalizeWritingVisualData(visualData);
+
+  if (structured) {
+    return {
+      source: "structured",
+      instruction: prompt,
+      visual: structured,
+    };
+  }
+
   const table = parseTablePrompt(prompt);
 
   if (table) {
-    return table;
+    return {
+      source: "markdown",
+      table,
+    };
   }
 
   return null;
@@ -32,14 +85,56 @@ export function parseWritingVisualData({
 export function getWritingVisualTypeLabel({
   prompt,
   taskType,
+  visualData,
 }: {
   prompt: string;
   taskType: number;
+  visualData?: unknown;
 }) {
-  return parseWritingVisualData({ prompt, taskType })?.label ?? null;
+  const parsed = parseWritingVisualData({ prompt, taskType, visualData });
+
+  if (!parsed) {
+    return null;
+  }
+
+  if (parsed.source === "structured") {
+    return getStructuredVisualLabel(parsed.visual.type);
+  }
+
+  return parsed.table.label;
 }
 
-function parseTablePrompt(prompt: string): WritingVisualData | null {
+export function normalizeWritingVisualData(
+  visualData: unknown,
+): StructuredWritingVisualData | null {
+  if (!visualData) {
+    return null;
+  }
+
+  const parsed = writingVisualDataSchema.safeParse(visualData);
+
+  return parsed.success ? parsed.data : null;
+}
+
+export function getStructuredVisualLabel(
+  type: StructuredWritingVisualData["type"],
+) {
+  if (type === "table") {
+    return "Table";
+  }
+
+  if (type === "pie_chart") {
+    return "Pie chart";
+  }
+
+  if (type === "line_chart") {
+    return "Line chart";
+  }
+
+  return "Bar chart";
+}
+
+function parseTablePrompt(prompt: string): MarkdownTableVisualData | null {
   const lines = prompt.split(/\r?\n/);
   const tableStart = lines.findIndex((line) => isTableLine(line));
 
@@ -78,7 +173,7 @@ function parseTablePrompt(prompt: string): WritingVisualData | null {
   const raw = tableLines.join("\n");
 
   return {
-    type: "table",
+    type: "markdown_table",
     label: inferTableLabel(prompt),
     instruction: instruction || prompt.replace(raw, "").trim() || prompt,
     title: inferTableTitle(prompt),

@@ -4,7 +4,11 @@ import { z } from "zod";
 import { isSupabaseConfigured } from "@/lib/env";
 import { createOpenAIClient } from "@/lib/openai/client";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { getWritingVisualTypeLabel } from "@/lib/writing-visual-data";
+import {
+  getWritingVisualTypeLabel,
+  normalizeWritingVisualData,
+  type StructuredWritingVisualData,
+} from "@/lib/writing-visual-data";
 
 export type PublishedWritingTaskSummary = {
   id: string;
@@ -20,6 +24,7 @@ export type PublishedWritingTaskSummary = {
 
 export type PublishedWritingTask = PublishedWritingTaskSummary & {
   prompt: string;
+  visualData: StructuredWritingVisualData | null;
   minimumWords: number;
   sampleAnswerBand7: string | null;
   sampleAnswerBand8: string | null;
@@ -31,6 +36,7 @@ export type WritingAttemptResult = {
   topic: string;
   title: string;
   prompt: string;
+  visualData: StructuredWritingVisualData | null;
   essay: string;
   wordCount: number;
   overallBand: number;
@@ -92,7 +98,7 @@ export const getPublishedWritingTaskSummaries = cache(async () => {
   const admin = createSupabaseAdminClient();
   const { data, error } = await admin
     .from("writing_tasks")
-    .select("id,task_type,topic,prompt,band_target,created_at")
+    .select("id,task_type,topic,prompt,visual_data,band_target,created_at")
     .eq("status", "published")
     .order("created_at", { ascending: false })
     .limit(50);
@@ -111,6 +117,7 @@ export const getPublishedWritingTaskSummaries = cache(async () => {
       visualTypeLabel: getWritingVisualTypeLabel({
         prompt: task.prompt,
         taskType: normalizeTaskType(task.task_type),
+        visualData: task.visual_data,
       }),
       bandTarget: task.band_target,
       estimatedTimeMinutes: getSuggestedTimeMinutes(task.task_type),
@@ -128,7 +135,7 @@ export const getPublishedWritingTask = cache(async (id: string) => {
   const { data, error } = await admin
     .from("writing_tasks")
     .select(
-      "id,task_type,topic,prompt,band_target,sample_answer_band_7,sample_answer_band_8,created_at",
+      "id,task_type,topic,prompt,visual_data,band_target,sample_answer_band_7,sample_answer_band_8,created_at",
     )
     .eq("id", id)
     .eq("status", "published")
@@ -150,10 +157,12 @@ export const getPublishedWritingTask = cache(async (id: string) => {
     topic: data.topic,
     title: buildWritingTaskTitle(taskType, data.topic),
     prompt: data.prompt,
+    visualData: normalizeWritingVisualData(data.visual_data),
     promptSummary: summarizePrompt(data.prompt),
     visualTypeLabel: getWritingVisualTypeLabel({
       prompt: data.prompt,
       taskType,
+      visualData: data.visual_data,
     }),
     bandTarget: data.band_target,
     estimatedTimeMinutes: getSuggestedTimeMinutes(taskType),
@@ -303,7 +312,7 @@ export async function getWritingAttemptResult({
 
   const { data: task, error: taskError } = await admin
     .from("writing_tasks")
-    .select("id,task_type,topic,prompt")
+    .select("id,task_type,topic,prompt,visual_data")
     .eq("id", attempt.writing_task_id)
     .maybeSingle();
 
@@ -319,6 +328,7 @@ export async function getWritingAttemptResult({
     topic: task?.topic ?? "Writing",
     title: buildWritingTaskTitle(taskType, task?.topic ?? "Writing"),
     prompt: task?.prompt ?? "",
+    visualData: normalizeWritingVisualData(task?.visual_data),
     essay: attempt.essay,
     wordCount: attempt.word_count,
     overallBand: Number(attempt.overall_band),
@@ -378,6 +388,7 @@ async function gradeWritingWithOpenAI({
           task_type: task.taskType,
           topic: task.topic,
           prompt: task.prompt,
+          visual_data: task.visualData,
           band_target: task.bandTarget,
           word_count: wordCount,
           essay,

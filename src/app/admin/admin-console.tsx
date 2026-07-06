@@ -23,6 +23,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { WritingTaskVisual } from "@/components/writing/writing-task-visual";
 import type {
   AdminContentItem,
   AdminContentStatus,
@@ -147,6 +148,7 @@ type AdminContentDetail =
         taskType: number;
         topic: string;
         prompt: string;
+        visualData: unknown;
         bandTarget: number | null;
         suggestedTimeMinutes: number;
         minimumWords: number;
@@ -195,6 +197,7 @@ type AdminEditDraft =
       sampleAnswerBand8: string;
       sampleAnswerBand9: string;
       scoringNotesJson: string;
+      visualDataJson: string;
     };
 
 type PublishValidationResponse =
@@ -1444,6 +1447,17 @@ function AdminContentEditForm({
         rows={8}
         onChange={(scoringNotesJson) => onChange({ ...draft, scoringNotesJson })}
       />
+      <AdminTextarea
+        label="Visual data JSON"
+        value={draft.visualDataJson}
+        rows={10}
+        onChange={(visualDataJson) => onChange({ ...draft, visualDataJson })}
+      />
+      <p className="rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600">
+        Optional for Task 1. Use JSON with type, title, xKey, series, data and
+        unit. Leave empty if this task should use the prompt or markdown table
+        fallback.
+      </p>
     </div>
   );
 }
@@ -1636,9 +1650,11 @@ function WritingDetail({
         <Metric label="Minimum" value={`${detail.content.minimumWords} words`} />
       </div>
       <ReviewSection title="Prompt">
-        <div className="whitespace-pre-wrap rounded-md border border-slate-200 bg-slate-50 p-4 text-sm leading-7 text-slate-700">
-          {detail.content.prompt}
-        </div>
+        <WritingTaskVisual
+          prompt={detail.content.prompt}
+          taskType={detail.content.taskType}
+          visualData={detail.content.visualData}
+        />
       </ReviewSection>
       <div className="grid gap-4 lg:grid-cols-3">
         <ReviewSection title="Band 7 sample">
@@ -1653,6 +1669,9 @@ function WritingDetail({
       </div>
       <ReviewSection title="Scoring notes">
         <JsonBlock value={detail.content.scoringNotes} />
+      </ReviewSection>
+      <ReviewSection title="Visual data JSON">
+        <JsonBlock value={detail.content.visualData} />
       </ReviewSection>
     </>
   );
@@ -2365,6 +2384,9 @@ function createEditDraft(detail: AdminContentDetail): AdminEditDraft {
     sampleAnswerBand8: detail.content.sampleAnswerBand8 ?? "",
     sampleAnswerBand9: detail.content.sampleAnswerBand9 ?? "",
     scoringNotesJson: JSON.stringify(detail.content.scoringNotes ?? {}, null, 2),
+    visualDataJson: detail.content.visualData
+      ? JSON.stringify(detail.content.visualData, null, 2)
+      : "",
   };
 }
 
@@ -2410,6 +2432,9 @@ function buildEditPatchPayload(draft: AdminEditDraft) {
       sampleAnswerBand8: draft.sampleAnswerBand8.trim() || null,
       sampleAnswerBand9: draft.sampleAnswerBand9.trim() || null,
       scoringNotes: parseJsonValue(draft.scoringNotesJson, "Scoring notes JSON"),
+      visualData: draft.visualDataJson.trim()
+        ? parseJsonValue(draft.visualDataJson, "Visual data JSON")
+        : null,
     },
   };
 }

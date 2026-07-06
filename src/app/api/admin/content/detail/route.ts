@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { writingVisualDataSchema } from "@/lib/writing-visual-data";
 import { requireAdminUser } from "@/server/services/admin-auth";
 import { apiErrorResponse } from "@/server/utils/api-error";
 
@@ -61,6 +62,7 @@ const patchContentDetailSchema = z.discriminatedUnion("type", [
       sampleAnswerBand8: z.string().nullable().optional(),
       sampleAnswerBand9: z.string().nullable().optional(),
       scoringNotes: z.unknown(),
+      visualData: writingVisualDataSchema.nullable().optional(),
     }),
   }),
 ]);
@@ -206,7 +208,7 @@ export async function GET(request: Request) {
   const { data, error } = await admin
     .from("writing_tasks")
     .select(
-      "id,task_type,topic,prompt,band_target,sample_answer_band_7,sample_answer_band_8,sample_answer_band_9,scoring_notes,source_type,status,created_by,published_at,created_at,updated_at",
+      "id,task_type,topic,prompt,visual_data,band_target,sample_answer_band_7,sample_answer_band_8,sample_answer_band_9,scoring_notes,source_type,status,created_by,published_at,created_at,updated_at",
     )
     .eq("id", id)
     .maybeSingle();
@@ -231,6 +233,7 @@ export async function GET(request: Request) {
       taskType: data.task_type,
       topic: data.topic,
       prompt: data.prompt,
+      visualData: data.visual_data,
       bandTarget: data.band_target,
       suggestedTimeMinutes: data.task_type === 1 ? 20 : 40,
       minimumWords: data.task_type === 1 ? 150 : 250,
@@ -431,6 +434,7 @@ export async function PATCH(request: Request) {
       sampleAnswerBand8: current.data.sample_answer_band_8,
       sampleAnswerBand9: current.data.sample_answer_band_9,
       scoringNotes: current.data.scoring_notes,
+      visualData: current.data.visual_data,
     },
     input.data,
   );
@@ -445,6 +449,7 @@ export async function PATCH(request: Request) {
       sample_answer_band_8: input.data.sampleAnswerBand8 ?? null,
       sample_answer_band_9: input.data.sampleAnswerBand9 ?? null,
       scoring_notes: input.data.scoringNotes,
+      visual_data: input.data.visualData ?? null,
     })
     .eq("id", input.id);
 
@@ -621,7 +626,7 @@ async function loadCurrentWriting(
   const { data, error } = await admin
     .from("writing_tasks")
     .select(
-      "id,task_type,topic,prompt,band_target,sample_answer_band_7,sample_answer_band_8,sample_answer_band_9,scoring_notes",
+      "id,task_type,topic,prompt,visual_data,band_target,sample_answer_band_7,sample_answer_band_8,sample_answer_band_9,scoring_notes",
     )
     .eq("id", id)
     .maybeSingle();

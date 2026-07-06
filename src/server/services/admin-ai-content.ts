@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createOpenAIClient } from "@/lib/openai/client";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { assertOriginalContentPolicy } from "@/lib/validators/content-policy";
+import { writingVisualDataSchema } from "@/lib/writing-visual-data";
 
 const adminReadingQuestionSchema = z.object({
   type: z.string().min(1),
@@ -65,6 +66,7 @@ const adminWritingOutputSchema = z.object({
   sample_answer_band_8: z.string().min(1),
   sample_answer_band_9: z.string().min(1),
   scoring_notes: z.array(z.string()).min(1),
+  visual_data: writingVisualDataSchema.nullable(),
 });
 
 export const adminGenerateReadingInputSchema = z.object({
@@ -297,6 +299,7 @@ export async function generateAdminWritingContent({
             "Generate a fully original IELTS Writing task.",
             "Prompt and sample answers must be in English.",
             "Do not copy official IELTS, Cambridge IELTS, exam recalls, or copyrighted materials.",
+            "For Task 1 chart, graph, pie chart or table tasks, include visual_data as structured JSON. For Task 2, set visual_data to null.",
           ],
         }),
       });
@@ -316,6 +319,7 @@ export async function generateAdminWritingContent({
           sample_answer_band_8: payload.data.sample_answer_band_8,
           sample_answer_band_9: payload.data.sample_answer_band_9,
           scoring_notes: payload.data.scoring_notes,
+          visual_data: payload.data.visual_data,
           source_type: "ai_generated",
           status: "review",
           created_by: adminUserId,
