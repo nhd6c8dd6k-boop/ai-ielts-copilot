@@ -18,6 +18,8 @@ import {
   X,
 } from "lucide-react";
 
+import { LanguageSwitcher } from "@/components/i18n/language-switcher";
+import { useI18n } from "@/components/i18n/language-provider";
 import { Button } from "@/components/ui/button";
 import { isSupabaseConfigured } from "@/lib/env";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -31,18 +33,34 @@ type SessionResponse = {
 };
 
 const baseItems = [
-  { href: "/practice", label: "Practice", icon: LibraryBig },
-  { href: "/practice/reading", label: "Reading", icon: BookOpenText },
-  { href: "/practice/listening", label: "Listening", icon: Headphones },
-  { href: "/practice/writing", label: "Writing", icon: PenLine },
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/pricing", label: "Pricing", icon: CreditCard },
-  { href: "/profile", label: "Profile", icon: UserRound },
+  { href: "/practice", labelKey: "nav.practice", fallback: "Practice", icon: LibraryBig },
+  { href: "/practice/reading", labelKey: "nav.reading", fallback: "Reading", icon: BookOpenText },
+  {
+    href: "/practice/listening",
+    labelKey: "nav.listening",
+    fallback: "Listening",
+    icon: Headphones,
+  },
+  { href: "/practice/writing", labelKey: "nav.writing", fallback: "Writing", icon: PenLine },
+  {
+    href: "/dashboard",
+    labelKey: "nav.dashboard",
+    fallback: "Dashboard",
+    icon: LayoutDashboard,
+  },
+  { href: "/pricing", labelKey: "nav.pricing", fallback: "Pricing", icon: CreditCard },
+  { href: "/profile", labelKey: "nav.profile", fallback: "Profile", icon: UserRound },
 ];
 
-const supportItem = { href: "/support", label: "Support", icon: LifeBuoy };
+const supportItem = {
+  href: "/support",
+  labelKey: "nav.support",
+  fallback: "Support",
+  icon: LifeBuoy,
+};
 
 export function MobileAppNav() {
+  const { t } = useI18n();
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -139,7 +157,7 @@ export function MobileAppNav() {
   const navItems = isAdmin
     ? [
         ...baseItems,
-        { href: "/admin", label: "Admin", icon: Shield },
+        { href: "/admin", labelKey: "nav.admin", fallback: "Admin", icon: Shield },
         supportItem,
       ]
     : [...baseItems, supportItem];
@@ -151,7 +169,7 @@ export function MobileAppNav() {
         variant="outline"
         size="icon"
         className="lg:hidden"
-        aria-label="Open navigation"
+        aria-label={t("nav.open", "Open navigation")}
         aria-expanded={isOpen}
         onClick={() => setIsOpen(true)}
       >
@@ -163,17 +181,19 @@ export function MobileAppNav() {
           <button
             type="button"
             className="absolute inset-0 h-full w-full bg-slate-950/40"
-            aria-label="Close navigation"
+            aria-label={t("nav.close", "Close navigation")}
             onClick={() => setIsOpen(false)}
           />
           <div className="absolute inset-y-0 left-0 flex w-72 max-w-[82vw] flex-col overflow-y-auto border-r border-slate-200 bg-white shadow-xl">
             <div className="flex items-center justify-between border-b border-slate-200 px-4 py-4">
-              <span className="text-sm font-semibold text-slate-950">Navigation</span>
+              <span className="text-sm font-semibold text-slate-950">
+                {t("nav.navigation", "Navigation")}
+              </span>
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                aria-label="Close navigation"
+                aria-label={t("nav.close", "Close navigation")}
                 onClick={() => setIsOpen(false)}
               >
                 <X className="h-5 w-5" aria-hidden="true" />
@@ -200,13 +220,14 @@ export function MobileAppNav() {
                     )}
                   >
                     <Icon className="h-4 w-4" aria-hidden="true" />
-                    {item.label}
+                    {t(item.labelKey, item.fallback)}
                   </Link>
                 );
               })}
             </nav>
 
             <div className="space-y-3 border-t border-slate-200 px-4 py-4">
+              <LanguageSwitcher className="w-full justify-center" />
               <Button
                 type="button"
                 variant="outline"
@@ -215,7 +236,9 @@ export function MobileAppNav() {
                 disabled={isSigningOut}
               >
                 <LogOut className="h-4 w-4" aria-hidden="true" />
-                {isSigningOut ? "Signing out" : "Sign out"}
+                {isSigningOut
+                  ? t("nav.signingOut", "Signing out")
+                  : t("nav.signOut", "Sign out")}
               </Button>
               <p className="text-xs leading-5 text-slate-500">
                 AI IELTS Copilot Beta

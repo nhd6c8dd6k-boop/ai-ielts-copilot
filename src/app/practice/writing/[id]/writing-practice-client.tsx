@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, Clock3, Loader2, PenLine, Save } from "lucide-react";
 
+import { useI18n } from "@/components/i18n/language-provider";
 import { AppShell } from "@/components/layout/app-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,7 @@ export function WritingPracticeClient({
   task,
   isAiFeedbackAvailable,
 }: WritingPracticeClientProps) {
+  const { t } = useI18n();
   const router = useRouter();
   const draftStorageKey = `ai-ielts-writing-draft-${task.id}`;
   const [essay, setEssay] = useState(() => {
@@ -47,7 +49,7 @@ export function WritingPracticeClient({
     }
 
     return window.localStorage.getItem(draftStorageKey)
-      ? "Draft restored from this browser."
+      ? "draftRestored"
       : null;
   });
 
@@ -66,7 +68,7 @@ export function WritingPracticeClient({
     if (!isAiFeedbackAvailable) {
       setError(null);
       setNotice(
-        "AI Writing feedback is temporarily unavailable. You can still practice writing and save your draft.",
+        "feedbackUnavailable",
       );
       return;
     }
@@ -119,7 +121,7 @@ export function WritingPracticeClient({
   const saveDraft = () => {
     window.localStorage.setItem(draftStorageKey, essay);
     setError(null);
-    setNotice("Draft saved in this browser.");
+    setNotice("draftSaved");
   };
 
   return (
@@ -144,7 +146,7 @@ export function WritingPracticeClient({
             {formatTime(secondsElapsed)}
           </Badge>
           <Badge className={isBelowMinimum ? "bg-amber-50 text-amber-800" : "bg-slate-50"}>
-            {wordCount} words
+            {wordCount} {t("writing.words", "words")}
           </Badge>
           <Button
             type="button"
@@ -156,7 +158,7 @@ export function WritingPracticeClient({
             ) : (
               <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
             )}
-            Submit for AI Feedback
+            {t("writing.submitFeedback", "Submit for AI Feedback")}
           </Button>
         </div>
       </div>
@@ -169,27 +171,37 @@ export function WritingPracticeClient({
 
       {!isAiFeedbackAvailable ? (
         <div className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-800">
-          AI Writing feedback is temporarily unavailable. You can still practice
-          writing and save your draft.
+          {t(
+            "writing.feedbackUnavailable",
+            "AI Writing feedback is temporarily unavailable. You can still practice writing and save your draft.",
+          )}
         </div>
       ) : null}
 
       {notice ? (
         <div className="mb-4 rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-          {notice}
+          {notice === "draftRestored"
+            ? t("writing.draftRestored", "Draft restored from this browser.")
+            : notice === "draftSaved"
+              ? t("writing.draftSaved", "Draft saved in this browser.")
+              : notice}
         </div>
       ) : null}
 
       <div className="grid gap-6 xl:grid-cols-[420px_1fr]">
         <Card className="h-fit">
           <CardHeader>
-            <CardTitle>Writing prompt</CardTitle>
+            <CardTitle>{t("writing.prompt", "Writing prompt")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex flex-wrap gap-2">
-              <Badge>Suggested time: {task.estimatedTimeMinutes} minutes</Badge>
+              <Badge>
+                {t("writing.suggestedTime", "Suggested time")}:{" "}
+                {task.estimatedTimeMinutes} minutes
+              </Badge>
               <Badge className="bg-white">
-                At least {task.minimumWords} words
+                {t("writing.atLeast", "At least")} {task.minimumWords}{" "}
+                {t("writing.words", "words")}
               </Badge>
             </div>
             <WritingTaskVisual
@@ -198,8 +210,10 @@ export function WritingPracticeClient({
               visualData={task.visualData}
             />
             <p className="text-xs leading-5 text-slate-500">
-              AI Score is an estimate and does not represent an official IELTS
-              score.
+              {t(
+                "writing.disclaimer",
+                "AI Score is an estimate and does not represent an official IELTS score.",
+              )}
             </p>
           </CardContent>
         </Card>
@@ -207,9 +221,11 @@ export function WritingPracticeClient({
         <Card>
           <CardHeader>
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <CardTitle>Essay editor</CardTitle>
+              <CardTitle>{t("writing.essayEditor", "Essay editor")}</CardTitle>
               <div className="flex flex-wrap gap-2">
-                <Badge className="bg-white">{wordCount} words</Badge>
+                <Badge className="bg-white">
+                  {wordCount} {t("writing.words", "words")}
+                </Badge>
                 <Badge
                   className={
                     wordCount >= task.minimumWords
@@ -217,7 +233,7 @@ export function WritingPracticeClient({
                       : "bg-amber-50 text-amber-800"
                   }
                 >
-                  Minimum {task.minimumWords}
+                  {t("writing.minimum", "Minimum")} {task.minimumWords}
                 </Badge>
               </div>
             </div>
@@ -227,7 +243,10 @@ export function WritingPracticeClient({
               value={essay}
               onChange={(event) => setEssay(event.target.value)}
               className="min-h-[520px] w-full resize-y rounded-md border border-slate-200 bg-white p-4 text-sm leading-7 text-slate-950 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
-              placeholder="Write your IELTS essay in English..."
+              placeholder={t(
+                "writing.placeholder",
+                "Write your IELTS essay in English...",
+              )}
             />
             <div className="mt-4 flex flex-col gap-3 sm:flex-row">
               <Button
@@ -240,7 +259,9 @@ export function WritingPracticeClient({
                 ) : (
                   <PenLine className="h-4 w-4" aria-hidden="true" />
                 )}
-                {isSubmitting ? "Getting feedback" : "Submit for AI Feedback"}
+                {isSubmitting
+                  ? t("writing.gettingFeedback", "Getting feedback")
+                  : t("writing.submitFeedback", "Submit for AI Feedback")}
               </Button>
               <Button
                 type="button"
@@ -249,7 +270,7 @@ export function WritingPracticeClient({
                 disabled={!essay.trim()}
               >
                 <Save className="h-4 w-4" aria-hidden="true" />
-                Save Draft
+                {t("writing.saveDraft", "Save Draft")}
               </Button>
               <Button
                 type="button"
@@ -257,7 +278,7 @@ export function WritingPracticeClient({
                 onClick={() => setEssay("")}
                 disabled={isSubmitting}
               >
-                Clear essay
+                {t("writing.clearEssay", "Clear essay")}
               </Button>
             </div>
           </CardContent>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BookOpen, Clock3, FileText } from "lucide-react";
 
+import { LocalizedText } from "@/components/i18n/localized-text";
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -22,13 +23,18 @@ export default async function ReadingPracticePage() {
     <AppShell>
       <PageHeader
         eyebrow="Reading Practice"
+        eyebrowKey="reading.eyebrow"
         title="IELTS Reading practice sets"
+        titleKey="reading.title"
         description="Practise IELTS-style Reading questions with a computer-based test layout, timer, automatic scoring, and answer explanations."
+        descriptionKey="reading.description"
       />
 
       <div className="mb-5 rounded-md border border-teal-200 bg-teal-50 px-4 py-3 text-sm leading-6 text-teal-800">
-        Free during beta. Sign in to start practice and save your progress.
-        <span className="ml-1">Beta 阶段免费使用。登录后即可开始练习并保存记录。</span>
+        <LocalizedText
+          k="practice.betaHint"
+          fallback="Free during beta. Sign in to start practice and save your progress."
+        />
       </div>
 
       {readingSets.length ? (
@@ -43,7 +49,11 @@ export default async function ReadingPracticePage() {
                       <Badge>Band {set.band}</Badge>
                       <Badge className="bg-white">{set.topic}</Badge>
                       <Badge className="bg-slate-50">
-                        {set.questionCount} questions
+                        {set.questionCount}{" "}
+                        <LocalizedText
+                          k="practice.questions"
+                          fallback="questions"
+                        />
                       </Badge>
                     </div>
                   </div>
@@ -54,16 +64,19 @@ export default async function ReadingPracticePage() {
                 <div className="grid gap-3 text-sm text-slate-600 sm:grid-cols-3">
                   <InfoMetric
                     icon={FileText}
+                    labelKey="practice.questionCount"
                     label="Question count"
                     value={`${set.questionCount}`}
                   />
                   <InfoMetric
                     icon={Clock3}
+                    labelKey="practice.estimatedTime"
                     label="Estimated time"
                     value={`${set.estimatedTimeMinutes} min`}
                   />
                   <InfoMetric
                     icon={BookOpen}
+                    labelKey="practice.added"
                     label="Added"
                     value={new Date(set.createdAt).toLocaleDateString()}
                   />
@@ -77,7 +90,10 @@ export default async function ReadingPracticePage() {
                         : buildLoginRedirectHref(`/practice/reading/${set.id}`)
                     }
                   >
-                    Start Practice
+                    <LocalizedText
+                      k="practice.startPractice"
+                      fallback="Start Practice"
+                    />
                   </Link>
                 </Button>
               </CardContent>
@@ -93,15 +109,24 @@ export default async function ReadingPracticePage() {
                 aria-hidden="true"
               />
               <h2 className="mt-5 text-lg font-semibold text-slate-950">
-                No Reading practice sets yet.
+                <LocalizedText
+                  k="reading.emptyTitle"
+                  fallback="No Reading practice sets yet."
+                />
               </h2>
               <p className="mt-3 text-sm leading-6 text-slate-600">
-                New Reading practice sets will appear here soon. You can come
-                back later to practise with timer, question navigation, and
-                answer explanations.
+                <LocalizedText
+                  k="reading.emptyDescription"
+                  fallback="New Reading practice sets will appear here soon. You can come back later to practise with timer, question navigation, and answer explanations."
+                />
               </p>
               <Button asChild variant="outline" className="mt-5">
-                <Link href="/practice">Back to Practice</Link>
+                <Link href="/practice">
+                  <LocalizedText
+                    k="practice.backToPractice"
+                    fallback="Back to Practice"
+                  />
+                </Link>
               </Button>
             </div>
           </CardContent>
@@ -114,17 +139,19 @@ export default async function ReadingPracticePage() {
 function InfoMetric({
   icon: Icon,
   label,
+  labelKey,
   value,
 }: {
   icon: typeof FileText;
   label: string;
+  labelKey: string;
   value: string;
 }) {
   return (
     <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
       <div className="flex items-center gap-2 text-xs text-slate-500">
         <Icon className="h-3.5 w-3.5" aria-hidden="true" />
-        {label}
+        <LocalizedText k={labelKey} fallback={label} />
       </div>
       <p className="mt-1 font-medium text-slate-950">{value}</p>
     </div>

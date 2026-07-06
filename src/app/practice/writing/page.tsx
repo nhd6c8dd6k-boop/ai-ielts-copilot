@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Clock3, FileText, PenLine } from "lucide-react";
 
+import { LocalizedText } from "@/components/i18n/localized-text";
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -22,13 +23,18 @@ export default async function WritingPracticePage() {
     <AppShell>
       <PageHeader
         eyebrow="Writing Practice"
+        eyebrowKey="writing.eyebrow"
         title="IELTS Writing practice tasks"
+        titleKey="writing.title"
         description="Practise IELTS Writing Task 1 and Task 2, then get AI band feedback, scoring criteria comments, and improvement suggestions."
+        descriptionKey="writing.description"
       />
 
       <div className="mb-5 rounded-md border border-teal-200 bg-teal-50 px-4 py-3 text-sm leading-6 text-teal-800">
-        Free during beta. Sign in to start practice and save your progress.
-        <span className="ml-1">Beta 阶段免费使用。登录后即可开始练习并保存记录。</span>
+        <LocalizedText
+          k="practice.betaHint"
+          fallback="Free during beta. Sign in to start practice and save your progress."
+        />
       </div>
 
       {tasks.length ? (
@@ -53,7 +59,10 @@ export default async function WritingPracticePage() {
                         </Badge>
                       ) : null}
                       <Badge className="bg-teal-50 text-teal-800">
-                        AI Feedback available
+                        <LocalizedText
+                          k="practice.aiFeedbackAvailable"
+                          fallback="AI Feedback available"
+                        />
                       </Badge>
                     </div>
                   </div>
@@ -68,16 +77,19 @@ export default async function WritingPracticePage() {
                 <div className="mt-5 grid gap-3 text-sm text-slate-600 sm:grid-cols-3">
                   <InfoMetric
                     icon={Clock3}
+                    labelKey="practice.estimatedTime"
                     label="Estimated time"
                     value={`${task.estimatedTimeMinutes} min`}
                   />
                   <InfoMetric
                     icon={FileText}
+                    labelKey="practice.taskType"
                     label="Task type"
                     value={`Task ${task.taskType}`}
                   />
                   <InfoMetric
                     icon={PenLine}
+                    labelKey="practice.added"
                     label="Added"
                     value={new Date(task.createdAt).toLocaleDateString()}
                   />
@@ -91,7 +103,7 @@ export default async function WritingPracticePage() {
                         : buildLoginRedirectHref(`/practice/writing/${task.id}`)
                     }
                   >
-                    Start Writing
+                    <LocalizedText k="writing.start" fallback="Start Writing" />
                   </Link>
                 </Button>
               </CardContent>
@@ -105,13 +117,23 @@ export default async function WritingPracticePage() {
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-md bg-slate-100 text-slate-500">
                 <PenLine className="h-6 w-6" aria-hidden="true" />
               </div>
-              <Badge className="mt-5 bg-slate-50">Writing practice</Badge>
+              <Badge className="mt-5 bg-slate-50">
+                <LocalizedText
+                  k="practice.writing.title"
+                  fallback="Writing practice"
+                />
+              </Badge>
               <h2 className="mt-4 text-lg font-semibold text-slate-950">
-                No Writing practice tasks yet. Please check back later.
+                <LocalizedText
+                  k="writing.emptyTitle"
+                  fallback="No Writing practice tasks yet. Please check back later."
+                />
               </h2>
               <p className="mt-3 text-sm leading-6 text-slate-600">
-                New Writing tasks will appear here soon. You can practise Task 1
-                and Task 2 responses, save drafts, and get AI feedback.
+                <LocalizedText
+                  k="writing.emptyDescription"
+                  fallback="New Writing tasks will appear here soon. You can practise Task 1 and Task 2 responses, save drafts, and get AI feedback."
+                />
               </p>
             </div>
           </CardContent>
@@ -124,17 +146,19 @@ export default async function WritingPracticePage() {
 function InfoMetric({
   icon: Icon,
   label,
+  labelKey,
   value,
 }: {
   icon: typeof FileText;
   label: string;
+  labelKey: string;
   value: string;
 }) {
   return (
     <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
       <div className="flex items-center gap-2 text-xs text-slate-500">
         <Icon className="h-3.5 w-3.5" aria-hidden="true" />
-        {label}
+        <LocalizedText k={labelKey} fallback={label} />
       </div>
       <p className="mt-1 font-medium text-slate-950">{value}</p>
     </div>

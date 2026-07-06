@@ -1,4 +1,5 @@
 import { BrandLogo } from "@/components/brand/brand-logo";
+import { LanguageSwitcher } from "@/components/i18n/language-switcher";
 import { AppSidebarNav } from "@/components/layout/app-sidebar-nav";
 import { MobileAppNav } from "@/components/layout/mobile-app-nav";
 import { SupportFooter } from "@/components/layout/support-footer";
@@ -11,6 +12,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="flex h-full flex-col">
           <div>
             <BrandLogo className="px-2" />
+            <LanguageSwitcher className="mt-5 w-full justify-center" />
             <AppSidebarNav />
           </div>
           <div className="mt-auto">

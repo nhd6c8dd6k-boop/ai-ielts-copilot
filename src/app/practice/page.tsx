@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BookOpen, Headphones, PenLine, Timer } from "lucide-react";
 
+import { LocalizedText } from "@/components/i18n/localized-text";
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -21,47 +22,66 @@ export default async function PracticePage() {
   const cards = [
     {
       title: "Reading Practice",
+      titleKey: "practice.reading.title",
       description:
         "Practise IELTS-style Reading sets with automatic scoring and explanations.",
+      descriptionKey: "practice.reading.description",
       count: stats.readingCount,
+      countLabelKey: "practice.setsAvailable",
       countLabel: "sets available",
       href: "/practice/reading",
       cta: "Start Reading Practice",
+      ctaKey: "practice.reading.cta",
       icon: BookOpen,
       badge: null,
     },
     {
       title: "Listening Practice",
+      titleKey: "practice.listening.title",
       description:
         "Practise with audio-based Listening sets, then review your answers and explanations.",
+      descriptionKey: "practice.listening.description",
       count: stats.listeningCount,
+      countLabelKey: "practice.setsAvailable",
       countLabel: "sets available",
       href: "/practice/listening",
       cta: "Start Listening Practice",
+      ctaKey: "practice.listening.cta",
       icon: Headphones,
       badge: "Audio practice",
+      badgeKey: "practice.audioPractice",
     },
     {
       title: "Writing Practice",
+      titleKey: "practice.writing.title",
       description:
         "Write Task 1 or Task 2 responses and get AI feedback on band score, criteria, grammar, and vocabulary.",
+      descriptionKey: "practice.writing.description",
       count: stats.writingCount,
+      countLabelKey: "practice.tasksAvailable",
       countLabel: "tasks available",
       href: "/practice/writing",
       cta: "Practice Writing",
+      ctaKey: "practice.writing.cta",
       icon: PenLine,
       badge: "AI Feedback available",
+      badgeKey: "practice.aiFeedbackAvailable",
     },
     {
       title: "Full Exam",
+      titleKey: "practice.fullExam.title",
       description:
         "A longer Computer IELTS-style exam workspace for combining sections. Beta preview is available while full scoring is being refined.",
+      descriptionKey: "practice.fullExam.description",
       count: null,
+      countLabelKey: "practice.setsAvailable",
       countLabel: "",
       href: "/exam",
       cta: "Open Full Exam",
+      ctaKey: "practice.fullExam.cta",
       icon: Timer,
       badge: "Beta preview",
+      badgeKey: "practice.betaPreview",
     },
   ];
 
@@ -69,13 +89,18 @@ export default async function PracticePage() {
     <AppShell>
       <PageHeader
         eyebrow="Practice"
+        eyebrowKey="practice.eyebrow"
         title="Choose a beta practice mode"
+        titleKey="practice.title"
         description="Choose Reading, Listening, or Writing practice and build familiarity with the computer-based IELTS workflow."
+        descriptionKey="practice.description"
       />
 
       <div className="mb-5 rounded-md border border-teal-200 bg-teal-50 px-4 py-3 text-sm leading-6 text-teal-800">
-        Free during beta. Sign in to start practice and save your progress.
-        <span className="ml-1">Beta 阶段免费使用。登录后即可开始练习并保存记录。</span>
+        <LocalizedText
+          k="practice.betaHint"
+          fallback="Free during beta. Sign in to start practice and save your progress."
+        />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-4">
@@ -90,15 +115,26 @@ export default async function PracticePage() {
               <CardHeader>
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <CardTitle>{card.title}</CardTitle>
+                    <CardTitle>
+                      <LocalizedText k={card.titleKey} fallback={card.title} />
+                    </CardTitle>
                     <div className="mt-3 flex flex-wrap gap-2">
                       {card.count === null ? null : (
                         <Badge>
-                          {card.count} {card.countLabel}
+                          {card.count}{" "}
+                          <LocalizedText
+                            k={card.countLabelKey}
+                            fallback={card.countLabel}
+                          />
                         </Badge>
                       )}
                       {card.badge ? (
-                        <Badge className="bg-white">{card.badge}</Badge>
+                        <Badge className="bg-white">
+                          <LocalizedText
+                            k={card.badgeKey}
+                            fallback={card.badge}
+                          />
+                        </Badge>
                       ) : null}
                     </div>
                   </div>
@@ -109,7 +145,10 @@ export default async function PracticePage() {
               </CardHeader>
               <CardContent>
                 <p className="min-h-[96px] text-sm leading-6 text-slate-600">
-                  {card.description}
+                  <LocalizedText
+                    k={card.descriptionKey}
+                    fallback={card.description}
+                  />
                 </p>
                 <Button asChild className="mt-5 w-full">
                   <Link
@@ -117,7 +156,7 @@ export default async function PracticePage() {
                       isSignedIn ? card.href : buildLoginRedirectHref(card.href)
                     }
                   >
-                    {card.cta}
+                    <LocalizedText k={card.ctaKey} fallback={card.cta} />
                   </Link>
                 </Button>
               </CardContent>

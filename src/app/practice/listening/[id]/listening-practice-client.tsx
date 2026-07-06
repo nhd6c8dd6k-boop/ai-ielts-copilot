@@ -11,6 +11,7 @@ import {
   Loader2,
 } from "lucide-react";
 
+import { useI18n } from "@/components/i18n/language-provider";
 import { AppShell } from "@/components/layout/app-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -39,6 +40,7 @@ type SubmitResponse =
 export function ListeningPracticeClient({
   listeningSet,
 }: ListeningPracticeClientProps) {
+  const { t } = useI18n();
   const router = useRouter();
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [flaggedIds, setFlaggedIds] = useState<string[]>([]);
@@ -167,7 +169,8 @@ export function ListeningPracticeClient({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Badge className="bg-slate-50">
-            {answeredCount}/{listeningSet.questions.length} answered
+            {answeredCount}/{listeningSet.questions.length}{" "}
+            {t("practice.answered", "answered")}
           </Badge>
           <Badge className="bg-slate-50">
             <Clock3 className="h-3.5 w-3.5" aria-hidden="true" />
@@ -179,7 +182,7 @@ export function ListeningPracticeClient({
             ) : (
               <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
             )}
-            Submit
+            {t("practice.submit", "Submit")}
           </Button>
         </div>
       </div>
@@ -196,7 +199,7 @@ export function ListeningPracticeClient({
             <div className="sticky top-0 z-10 border-b border-slate-200 bg-white p-5">
               <div className="flex items-center justify-between gap-4">
                 <div className="text-sm font-medium text-slate-950">
-                  Listening source
+                  {t("practice.listeningSource", "Listening source")}
                 </div>
                 <Badge className="bg-slate-50">
                   <Headphones className="h-3.5 w-3.5" aria-hidden="true" />
@@ -208,14 +211,18 @@ export function ListeningPracticeClient({
                   <div className="mb-3 flex items-center justify-between gap-3">
                     <div>
                       <p className="text-sm font-semibold text-slate-950">
-                        Audio Player
+                        {t("practice.audioPlayer", "Audio Player")}
                       </p>
                       <p className="mt-1 text-xs text-slate-500">
-                        Listen to the recording, then answer the questions on
-                        the right.
+                        {t(
+                          "practice.audioPlayerDescription",
+                          "Listen to the recording, then answer the questions on the right.",
+                        )}
                       </p>
                     </div>
-                    <Badge className="bg-teal-50 text-teal-800">Ready</Badge>
+                    <Badge className="bg-teal-50 text-teal-800">
+                      {t("practice.ready", "Ready")}
+                    </Badge>
                   </div>
                   <audio
                     className="w-full"
@@ -225,8 +232,10 @@ export function ListeningPracticeClient({
                 </div>
               ) : (
                 <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-800">
-                  Audio is not ready yet. A transcript-based practice fallback
-                  is available for this set.
+                  {t(
+                    "practice.audioFallback",
+                    "Audio is not ready yet. A transcript-based practice fallback is available for this set.",
+                  )}
                 </div>
               )}
             </div>
@@ -235,7 +244,7 @@ export function ListeningPracticeClient({
               <div className="p-6">
                 <details className="rounded-md border border-slate-200 bg-slate-50 p-4">
                   <summary className="cursor-pointer text-sm font-semibold text-slate-950">
-                    Transcript for review
+                    {t("practice.transcriptReview", "Transcript for review")}
                   </summary>
                   <article className="mt-5 text-[15px] leading-8 text-slate-700">
                     {listeningSet.script
@@ -254,7 +263,7 @@ export function ListeningPracticeClient({
             ) : (
               <article className="p-6 text-[15px] leading-8 text-slate-700">
                 <h2 className="mb-4 text-sm font-semibold text-slate-950">
-                  Transcript Practice
+                  {t("practice.transcriptPractice", "Transcript Practice")}
                 </h2>
                 {listeningSet.script.split(/\n{2,}/).map((paragraph, index) => (
                   <p key={`${paragraph.slice(0, 24)}-${index}`} className="mb-5">
@@ -335,7 +344,7 @@ export function ListeningPracticeClient({
                           : "text-slate-500"
                       }
                       onClick={() => toggleFlag(question.id)}
-                      aria-label="Flag question"
+                      aria-label={t("practice.flagQuestion", "Flag question")}
                     >
                       <Flag className="h-4 w-4" aria-hidden="true" />
                     </Button>
@@ -365,8 +374,10 @@ export function ListeningPracticeClient({
                   ) : question.answerCount > 1 ? (
                     <div className="mt-4">
                       <p className="mb-2 text-xs leading-5 text-slate-500">
-                        多空题请分别填写每个空。For questions with more than one
-                        blank, fill each blank separately.
+                        {t(
+                          "practice.multiBlankHint",
+                          "For questions with more than one blank, fill each blank separately.",
+                        )}
                       </p>
                       <div className="grid gap-2 sm:grid-cols-2">
                         {getAnswerInputParts(
@@ -384,7 +395,7 @@ export function ListeningPracticeClient({
                                 event.target.value,
                               )
                             }
-                            placeholder={`Answer ${index + 1}`}
+                            placeholder={`${t("practice.typeAnswer", "Answer")} ${index + 1}`}
                             className="h-10 min-w-0 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-950 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
                           />
                         ))}
@@ -396,7 +407,7 @@ export function ListeningPracticeClient({
                       onChange={(event) =>
                         updateAnswer(question.id, event.target.value)
                       }
-                      placeholder="Type your answer"
+                      placeholder={t("practice.typeAnswer", "Type your answer")}
                       className="mt-4 h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-950 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
                     />
                   )}
@@ -407,7 +418,7 @@ export function ListeningPracticeClient({
             <div className="border-t border-slate-200 p-4">
               <div className="mb-3 flex items-center gap-2 text-xs text-slate-500">
                 <Bookmark className="h-3.5 w-3.5" aria-hidden="true" />
-                {flaggedIds.length} flagged
+                {flaggedIds.length} {t("practice.flagged", "flagged")}
               </div>
               <Button
                 type="button"
@@ -415,7 +426,9 @@ export function ListeningPracticeClient({
                 onClick={submitPractice}
                 disabled={isSubmitting}
               >
-                {isSubmitting ? "Submitting" : "Submit answers"}
+                {isSubmitting
+                  ? t("practice.submitting", "Submitting")
+                  : t("practice.submitAnswers", "Submit answers")}
               </Button>
             </div>
           </CardContent>

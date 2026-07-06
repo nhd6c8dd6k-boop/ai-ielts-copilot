@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, LayoutDashboard, LogOut, Shield, UserRound } from "lucide-react";
 
+import { useI18n } from "@/components/i18n/language-provider";
 import { Button } from "@/components/ui/button";
 import { isSupabaseConfigured } from "@/lib/env";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -22,6 +23,7 @@ type SessionResponse = {
 };
 
 export function HeaderAuthNav() {
+  const { t } = useI18n();
   const [mode, setMode] = useState<AuthMode>("loading");
   const [user, setUser] = useState<SessionUser | null>(null);
   const [isSigningOut, setIsSigningOut] = useState(false);
@@ -121,7 +123,7 @@ export function HeaderAuthNav() {
   if (mode === "loading") {
     return (
       <div
-        aria-label="正在检查登录状态"
+        aria-label={t("nav.login", "Checking sign-in status")}
         className="h-9 w-40 rounded-md bg-slate-100"
       />
     );
@@ -131,11 +133,11 @@ export function HeaderAuthNav() {
     return (
       <div className="flex items-center gap-2">
         <Button asChild variant="ghost" size="sm">
-          <Link href="/login">登录</Link>
+          <Link href="/login">{t("nav.login", "Log in")}</Link>
         </Button>
         <Button asChild size="sm">
           <Link href="/register">
-            免费开始
+            {t("nav.register", "Start free")}
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </Link>
         </Button>
@@ -150,20 +152,20 @@ export function HeaderAuthNav() {
       <Button asChild variant="ghost" size="sm">
         <Link href="/dashboard">
           <LayoutDashboard className="h-4 w-4" aria-hidden="true" />
-          Dashboard
+          {t("nav.dashboard", "Dashboard")}
         </Link>
       </Button>
       <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
         <Link href="/profile">
           <UserRound className="h-4 w-4" aria-hidden="true" />
-          Profile
+          {t("nav.profile", "Profile")}
         </Link>
       </Button>
       {isAdmin ? (
         <Button asChild variant="ghost" size="sm">
           <Link href="/admin">
             <Shield className="h-4 w-4" aria-hidden="true" />
-            Admin
+            {t("nav.admin", "Admin")}
           </Link>
         </Button>
       ) : null}
@@ -175,7 +177,9 @@ export function HeaderAuthNav() {
         disabled={isSigningOut}
       >
         <LogOut className="h-4 w-4" aria-hidden="true" />
-        {isSigningOut ? "退出中" : "退出"}
+        {isSigningOut
+          ? t("nav.signingOut", "Signing out")
+          : t("nav.signOut", "Sign out")}
       </Button>
     </div>
   );

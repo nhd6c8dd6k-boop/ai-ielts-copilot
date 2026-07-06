@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { LocalizedText } from "@/components/i18n/localized-text";
 import { MarketingHeader } from "@/components/layout/marketing-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -33,8 +34,15 @@ export default async function RegisterPage({
       <main className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-md items-center px-4 py-12">
         <Card className="w-full">
           <CardHeader>
-            <Badge className="mb-3 w-fit bg-slate-50">免费开始</Badge>
-            <CardTitle>创建学习账号</CardTitle>
+            <Badge className="mb-3 w-fit bg-slate-50">
+              <LocalizedText k="auth.registerBadge" fallback="Start free" />
+            </Badge>
+            <CardTitle>
+              <LocalizedText
+                k="auth.registerTitle"
+                fallback="Create your learning account"
+              />
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {error ? (
@@ -44,23 +52,30 @@ export default async function RegisterPage({
             ) : null}
             {isPracticeRedirect ? (
               <div className="rounded-md border border-teal-200 bg-teal-50 px-3 py-2 text-sm text-teal-800">
-                Beta 阶段免费使用。创建账号后会回到刚才选择的练习。
+                <LocalizedText
+                  k="auth.practiceRedirectHint"
+                  fallback="Free during beta. You will return to the selected practice after signing in."
+                />
               </div>
             ) : null}
             <form action={signUpAction} className="space-y-4">
               <input type="hidden" name="redirect" value={redirectTo} />
               <div className="space-y-2">
-                <Label htmlFor="name">姓名</Label>
+                <Label htmlFor="name">
+                  <LocalizedText k="auth.name" fallback="Name" />
+                </Label>
                 <Input
                   id="name"
                   name="name"
                   autoComplete="name"
                   required
-                  placeholder="你的名字"
+                  placeholder="Your name"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">邮箱</Label>
+                <Label htmlFor="email">
+                  <LocalizedText k="auth.email" fallback="Email" />
+                </Label>
                 <Input
                   id="email"
                   name="email"
@@ -71,7 +86,9 @@ export default async function RegisterPage({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">密码</Label>
+                <Label htmlFor="password">
+                  <LocalizedText k="auth.password" fallback="Password" />
+                </Label>
                 <Input
                   id="password"
                   name="password"
@@ -79,20 +96,26 @@ export default async function RegisterPage({
                   autoComplete="new-password"
                   required
                   minLength={8}
-                  placeholder="至少 8 位"
+                  placeholder="At least 8 characters"
                 />
               </div>
               <Button className="w-full" type="submit">
-                创建账号
+                <LocalizedText
+                  k="auth.createAccount"
+                  fallback="Create account"
+                />
               </Button>
             </form>
             <p className="mt-5 text-sm text-slate-600">
-              已经有账号？{" "}
+              <LocalizedText
+                k="auth.haveAccount"
+                fallback="Already have an account?"
+              />{" "}
               <Link
                 href={`/login?redirect=${encodeURIComponent(redirectTo)}`}
                 className="font-medium text-slate-950"
               >
-                去登录
+                <LocalizedText k="auth.goLogin" fallback="Log in" />
               </Link>
             </p>
           </CardContent>

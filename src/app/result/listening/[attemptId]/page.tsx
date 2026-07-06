@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { CheckCircle2, CircleAlert, Clock3 } from "lucide-react";
 
+import { LocalizedText } from "@/components/i18n/localized-text";
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -43,32 +44,56 @@ export default async function ListeningResultPage({
     <AppShell>
       <PageHeader
         eyebrow="Listening Result"
+        eyebrowKey="result.listeningEyebrow"
         title={result.title}
         description="这是本次 Listening practice 的自动判分结果。正确答案由服务器端读取，提交前不会暴露给前端。"
+        descriptionKey="result.listeningDescription"
       />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Metric label="Overall Score" value={`${result.score}%`} />
+        <Metric
+          label="Overall Score"
+          labelKey="result.overallScore"
+          value={`${result.score}%`}
+        />
         <Metric
           label="Correct"
+          labelKey="result.correct"
           value={`${result.correctCount}/${result.totalQuestions}`}
         />
-        <Metric label="Estimated Band" value={result.bandEstimate.toFixed(1)} />
-        <Metric label="Time Spent" value={formatDuration(result.timeSpentSeconds)} />
+        <Metric
+          label="Estimated Band"
+          labelKey="result.estimatedBand"
+          value={result.bandEstimate.toFixed(1)}
+        />
+        <Metric
+          label="Time Spent"
+          labelKey="result.timeSpent"
+          value={formatDuration(result.timeSpentSeconds)}
+        />
       </div>
 
       <div className="mt-6 flex flex-wrap gap-3">
         <Button asChild>
-          <Link href="/practice/listening">Practice More</Link>
+          <Link href="/practice/listening">
+            <LocalizedText k="result.practiceMore" fallback="Practice More" />
+          </Link>
         </Button>
         <Button asChild variant="outline">
-          <Link href="/dashboard">Back to Dashboard</Link>
+          <Link href="/dashboard">
+            <LocalizedText
+              k="result.backDashboard"
+              fallback="Back to Dashboard"
+            />
+          </Link>
         </Button>
       </div>
 
       <Card className="mt-6">
         <CardHeader>
-          <CardTitle>Question review</CardTitle>
+          <CardTitle>
+            <LocalizedText k="result.questionReview" fallback="Question review" />
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {result.questions.map((question) => (
@@ -95,7 +120,14 @@ export default async function ListeningResultPage({
                           : "bg-rose-100 text-rose-800"
                       }
                     >
-                      {question.isCorrect ? "Correct" : "Incorrect"}
+                      {question.isCorrect ? (
+                        <LocalizedText k="result.correct" fallback="Correct" />
+                      ) : (
+                        <LocalizedText
+                          k="result.incorrect"
+                          fallback="Incorrect"
+                        />
+                      )}
                     </Badge>
                   </div>
                   <p className="mt-3 text-sm font-medium leading-6 text-slate-950">
@@ -122,6 +154,11 @@ export default async function ListeningResultPage({
                       ? "Your answers"
                       : "Your answer"
                   }
+                  labelKey={
+                    question.userAnswerParts.length > 1
+                      ? "result.yourAnswers"
+                      : "result.yourAnswer"
+                  }
                   value={question.userAnswer || "-"}
                   parts={question.userAnswerParts}
                 />
@@ -131,6 +168,11 @@ export default async function ListeningResultPage({
                       ? "Correct answers"
                       : "Correct answer"
                   }
+                  labelKey={
+                    question.correctAnswerParts.length > 1
+                      ? "result.correctAnswersPlural"
+                      : "result.correctAnswer"
+                  }
                   value={question.correctAnswer}
                   parts={question.correctAnswerParts}
                 />
@@ -139,14 +181,22 @@ export default async function ListeningResultPage({
               <div className="mt-4 rounded-md bg-white p-4 text-sm leading-6 text-slate-700">
                 {question.explanationZh ? (
                   <p>
-                    <span className="font-medium text-slate-950">中文解析：</span>
+                    <span className="font-medium text-slate-950">
+                      <LocalizedText
+                        k="result.chineseExplanation"
+                        fallback="Chinese explanation:"
+                      />
+                    </span>
                     {question.explanationZh}
                   </p>
                 ) : null}
                 {question.explanationEn ? (
                   <p className="mt-2">
                     <span className="font-medium text-slate-950">
-                      English explanation:
+                      <LocalizedText
+                        k="result.englishExplanation"
+                        fallback="English explanation:"
+                      />
                     </span>{" "}
                     {question.explanationEn}
                   </p>
@@ -160,12 +210,20 @@ export default async function ListeningResultPage({
   );
 }
 
-function Metric({ label, value }: { label: string; value: string }) {
+function Metric({
+  label,
+  labelKey,
+  value,
+}: {
+  label: string;
+  labelKey: string;
+  value: string;
+}) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium text-slate-600">
-          {label}
+          <LocalizedText k={labelKey} fallback={label} />
         </CardTitle>
         <Clock3 className="h-4 w-4 text-slate-400" aria-hidden="true" />
       </CardHeader>
@@ -178,10 +236,12 @@ function Metric({ label, value }: { label: string; value: string }) {
 
 function AnswerBox({
   label,
+  labelKey,
   value,
   parts,
 }: {
   label: string;
+  labelKey: string;
   value: string;
   parts?: string[];
 }) {
@@ -189,7 +249,9 @@ function AnswerBox({
 
   return (
     <div className="rounded-md border border-slate-200 bg-white p-3">
-      <p className="text-xs text-slate-500">{label}</p>
+      <p className="text-xs text-slate-500">
+        <LocalizedText k={labelKey} fallback={label} />
+      </p>
       {displayParts.length > 1 ? (
         <ol className="mt-2 space-y-1 text-sm font-medium text-slate-950">
           {displayParts.map((part, index) => (

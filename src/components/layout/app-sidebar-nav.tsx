@@ -11,6 +11,7 @@ import {
   UserRound,
 } from "lucide-react";
 
+import { useI18n } from "@/components/i18n/language-provider";
 import { isSupabaseConfigured } from "@/lib/env";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
@@ -23,13 +24,19 @@ type SessionResponse = {
 };
 
 const baseNavItems = [
-  { href: "/practice", label: "Practice", icon: LibraryBig },
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/pricing", label: "Pricing", icon: CreditCard },
-  { href: "/profile", label: "Profile", icon: UserRound },
+  { href: "/practice", labelKey: "nav.practice", fallback: "Practice", icon: LibraryBig },
+  {
+    href: "/dashboard",
+    labelKey: "nav.dashboard",
+    fallback: "Dashboard",
+    icon: LayoutDashboard,
+  },
+  { href: "/pricing", labelKey: "nav.pricing", fallback: "Pricing", icon: CreditCard },
+  { href: "/profile", labelKey: "nav.profile", fallback: "Profile", icon: UserRound },
 ];
 
 export function AppSidebarNav() {
+  const { t } = useI18n();
   const pathname = usePathname();
   const [isAdmin, setIsAdmin] = useState(false);
 
@@ -73,7 +80,10 @@ export function AppSidebarNav() {
   }, []);
 
   const navItems = isAdmin
-    ? [...baseNavItems, { href: "/admin", label: "Admin", icon: Shield }]
+    ? [
+        ...baseNavItems,
+        { href: "/admin", labelKey: "nav.admin", fallback: "Admin", icon: Shield },
+      ]
     : baseNavItems;
 
   return (
@@ -96,7 +106,7 @@ export function AppSidebarNav() {
             )}
           >
             <Icon className="h-4 w-4" aria-hidden="true" />
-            {item.label}
+            {t(item.labelKey, item.fallback)}
           </Link>
         );
       })}

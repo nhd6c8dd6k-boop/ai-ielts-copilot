@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { LocalizedText } from "@/components/i18n/localized-text";
 import { MarketingHeader } from "@/components/layout/marketing-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,8 +30,12 @@ export default async function ForgotPasswordPage({
       <main className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-md items-center px-4 py-12">
         <Card className="w-full">
           <CardHeader>
-            <Badge className="mb-3 w-fit bg-slate-50">账号安全</Badge>
-            <CardTitle>重置密码</CardTitle>
+            <Badge className="mb-3 w-fit bg-slate-50">
+              <LocalizedText k="auth.forgotBadge" fallback="Account security" />
+            </Badge>
+            <CardTitle>
+              <LocalizedText k="auth.resetPassword" fallback="Reset password" />
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {error ? (
@@ -40,7 +45,9 @@ export default async function ForgotPasswordPage({
             ) : null}
             <form action={resetPasswordAction} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">邮箱</Label>
+                <Label htmlFor="email">
+                  <LocalizedText k="auth.email" fallback="Email" />
+                </Label>
                 <Input
                   id="email"
                   name="email"
@@ -51,13 +58,16 @@ export default async function ForgotPasswordPage({
                 />
               </div>
               <Button className="w-full" type="submit">
-                发送重置邮件
+                <LocalizedText
+                  k="auth.sendResetEmail"
+                  fallback="Send reset email"
+                />
               </Button>
             </form>
             <p className="mt-5 text-sm text-slate-600">
-              想起来了？{" "}
+              <LocalizedText k="auth.remembered" fallback="Remembered it?" />{" "}
               <Link href="/login" className="font-medium text-slate-950">
-                返回登录
+                <LocalizedText k="auth.backToLogin" fallback="Back to login" />
               </Link>
             </p>
           </CardContent>

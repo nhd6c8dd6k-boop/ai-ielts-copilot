@@ -13,20 +13,16 @@ import {
   Timer,
   type LucideIcon,
 } from "lucide-react";
-import { useState } from "react";
 
 import { BrandLogo } from "@/components/brand/brand-logo";
+import { LanguageSwitcher } from "@/components/i18n/language-switcher";
+import { useI18n } from "@/components/i18n/language-provider";
 import { MarketingHeader } from "@/components/layout/marketing-header";
-import {
-  SupportFooter,
-  supportEmail,
-  xiaohongshuAccount,
-} from "@/components/layout/support-footer";
+import { SupportFooter } from "@/components/layout/support-footer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-
-type Locale = "zh" | "en";
+import type { Language } from "@/lib/i18n/messages";
+import { supportEmail, xiaohongshuAccount } from "@/lib/support";
 
 type Pillar = {
   title: string;
@@ -310,11 +306,11 @@ const copy = {
       "No pirated tests",
     ],
   },
-} satisfies Record<Locale, HomeCopy>;
+} satisfies Record<Language, HomeCopy>;
 
 export default function Home() {
-  const [locale, setLocale] = useState<Locale>("zh");
-  const t = copy[locale];
+  const { language } = useI18n();
+  const t = copy[language];
   const practiceIcons = [BookOpen, Headphones, PenLine];
 
   return (
@@ -330,26 +326,7 @@ export default function Home() {
                   {t.beta}
                 </Badge>
                 <Badge className="bg-white/80">{t.badge}</Badge>
-                <div
-                  className="inline-flex rounded-md border border-slate-200 bg-white p-1"
-                  aria-label={t.languageLabel}
-                >
-                  {(["zh", "en"] as const).map((item) => (
-                    <button
-                      key={item}
-                      type="button"
-                      onClick={() => setLocale(item)}
-                      className={cn(
-                        "h-8 rounded px-3 text-xs font-medium transition-colors",
-                        locale === item
-                          ? "bg-slate-950 text-white"
-                          : "text-slate-600 hover:bg-slate-100 hover:text-slate-950",
-                      )}
-                    >
-                      {item === "zh" ? "中文" : "EN"}
-                    </button>
-                  ))}
-                </div>
+                <LanguageSwitcher compact />
               </div>
               <div className="mt-6 flex justify-center">
                 <BrandLogo

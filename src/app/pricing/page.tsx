@@ -1,21 +1,22 @@
 import Link from "next/link";
 import { Check, Clock, ShieldCheck } from "lucide-react";
 
+import { LocalizedText } from "@/components/i18n/localized-text";
 import { MarketingHeader } from "@/components/layout/marketing-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 const betaFeatures = [
-  "Reading practice with automatic scoring",
-  "Listening audio practice with automatic scoring",
-  "Writing Task 1 / Task 2 with AI feedback",
-  "Dashboard progress tracking",
+  ["pricing.feature.reading", "Reading practice with automatic scoring"],
+  ["pricing.feature.listening", "Listening audio practice with automatic scoring"],
+  ["pricing.feature.writing", "Writing Task 1 / Task 2 with AI feedback"],
+  ["pricing.feature.dashboard", "Dashboard progress tracking"],
 ];
 
 const plannedFeatures = [
-  "More published practice sets",
-  "Pro plans and usage limits",
-  "Paid plans may be added after beta testing",
+  ["pricing.planned.moreSets", "More published practice sets"],
+  ["pricing.planned.proPlans", "Pro plans and usage limits"],
+  ["pricing.planned.paidLater", "Paid plans may be added after beta testing"],
 ];
 
 export default function PricingPage() {
@@ -24,14 +25,17 @@ export default function PricingPage() {
       <MarketingHeader />
       <main className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
         <div className="max-w-3xl">
-          <Badge>Beta Access</Badge>
+          <Badge>
+            <LocalizedText k="pricing.betaAccess" fallback="Beta Access" />
+          </Badge>
           <h1 className="mt-5 text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-            Free during beta
+            <LocalizedText k="pricing.free" fallback="Free during beta" />
           </h1>
           <p className="mt-5 text-lg leading-8 text-slate-600">
-            AI IELTS Copilot is open for early beta testing. You can try
-            Reading, Listening, Writing, and Dashboard progress tracking for
-            free while the product is being improved with early users.
+            <LocalizedText
+              k="pricing.description"
+              fallback="AI IELTS Copilot is free during beta while we improve the practice experience with early users."
+            />
           </p>
         </div>
 
@@ -40,38 +44,53 @@ export default function PricingPage() {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <Badge className="border-slate-950 bg-slate-950 text-white">
-                  Available now
+                  <LocalizedText
+                    k="pricing.availableNow"
+                    fallback="Available now"
+                  />
                 </Badge>
                 <h2 className="mt-5 text-2xl font-semibold text-slate-950">
-                  Beta Access
+                  <LocalizedText
+                    k="pricing.betaAccess"
+                    fallback="Beta Access"
+                  />
                 </h2>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Use the current beta product while the practice experience is
-                  being tested and improved.
+                  <LocalizedText
+                    k="pricing.betaBody"
+                    fallback="Use the current beta product while the practice experience is being tested and improved."
+                  />
                 </p>
               </div>
               <div className="text-right">
                 <div className="text-4xl font-semibold tracking-tight text-slate-950">
                   ¥0
                 </div>
-                <div className="mt-1 text-sm text-slate-500">during beta</div>
+                <div className="mt-1 text-sm text-slate-500">
+                  <LocalizedText k="pricing.duringBeta" fallback="during beta" />
+                </div>
               </div>
             </div>
 
             <ul className="mt-8 grid gap-3 sm:grid-cols-2">
-              {betaFeatures.map((feature) => (
-                <li key={feature} className="flex gap-3 text-sm text-slate-600">
+              {betaFeatures.map(([key, fallback]) => (
+                <li key={key} className="flex gap-3 text-sm text-slate-600">
                   <Check
                     className="mt-0.5 h-4 w-4 text-teal-700"
                     aria-hidden="true"
                   />
-                  {feature}
+                  <LocalizedText k={key} fallback={fallback} />
                 </li>
               ))}
             </ul>
 
             <Button asChild className="mt-8">
-              <Link href="/practice">Start practicing</Link>
+              <Link href="/practice">
+                <LocalizedText
+                  k="pricing.startPracticing"
+                  fallback="Start practicing"
+                />
+              </Link>
             </Button>
           </section>
 
@@ -80,20 +99,25 @@ export default function PricingPage() {
               <Clock className="h-5 w-5" aria-hidden="true" />
             </div>
             <h2 className="mt-5 text-xl font-semibold text-slate-950">
-              Pro plans are not active during beta
+              <LocalizedText
+                k="pricing.proInactive"
+                fallback="Pro plans are not active during beta"
+              />
             </h2>
             <p className="mt-3 text-sm leading-6 text-slate-600">
-              Paid plans may be added after beta testing. Payment options are
-              intentionally disabled for now, so there are no checkout buttons.
+              <LocalizedText
+                k="pricing.proInactiveBody"
+                fallback="Paid plans may be added after beta testing. Payment options are intentionally disabled for now, so there are no checkout buttons."
+              />
             </p>
             <ul className="mt-6 space-y-3">
-              {plannedFeatures.map((feature) => (
-                <li key={feature} className="flex gap-3 text-sm text-slate-600">
+              {plannedFeatures.map(([key, fallback]) => (
+                <li key={key} className="flex gap-3 text-sm text-slate-600">
                   <ShieldCheck
                     className="mt-0.5 h-4 w-4 text-slate-400"
                     aria-hidden="true"
                   />
-                  {feature}
+                  <LocalizedText k={key} fallback={fallback} />
                 </li>
               ))}
             </ul>

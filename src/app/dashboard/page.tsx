@@ -21,6 +21,7 @@ import {
   YAxis,
 } from "recharts";
 
+import { useI18n } from "@/components/i18n/language-provider";
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -54,6 +55,7 @@ const syncLabels = {
 };
 
 export default function DashboardPage() {
+  const { t } = useI18n();
   const { history, syncMode } = useSyncedPracticeHistory();
   const [activeRecentSkill, setActiveRecentSkill] =
     useState<PracticeSkill>("reading");
@@ -92,26 +94,34 @@ export default function DashboardPage() {
   const stats = [
     {
       label: "Total Attempts",
+      labelKey: "dashboard.totalAttempts",
       value: `${completedSets}`,
       icon: BookOpen,
     },
     {
       label: "Average Reading Score",
+      labelKey: "dashboard.averageReading",
       value:
-        averageReadingScore === null ? "Not started" : `${averageReadingScore}%`,
+        averageReadingScore === null
+          ? t("dashboard.notStarted", "Not started")
+          : `${averageReadingScore}%`,
       icon: Target,
     },
     {
       label: "Average Listening Score",
+      labelKey: "dashboard.averageListening",
       value:
         averageListeningScore === null
-          ? "Not started"
+          ? t("dashboard.notStarted", "Not started")
           : `${averageListeningScore}%`,
       icon: Target,
     },
     {
       label: "Latest Practice",
-      value: latestAttempt ? skillLabels[latestAttempt.skill] : "Not started",
+      labelKey: "dashboard.latestPractice",
+      value: latestAttempt
+        ? skillLabels[latestAttempt.skill]
+        : t("dashboard.notStarted", "Not started"),
       icon: CalendarDays,
     },
   ];
@@ -120,8 +130,11 @@ export default function DashboardPage() {
     <AppShell>
       <PageHeader
         eyebrow="Dashboard"
+        eyebrowKey="dashboard.eyebrow"
         title="你的 IELTS 学习驾驶舱"
+        titleKey="dashboard.title"
         description="自动汇总 Reading、Listening 和 Writing 练习记录，展示预计分数、学习趋势、技能分布和下一步建议。"
+        descriptionKey="dashboard.description"
       />
 
       <div className="mb-4 flex justify-end">
@@ -132,7 +145,7 @@ export default function DashboardPage() {
               : "border-slate-200 bg-slate-50 text-slate-600"
           }
         >
-          {syncLabels[syncMode]}
+          {t(`dashboard.sync.${syncMode}`, syncLabels[syncMode])}
         </Badge>
       </div>
 
@@ -144,7 +157,7 @@ export default function DashboardPage() {
             <Card key={stat.label}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-slate-600">
-                  {stat.label}
+                  {t(stat.labelKey, stat.label)}
                 </CardTitle>
                 <Icon className="h-4 w-4 text-slate-400" aria-hidden="true" />
               </CardHeader>
@@ -161,7 +174,9 @@ export default function DashboardPage() {
       <div className="mt-6 grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <Card>
           <CardHeader>
-            <CardTitle>Learning trend</CardTitle>
+            <CardTitle>
+              {t("dashboard.learningTrend", "Learning trend")}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {trendData.length ? (
@@ -182,14 +197,14 @@ export default function DashboardPage() {
                 </ResponsiveContainer>
               </div>
             ) : (
-              <EmptyChart />
+              <EmptyChart label={t("dashboard.emptyChart")} />
             )}
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Skill radar</CardTitle>
+            <CardTitle>{t("dashboard.skillRadar", "Skill radar")}</CardTitle>
           </CardHeader>
           <CardContent>
             {history.length ? (
@@ -208,7 +223,7 @@ export default function DashboardPage() {
                 </ResponsiveContainer>
               </div>
             ) : (
-              <EmptyChart />
+              <EmptyChart label={t("dashboard.emptyChart")} />
             )}
           </CardContent>
         </Card>
@@ -217,7 +232,7 @@ export default function DashboardPage() {
       <div className="mt-6 grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
         <Card>
           <CardHeader>
-            <CardTitle>Skill focus</CardTitle>
+            <CardTitle>{t("dashboard.skillFocus", "Skill focus")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {skillRows.map((row) => (
@@ -240,7 +255,9 @@ export default function DashboardPage() {
         <Card>
           <CardHeader>
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <CardTitle>Recent practice</CardTitle>
+              <CardTitle>
+                {t("dashboard.recentPractice", "Recent Practice")}
+              </CardTitle>
               <div className="flex max-w-full gap-2 overflow-x-auto rounded-md bg-slate-100 p-1">
                 {recentPracticeTabs.map((tab) => {
                   const isActive = activeRecentSkill === tab.skill;
@@ -288,7 +305,9 @@ export default function DashboardPage() {
                     </p>
                     {item.resultUrl ? (
                       <Button asChild variant="outline" size="sm" className="mt-2">
-                        <Link href={item.resultUrl}>View Result</Link>
+                        <Link href={item.resultUrl}>
+                          {t("dashboard.viewResult", "View Result")}
+                        </Link>
                       </Button>
                     ) : null}
                   </div>
@@ -297,15 +316,18 @@ export default function DashboardPage() {
             ) : (
               <div className="rounded-md border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
                 <p className="text-sm font-medium text-slate-950">
-                  No {skillLabels[activeRecentSkill]} practice yet.
-                </p>
-                <p className="mt-2 text-sm text-slate-500">
-                  暂时没有 {skillLabels[activeRecentSkill]} 练习记录。
+                  {t(
+                    `dashboard.${activeRecentSkill}Empty`,
+                    `No ${skillLabels[activeRecentSkill]} practice yet.`,
+                  )}
                 </p>
                 {activeRecentTab ? (
                   <Button asChild className="mt-5">
                     <Link href={activeRecentTab.href}>
-                      Start {activeRecentTab.label}
+                      {t(
+                        `dashboard.start${capitalize(activeRecentTab.label)}`,
+                        `Start ${activeRecentTab.label}`,
+                      )}
                     </Link>
                   </Button>
                 ) : null}
@@ -318,7 +340,7 @@ export default function DashboardPage() {
   );
 }
 
-function EmptyChart() {
+function EmptyChart({ label }: { label: string }) {
   return (
     <div className="flex h-72 items-center justify-center rounded-md border border-dashed border-slate-300 bg-slate-50">
       <div className="text-center">
@@ -327,11 +349,15 @@ function EmptyChart() {
           aria-hidden="true"
         />
         <p className="mt-3 text-sm text-slate-500">
-          完成第一次练习后，图表会自动出现。
+          {label}
         </p>
       </div>
     </div>
   );
+}
+
+function capitalize(value: string) {
+  return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
 function buildSkillRows(history: PracticeHistoryItem[]) {

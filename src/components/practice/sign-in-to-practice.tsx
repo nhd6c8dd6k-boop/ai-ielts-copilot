@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { LockKeyhole } from "lucide-react";
 
+import { LocalizedText } from "@/components/i18n/localized-text";
 import { AppShell } from "@/components/layout/app-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,25 +25,32 @@ export function SignInToPractice({ returnTo }: SignInToPracticeProps) {
               <LockKeyhole className="h-6 w-6" aria-hidden="true" />
             </div>
             <Badge className="mt-5 bg-teal-50 text-teal-800">
-              Free during beta
+              <LocalizedText k="pricing.free" fallback="Free during beta" />
             </Badge>
             <h1 className="mt-5 text-2xl font-semibold tracking-tight text-slate-950">
-              Sign in to start free practice
+              <LocalizedText
+                k="auth.signInToPractice"
+                fallback="Sign in to start free practice"
+              />
             </h1>
-            <p className="mt-2 text-base font-medium text-slate-700">
-              登录后即可免费开始练习
-            </p>
             <p className="mt-4 text-sm leading-6 text-slate-600">
-              Beta 阶段免费使用。登录后可以保存练习记录、查看结果，并使用
-              Writing AI 反馈。
+              <LocalizedText
+                k="auth.signInPracticeDescription"
+                fallback="Free during beta. Sign in to save your practice record, view results, and use Writing AI feedback."
+              />
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:justify-center">
               <Button asChild>
-                <Link href={buildLoginRedirectHref(returnTo)}>Sign in</Link>
+                <Link href={buildLoginRedirectHref(returnTo)}>
+                  <LocalizedText k="auth.signIn" fallback="Sign in" />
+                </Link>
               </Button>
               <Button asChild variant="outline">
                 <Link href={buildRegisterRedirectHref(returnTo)}>
-                  Create account
+                  <LocalizedText
+                    k="auth.createAccount"
+                    fallback="Create account"
+                  />
                 </Link>
               </Button>
             </div>

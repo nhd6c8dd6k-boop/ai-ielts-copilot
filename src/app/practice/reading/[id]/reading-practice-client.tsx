@@ -11,6 +11,7 @@ import {
   Loader2,
 } from "lucide-react";
 
+import { useI18n } from "@/components/i18n/language-provider";
 import { AppShell } from "@/components/layout/app-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,7 @@ type SubmitResponse =
     };
 
 export function ReadingPracticeClient({ readingSet }: ReadingPracticeClientProps) {
+  const { t } = useI18n();
   const router = useRouter();
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [flaggedIds, setFlaggedIds] = useState<string[]>([]);
@@ -157,7 +159,8 @@ export function ReadingPracticeClient({ readingSet }: ReadingPracticeClientProps
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Badge className="bg-slate-50">
-            {answeredCount}/{readingSet.questions.length} answered
+            {answeredCount}/{readingSet.questions.length}{" "}
+            {t("practice.answered", "answered")}
           </Badge>
           <Badge className="bg-slate-50">
             <Clock3 className="h-3.5 w-3.5" aria-hidden="true" />
@@ -169,7 +172,7 @@ export function ReadingPracticeClient({ readingSet }: ReadingPracticeClientProps
             ) : (
               <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
             )}
-            Submit
+            {t("practice.submit", "Submit")}
           </Button>
         </div>
       </div>
@@ -184,10 +187,12 @@ export function ReadingPracticeClient({ readingSet }: ReadingPracticeClientProps
         <Card className="min-h-0">
           <CardContent className="h-[calc(100vh-230px)] overflow-auto p-0">
             <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-white px-5 py-3">
-              <div className="text-sm font-medium text-slate-950">Passage</div>
+              <div className="text-sm font-medium text-slate-950">
+                {t("practice.passage", "Passage")}
+              </div>
               <div className="flex items-center gap-2 text-xs text-slate-500">
                 <Highlighter className="h-3.5 w-3.5" aria-hidden="true" />
-                Select text to highlight
+                {t("practice.selectToHighlight", "Select text to highlight")}
               </div>
             </div>
             <article
@@ -269,7 +274,7 @@ export function ReadingPracticeClient({ readingSet }: ReadingPracticeClientProps
                           : "text-slate-500"
                       }
                       onClick={() => toggleFlag(question.id)}
-                      aria-label="Flag question"
+                      aria-label={t("practice.flagQuestion", "Flag question")}
                     >
                       <Flag className="h-4 w-4" aria-hidden="true" />
                     </Button>
@@ -302,7 +307,7 @@ export function ReadingPracticeClient({ readingSet }: ReadingPracticeClientProps
                       onChange={(event) =>
                         updateAnswer(question.id, event.target.value)
                       }
-                      placeholder="Type your answer"
+                      placeholder={t("practice.typeAnswer", "Type your answer")}
                       className="mt-4 h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-950 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
                     />
                   )}
@@ -313,7 +318,7 @@ export function ReadingPracticeClient({ readingSet }: ReadingPracticeClientProps
             <div className="border-t border-slate-200 p-4">
               <div className="mb-3 flex items-center gap-2 text-xs text-slate-500">
                 <Bookmark className="h-3.5 w-3.5" aria-hidden="true" />
-                {flaggedIds.length} flagged
+                {flaggedIds.length} {t("practice.flagged", "flagged")}
               </div>
               <Button
                 type="button"
@@ -321,7 +326,9 @@ export function ReadingPracticeClient({ readingSet }: ReadingPracticeClientProps
                 onClick={submitPractice}
                 disabled={isSubmitting}
               >
-                {isSubmitting ? "Submitting" : "Submit answers"}
+                {isSubmitting
+                  ? t("practice.submitting", "Submitting")
+                  : t("practice.submitAnswers", "Submit answers")}
               </Button>
             </div>
           </CardContent>

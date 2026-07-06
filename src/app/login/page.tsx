@@ -1,5 +1,7 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 
+import { LocalizedText } from "@/components/i18n/localized-text";
 import { MarketingHeader } from "@/components/layout/marketing-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -52,8 +54,15 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
       <main className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-md items-center px-4 py-12">
         <Card className="w-full">
           <CardHeader>
-            <Badge className="mb-3 w-fit bg-slate-50">账号登录</Badge>
-            <CardTitle>登录 AI IELTS Copilot</CardTitle>
+            <Badge className="mb-3 w-fit bg-slate-50">
+              <LocalizedText k="auth.loginBadge" fallback="Account login" />
+            </Badge>
+            <CardTitle>
+              <LocalizedText
+                k="auth.loginTitle"
+                fallback="Log in to AI IELTS Copilot"
+              />
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {error ? <AuthMessage tone="error" text={loginMessages[error]} /> : null}
@@ -62,12 +71,21 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             {checkout ? <AuthMessage text={checkoutMessages[checkout]} /> : null}
             {admin ? <AuthMessage text={adminMessages[admin]} /> : null}
             {isPracticeRedirect ? (
-              <AuthMessage text="Beta 阶段免费使用。登录后会自动回到刚才选择的练习。" />
+              <AuthMessage
+                text={
+                  <LocalizedText
+                    k="auth.practiceRedirectHint"
+                    fallback="Free during beta. You will return to the selected practice after signing in."
+                  />
+                }
+              />
             ) : null}
             <form action={signInAction} className="space-y-4">
               <input type="hidden" name="redirect" value={redirectTo} />
               <div className="space-y-2">
-                <Label htmlFor="email">邮箱</Label>
+                <Label htmlFor="email">
+                  <LocalizedText k="auth.email" fallback="Email" />
+                </Label>
                 <Input
                   id="email"
                   name="email"
@@ -78,18 +96,30 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">密码</Label>
+                <Label htmlFor="password">
+                  <LocalizedText k="auth.password" fallback="Password" />
+                </Label>
                 <Input
                   id="password"
                   name="password"
                   type="password"
                   autoComplete="current-password"
                   required
-                  placeholder="至少 8 位"
+                  placeholder="At least 8 characters"
                 />
               </div>
               <Button className="w-full" type="submit">
-                {isPracticeRedirect ? "登录并开始练习" : "登录并进入学习看板"}
+                {isPracticeRedirect ? (
+                  <LocalizedText
+                    k="auth.loginPractice"
+                    fallback="Log in and start practice"
+                  />
+                ) : (
+                  <LocalizedText
+                    k="auth.loginDashboard"
+                    fallback="Log in to dashboard"
+                  />
+                )}
               </Button>
             </form>
             <div className="mt-5 flex items-center justify-between text-sm">
@@ -97,13 +127,19 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                 href={`/register?redirect=${encodeURIComponent(redirectTo)}`}
                 className="text-slate-600 hover:text-slate-950"
               >
-                创建账号
+                <LocalizedText
+                  k="auth.createAccount"
+                  fallback="Create account"
+                />
               </Link>
               <Link
                 href="/forgot-password"
                 className="text-slate-600 hover:text-slate-950"
               >
-                忘记密码
+                <LocalizedText
+                  k="auth.forgotPassword"
+                  fallback="Forgot password?"
+                />
               </Link>
             </div>
           </CardContent>
@@ -126,7 +162,7 @@ function AuthMessage({
   text,
   tone = "success",
 }: {
-  text?: string;
+  text?: ReactNode;
   tone?: "success" | "error";
 }) {
   if (!text) {
