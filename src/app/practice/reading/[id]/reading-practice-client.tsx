@@ -118,7 +118,9 @@ export function ReadingPracticeClient({ readingSet }: ReadingPracticeClientProps
       const payload = (await response.json()) as SubmitResponse;
 
       if (response.status === 401) {
-        window.location.href = "/login?checkout=login_required";
+        window.location.href = `/login?redirect=${encodeURIComponent(
+          window.location.pathname,
+        )}`;
         return;
       }
 

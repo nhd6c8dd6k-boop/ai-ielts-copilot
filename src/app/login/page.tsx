@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { signInAction } from "@/features/auth/actions";
+import { getSafeRedirectPath } from "@/lib/auth/redirect";
 
 type LoginPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -42,6 +43,8 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const signup = getParam(params, "signup");
   const checkout = getParam(params, "checkout");
   const admin = getParam(params, "admin");
+  const redirectTo = getSafeRedirectPath(getParam(params, "redirect"), "/dashboard");
+  const isPracticeRedirect = redirectTo.startsWith("/practice/");
 
   return (
     <div className="min-h-screen bg-background">
@@ -58,7 +61,11 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             {signup ? <AuthMessage text={signupMessages[signup]} /> : null}
             {checkout ? <AuthMessage text={checkoutMessages[checkout]} /> : null}
             {admin ? <AuthMessage text={adminMessages[admin]} /> : null}
+            {isPracticeRedirect ? (
+              <AuthMessage text="Beta 阶段免费使用。登录后会自动回到刚才选择的练习。" />
+            ) : null}
             <form action={signInAction} className="space-y-4">
+              <input type="hidden" name="redirect" value={redirectTo} />
               <div className="space-y-2">
                 <Label htmlFor="email">邮箱</Label>
                 <Input
@@ -82,11 +89,14 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                 />
               </div>
               <Button className="w-full" type="submit">
-                登录并进入学习看板
+                {isPracticeRedirect ? "登录并开始练习" : "登录并进入学习看板"}
               </Button>
             </form>
             <div className="mt-5 flex items-center justify-between text-sm">
-              <Link href="/register" className="text-slate-600 hover:text-slate-950">
+              <Link
+                href={`/register?redirect=${encodeURIComponent(redirectTo)}`}
+                className="text-slate-600 hover:text-slate-950"
+              >
                 创建账号
               </Link>
               <Link

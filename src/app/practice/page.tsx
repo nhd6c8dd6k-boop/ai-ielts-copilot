@@ -6,12 +6,17 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { buildLoginRedirectHref } from "@/lib/auth/redirect";
+import { isUserSignedIn } from "@/server/services/auth-session";
 import { getPracticeLibraryStats } from "@/server/services/practice-library";
 
 export const dynamic = "force-dynamic";
 
 export default async function PracticePage() {
-  const stats = await getPracticeLibraryStats();
+  const [stats, isSignedIn] = await Promise.all([
+    getPracticeLibraryStats(),
+    isUserSignedIn(),
+  ]);
 
   const cards = [
     {
@@ -71,6 +76,11 @@ export default async function PracticePage() {
         description="Reading, Listening, and Writing are ready for beta practice with published original content, automatic scoring, and AI Writing feedback."
       />
 
+      <div className="mb-5 rounded-md border border-teal-200 bg-teal-50 px-4 py-3 text-sm leading-6 text-teal-800">
+        Free during beta. Sign in to start practice and save your progress.
+        <span className="ml-1">Beta 阶段免费使用。登录后即可开始练习并保存记录。</span>
+      </div>
+
       <div className="grid gap-4 xl:grid-cols-4">
         {cards.map((card) => {
           const Icon = card.icon;
@@ -105,7 +115,13 @@ export default async function PracticePage() {
                   {card.description}
                 </p>
                 <Button asChild className="mt-5 w-full">
-                  <Link href={card.href}>{card.cta}</Link>
+                  <Link
+                    href={
+                      isSignedIn ? card.href : buildLoginRedirectHref(card.href)
+                    }
+                  >
+                    {card.cta}
+                  </Link>
                 </Button>
               </CardContent>
             </Card>

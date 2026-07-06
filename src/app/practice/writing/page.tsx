@@ -6,12 +6,17 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { buildLoginRedirectHref } from "@/lib/auth/redirect";
+import { isUserSignedIn } from "@/server/services/auth-session";
 import { getPublishedWritingTaskSummaries } from "@/server/services/writing-practice";
 
 export const dynamic = "force-dynamic";
 
 export default async function WritingPracticePage() {
-  const tasks = await getPublishedWritingTaskSummaries();
+  const [tasks, isSignedIn] = await Promise.all([
+    getPublishedWritingTaskSummaries(),
+    isUserSignedIn(),
+  ]);
 
   return (
     <AppShell>
@@ -20,6 +25,11 @@ export default async function WritingPracticePage() {
         title="Choose a published IELTS Writing task."
         description="Write Task 1 or Task 2 essays in the browser, save drafts, and submit for AI band feedback."
       />
+
+      <div className="mb-5 rounded-md border border-teal-200 bg-teal-50 px-4 py-3 text-sm leading-6 text-teal-800">
+        Free during beta. Sign in to start practice and save your progress.
+        <span className="ml-1">Beta 阶段免费使用。登录后即可开始练习并保存记录。</span>
+      </div>
 
       {tasks.length ? (
         <div className="grid gap-4 xl:grid-cols-2">
@@ -74,7 +84,15 @@ export default async function WritingPracticePage() {
                 </div>
 
                 <Button asChild className="mt-5 w-full sm:w-auto">
-                  <Link href={`/practice/writing/${task.id}`}>Start Writing</Link>
+                  <Link
+                    href={
+                      isSignedIn
+                        ? `/practice/writing/${task.id}`
+                        : buildLoginRedirectHref(`/practice/writing/${task.id}`)
+                    }
+                  >
+                    Start Writing
+                  </Link>
                 </Button>
               </CardContent>
             </Card>

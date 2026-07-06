@@ -20,6 +20,15 @@ export async function POST(request: Request) {
     );
   }
 
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: "请先登录后提交作文。" }, { status: 401 });
+  }
+
   if (!env.openaiApiKey) {
     return NextResponse.json(
       {
@@ -28,15 +37,6 @@ export async function POST(request: Request) {
       },
       { status: 503 },
     );
-  }
-
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: "请先登录后提交作文。" }, { status: 401 });
   }
 
   const usage = await checkAiUsageLimit("writing_grade");

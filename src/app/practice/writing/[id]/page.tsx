@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 
+import { SignInToPractice } from "@/components/practice/sign-in-to-practice";
 import { env } from "@/lib/env";
+import { isUserSignedIn } from "@/server/services/auth-session";
 import { getPublishedWritingTask } from "@/server/services/writing-practice";
 import { WritingPracticeClient } from "./writing-practice-client";
 
@@ -18,6 +20,10 @@ export default async function WritingPracticeDetailPage({
 
   if (!task) {
     notFound();
+  }
+
+  if (!(await isUserSignedIn())) {
+    return <SignInToPractice returnTo={`/practice/writing/${id}`} />;
   }
 
   return (

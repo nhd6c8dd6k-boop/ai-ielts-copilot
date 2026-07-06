@@ -6,12 +6,17 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { buildLoginRedirectHref } from "@/lib/auth/redirect";
+import { isUserSignedIn } from "@/server/services/auth-session";
 import { getPublishedListeningSummaries } from "@/server/services/listening-practice";
 
 export const dynamic = "force-dynamic";
 
 export default async function ListeningPracticePage() {
-  const listeningSets = await getPublishedListeningSummaries();
+  const [listeningSets, isSignedIn] = await Promise.all([
+    getPublishedListeningSummaries(),
+    isUserSignedIn(),
+  ]);
 
   return (
     <AppShell>
@@ -20,6 +25,11 @@ export default async function ListeningPracticePage() {
         title="Choose a published IELTS Listening practice set."
         description="练习已发布的 IELTS-style 听力音频题，提交后自动判分并查看答案解析。"
       />
+
+      <div className="mb-5 rounded-md border border-teal-200 bg-teal-50 px-4 py-3 text-sm leading-6 text-teal-800">
+        Free during beta. Sign in to start practice and save your progress.
+        <span className="ml-1">Beta 阶段免费使用。登录后即可开始练习并保存记录。</span>
+      </div>
 
       {listeningSets.length ? (
         <div className="grid gap-4 xl:grid-cols-2">
@@ -73,7 +83,15 @@ export default async function ListeningPracticePage() {
                     Published {new Date(set.createdAt).toLocaleDateString()}
                   </p>
                   <Button asChild className="w-full sm:w-auto">
-                    <Link href={`/practice/listening/${set.id}`}>
+                    <Link
+                      href={
+                        isSignedIn
+                          ? `/practice/listening/${set.id}`
+                          : buildLoginRedirectHref(
+                              `/practice/listening/${set.id}`,
+                            )
+                      }
+                    >
                       Start Practice
                     </Link>
                   </Button>

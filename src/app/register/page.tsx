@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { signUpAction } from "@/features/auth/actions";
+import { getSafeRedirectPath } from "@/lib/auth/redirect";
 
 type RegisterPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -23,6 +24,8 @@ export default async function RegisterPage({
 }: RegisterPageProps) {
   const params = await searchParams;
   const error = getParam(params, "error");
+  const redirectTo = getSafeRedirectPath(getParam(params, "redirect"), "/dashboard");
+  const isPracticeRedirect = redirectTo.startsWith("/practice/");
 
   return (
     <div className="min-h-screen bg-background">
@@ -39,7 +42,13 @@ export default async function RegisterPage({
                 {registerMessages[error] ?? "注册失败，请稍后重试。"}
               </div>
             ) : null}
+            {isPracticeRedirect ? (
+              <div className="rounded-md border border-teal-200 bg-teal-50 px-3 py-2 text-sm text-teal-800">
+                Beta 阶段免费使用。创建账号后会回到刚才选择的练习。
+              </div>
+            ) : null}
             <form action={signUpAction} className="space-y-4">
+              <input type="hidden" name="redirect" value={redirectTo} />
               <div className="space-y-2">
                 <Label htmlFor="name">姓名</Label>
                 <Input
@@ -79,7 +88,10 @@ export default async function RegisterPage({
             </form>
             <p className="mt-5 text-sm text-slate-600">
               已经有账号？{" "}
-              <Link href="/login" className="font-medium text-slate-950">
+              <Link
+                href={`/login?redirect=${encodeURIComponent(redirectTo)}`}
+                className="font-medium text-slate-950"
+              >
                 去登录
               </Link>
             </p>

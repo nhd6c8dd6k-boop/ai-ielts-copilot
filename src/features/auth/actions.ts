@@ -2,19 +2,29 @@
 
 import { redirect } from "next/navigation";
 
+import {
+  appendInternalSearchParam,
+  getSafeRedirectPath,
+} from "@/lib/auth/redirect";
 import { env, isSupabaseConfigured } from "@/lib/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function signInAction(formData: FormData) {
+  const redirectTo = getSafeRedirectPath(
+    String(formData.get("redirect") ?? ""),
+    "/dashboard",
+  );
+  const redirectParam = `redirect=${encodeURIComponent(redirectTo)}`;
+
   if (!isSupabaseConfigured()) {
-    redirect("/dashboard?auth=demo");
+    redirect(appendInternalSearchParam(redirectTo, "auth", "demo"));
   }
 
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
 
   if (!email || !password) {
-    redirect("/login?error=missing_fields");
+    redirect(`/login?error=missing_fields&${redirectParam}`);
   }
 
   const supabase = await createSupabaseServerClient();
@@ -25,7 +35,7 @@ export async function signInAction(formData: FormData) {
   });
 
   if (error) {
-    redirect("/login?error=invalid_credentials");
+    redirect(`/login?error=invalid_credentials&${redirectParam}`);
   }
 
   await supabase
@@ -33,12 +43,18 @@ export async function signInAction(formData: FormData) {
     .update({ last_login_at: new Date().toISOString() })
     .eq("email", email);
 
-  redirect("/dashboard");
+  redirect(redirectTo);
 }
 
 export async function signUpAction(formData: FormData) {
+  const redirectTo = getSafeRedirectPath(
+    String(formData.get("redirect") ?? ""),
+    "/dashboard",
+  );
+  const redirectParam = `redirect=${encodeURIComponent(redirectTo)}`;
+
   if (!isSupabaseConfigured()) {
-    redirect("/dashboard?auth=demo");
+    redirect(appendInternalSearchParam(redirectTo, "auth", "demo"));
   }
 
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
@@ -46,11 +62,11 @@ export async function signUpAction(formData: FormData) {
   const displayName = String(formData.get("name") ?? "").trim();
 
   if (!email || !password || !displayName) {
-    redirect("/register?error=missing_fields");
+    redirect(`/register?error=missing_fields&${redirectParam}`);
   }
 
   if (password.length < 8) {
-    redirect("/register?error=weak_password");
+    redirect(`/register?error=weak_password&${redirectParam}`);
   }
 
   const supabase = await createSupabaseServerClient();
@@ -62,19 +78,21 @@ export async function signUpAction(formData: FormData) {
       data: {
         display_name: displayName,
       },
-      emailRedirectTo: `${env.nextPublicSiteUrl}/auth/callback?next=/dashboard`,
+      emailRedirectTo: `${env.nextPublicSiteUrl}/auth/callback?next=${encodeURIComponent(
+        redirectTo,
+      )}`,
     },
   });
 
   if (error) {
-    redirect("/register?error=signup_failed");
+    redirect(`/register?error=signup_failed&${redirectParam}`);
   }
 
   if (!data.session) {
-    redirect("/login?signup=check_email");
+    redirect(`/login?signup=check_email&${redirectParam}`);
   }
 
-  redirect("/dashboard");
+  redirect(redirectTo);
 }
 
 export async function resetPasswordAction(formData: FormData) {

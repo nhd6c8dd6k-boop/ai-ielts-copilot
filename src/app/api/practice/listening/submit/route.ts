@@ -35,7 +35,6 @@ export async function POST(request: Request) {
     );
   }
 
-  const input = submitListeningPracticeSchema.parse(await request.json());
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -45,6 +44,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "请先登录后提交成绩。" }, { status: 401 });
   }
 
+  const input = submitListeningPracticeSchema.parse(await request.json());
   const admin = createSupabaseAdminClient();
   const { data: listeningSet, error: setError } = await admin
     .from("listening_sets")
