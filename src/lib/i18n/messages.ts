@@ -31,6 +31,15 @@ export const messages: Record<Language, Record<string, string>> = {
       "This is a beta version. Your feedback helps us improve the practice experience.",
     "footer.support": "Support & Beta Feedback",
 
+    "betaRewardModal.title": "Beta tester reward 🎁",
+    "betaRewardModal.body":
+      "The first 10 users who sign up and complete one practice session will receive 1 month of Pro access when paid plans launch.",
+    "betaRewardModal.smallText":
+      "AI IELTS Copilot is free during beta. Your feedback helps us improve the practice experience.",
+    "betaRewardModal.primary": "Start practicing",
+    "betaRewardModal.secondary": "Maybe later",
+    "betaRewardModal.close": "Close reward modal",
+
     "practice.eyebrow": "Practice",
     "practice.title": "Choose a beta practice mode",
     "practice.description":
@@ -347,6 +356,15 @@ export const messages: Record<Language, Record<string, string>> = {
     "footer.xiaohongshu": "小红书：",
     "footer.beta": "当前是 Beta 测试版，欢迎反馈问题和建议。",
     "footer.support": "支持与 Beta 反馈",
+
+    "betaRewardModal.title": "Beta 测试福利 🎁",
+    "betaRewardModal.body":
+      "前 10 名注册并完成一次练习的用户，正式付费版上线后可获得 1 个月 Pro 体验。",
+    "betaRewardModal.smallText":
+      "目前 Beta 阶段免费使用。欢迎第一批同学试用并反馈问题。",
+    "betaRewardModal.primary": "开始练习",
+    "betaRewardModal.secondary": "稍后再看",
+    "betaRewardModal.close": "关闭福利弹窗",
 
     "practice.eyebrow": "练习中心",
     "practice.title": "选择一种练习方式",

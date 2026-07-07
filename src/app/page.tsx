@@ -18,6 +18,7 @@ import { BrandLogo } from "@/components/brand/brand-logo";
 import { LanguageSwitcher } from "@/components/i18n/language-switcher";
 import { useI18n } from "@/components/i18n/language-provider";
 import { MarketingHeader } from "@/components/layout/marketing-header";
+import { BetaRewardModal } from "@/components/marketing/beta-reward-modal";
 import { SupportFooter } from "@/components/layout/support-footer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -354,6 +355,7 @@ export default function Home() {
   return (
     <div className="min-h-screen overflow-x-hidden bg-background">
       <MarketingHeader />
+      <BetaRewardModal />
       <main>
         <section className="relative overflow-hidden border-b border-slate-200 bg-[#f8faf8]">
           <div className="absolute inset-0 bg-[linear-gradient(to_right,#e5e7eb_1px,transparent_1px),linear-gradient(to_bottom,#e5e7eb_1px,transparent_1px)] bg-[size:72px_72px] opacity-40" />
