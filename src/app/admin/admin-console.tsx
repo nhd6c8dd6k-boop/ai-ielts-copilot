@@ -593,7 +593,10 @@ export function AdminConsole({
     }
   };
 
-  const generateListeningAudio = async (item: AdminContentItem) => {
+  const generateListeningAudio = async (
+    item: AdminContentItem,
+    regenerateWithNewVoices = false,
+  ) => {
     if (item.type !== "listening") {
       return;
     }
@@ -616,6 +619,7 @@ export function AdminConsole({
         },
         body: JSON.stringify({
           listening_set_id: item.id,
+          regenerate_with_new_voices: regenerateWithNewVoices,
         }),
       });
       const payload = (await response.json()) as GenerateAudioApiResponse;
@@ -639,9 +643,16 @@ export function AdminConsole({
             : contentItem,
         ),
       );
-      setLogs((current) => [`${item.title} audio generated`, ...current]);
+      setLogs((current) => [
+        `${item.title} audio generated${
+          regenerateWithNewVoices ? " with new voices" : ""
+        }`,
+        ...current,
+      ]);
       setToastMessage(
-        `Audio ready · ${payload.usage.totalTokens} estimated input tokens · $${payload.usage.estimatedCost.toFixed(
+        `Audio ready${
+          regenerateWithNewVoices ? " · new voices" : ""
+        } · ${payload.usage.totalTokens} estimated input tokens · $${payload.usage.estimatedCost.toFixed(
           4,
         )}`,
       );
@@ -948,6 +959,28 @@ export function AdminConsole({
                           {item.audioStatus === "ready"
                             ? "Regenerate Audio"
                             : "Generate Audio"}
+                        </Button>
+                      ) : null}
+                      {item.type === "listening" &&
+                      item.audioStatus === "ready" ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={
+                            isMutatingId === item.id ||
+                            isAudioGeneratingId === item.id
+                          }
+                          onClick={() => generateListeningAudio(item, true)}
+                        >
+                          {isAudioGeneratingId === item.id ? (
+                            <Loader2
+                              className="h-4 w-4 animate-spin"
+                              aria-hidden="true"
+                            />
+                          ) : (
+                            <Headphones className="h-4 w-4" aria-hidden="true" />
+                          )}
+                          Regenerate with new voices
                         </Button>
                       ) : null}
                       <Button

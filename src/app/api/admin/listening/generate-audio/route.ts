@@ -97,6 +97,7 @@ export async function POST(request: Request) {
       existingMapping: listeningSet.tts_voice_mapping,
       forceNew: parsed.data.regenerate_with_new_voices,
       singleNarrator: listeningSet.section === 2 || listeningSet.section === 4,
+      section: listeningSet.section,
     });
     const speech = await generateSpeech({
       provider: "openai",
