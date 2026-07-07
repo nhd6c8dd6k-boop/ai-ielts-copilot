@@ -33,25 +33,26 @@ export function WritingPracticeClient({
   const { t } = useI18n();
   const router = useRouter();
   const draftStorageKey = `ai-ielts-writing-draft-${task.id}`;
-  const [essay, setEssay] = useState(() => {
-    if (typeof window === "undefined") {
-      return "";
-    }
-
-    return window.localStorage.getItem(draftStorageKey) ?? "";
-  });
+  const [essay, setEssay] = useState("");
   const [secondsElapsed, setSecondsElapsed] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(() => {
-    if (typeof window === "undefined") {
-      return null;
+  const [notice, setNotice] = useState<string | null>(null);
+
+  useEffect(() => {
+    const savedDraft = window.localStorage.getItem(draftStorageKey);
+
+    if (savedDraft) {
+      const frameId = window.requestAnimationFrame(() => {
+        setEssay(savedDraft);
+        setNotice("draftRestored");
+      });
+
+      return () => window.cancelAnimationFrame(frameId);
     }
 
-    return window.localStorage.getItem(draftStorageKey)
-      ? "draftRestored"
-      : null;
-  });
+    return undefined;
+  }, [draftStorageKey]);
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
