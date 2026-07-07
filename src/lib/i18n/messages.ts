@@ -141,6 +141,10 @@ export const messages: Record<Language, Record<string, string>> = {
       "AI Writing feedback is temporarily unavailable. You can still practice writing and save your draft.",
     "writing.draftSaved": "Draft saved in this browser.",
     "writing.draftRestored": "Draft restored from this browser.",
+    "writing.visual.information": "Visual information",
+    "writing.visual.unit": "Unit",
+    "writing.visual.processDiagram": "Process diagram",
+    "writing.visual.cycleContinues": "Cycle continues",
 
     "auth.signInToPractice": "Sign in to start free practice",
     "auth.signInPracticeDescription":
@@ -459,6 +463,10 @@ export const messages: Record<Language, Record<string, string>> = {
       "AI Writing feedback 暂时不可用。你仍然可以练习写作并保存草稿。",
     "writing.draftSaved": "草稿已保存在当前浏览器。",
     "writing.draftRestored": "已从当前浏览器恢复草稿。",
+    "writing.visual.information": "视觉信息",
+    "writing.visual.unit": "单位",
+    "writing.visual.processDiagram": "流程图",
+    "writing.visual.cycleContinues": "循环继续",
 
     "auth.signInToPractice": "登录后即可免费开始练习",
     "auth.signInPracticeDescription":

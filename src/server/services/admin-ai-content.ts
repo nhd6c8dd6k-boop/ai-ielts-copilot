@@ -299,7 +299,7 @@ export async function generateAdminWritingContent({
             "Generate a fully original IELTS Writing task.",
             "Prompt and sample answers must be in English.",
             "Do not copy official IELTS, Cambridge IELTS, exam recalls, or copyrighted materials.",
-            "For Task 1 chart, graph, pie chart or table tasks, include visual_data as structured JSON. For Task 2, set visual_data to null.",
+            "For Task 1 chart, graph, pie chart, table or process diagram tasks, include visual_data as structured JSON. For Task 2, set visual_data to null.",
           ],
         }),
       });

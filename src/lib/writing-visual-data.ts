@@ -5,7 +5,7 @@ const visualDatumSchema = z.record(
   z.union([z.string(), z.number(), z.null()]),
 );
 
-export const writingVisualDataSchema = z.object({
+const chartVisualDataSchema = z.object({
   type: z.enum(["bar_chart", "line_chart", "pie_chart", "table"]),
   title: z.string().min(1),
   description: z.string().optional().default(""),
@@ -21,6 +21,24 @@ export const writingVisualDataSchema = z.object({
   data: z.array(visualDatumSchema).min(1),
   unit: z.string().optional().default(""),
 });
+
+const processStageSchema = z.object({
+  label: z.string().min(1),
+  description: z.string().min(1),
+});
+
+const processDiagramVisualDataSchema = z.object({
+  type: z.literal("process_diagram"),
+  title: z.string().min(1),
+  description: z.string().optional().default(""),
+  stages: z.array(processStageSchema).min(2),
+  is_cycle: z.boolean().optional().default(false),
+});
+
+export const writingVisualDataSchema = z.discriminatedUnion("type", [
+  chartVisualDataSchema,
+  processDiagramVisualDataSchema,
+]);
 
 export type StructuredWritingVisualData = z.infer<
   typeof writingVisualDataSchema
@@ -119,6 +137,10 @@ export function normalizeWritingVisualData(
 export function getStructuredVisualLabel(
   type: StructuredWritingVisualData["type"],
 ) {
+  if (type === "process_diagram") {
+    return "Process diagram";
+  }
+
   if (type === "table") {
     return "Table";
   }

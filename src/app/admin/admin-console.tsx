@@ -1487,9 +1487,10 @@ function AdminContentEditForm({
         onChange={(visualDataJson) => onChange({ ...draft, visualDataJson })}
       />
       <p className="rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600">
-        Optional for Task 1. Use JSON with type, title, xKey, series, data and
-        unit. Leave empty if this task should use the prompt or markdown table
-        fallback.
+        Optional for Task 1. Charts and tables use type, title, xKey, series,
+        data and unit. Process diagrams use type, title, description, stages
+        and optional is_cycle. Leave empty if this task should use the prompt or
+        markdown table fallback.
       </p>
     </div>
   );

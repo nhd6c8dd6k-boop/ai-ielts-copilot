@@ -1,5 +1,6 @@
 "use client";
 
+import { ArrowDown, ArrowRight, RotateCcw } from "lucide-react";
 import {
   Bar,
   BarChart,
@@ -16,6 +17,7 @@ import {
   YAxis,
 } from "recharts";
 
+import { useI18n } from "@/components/i18n/language-provider";
 import { Badge } from "@/components/ui/badge";
 import {
   getStructuredVisualLabel,
@@ -29,6 +31,11 @@ type WritingTaskVisualProps = {
   taskType: number;
   visualData?: unknown;
 };
+
+type ChartWritingVisualData = Exclude<
+  StructuredWritingVisualData,
+  { type: "process_diagram" }
+>;
 
 const chartColors = [
   "#0f766e",
@@ -77,14 +84,19 @@ export function WritingTaskVisual({
 }
 
 function StructuredVisual({ visual }: { visual: StructuredWritingVisualData }) {
+  const { t } = useI18n();
   const label = getStructuredVisualLabel(visual.type);
 
   return (
     <section className="min-w-0">
       <div className="mb-2 flex items-center gap-2">
-        <Badge className="bg-teal-50 text-teal-800">{label}</Badge>
+        <Badge className="bg-teal-50 text-teal-800">
+          {visual.type === "process_diagram"
+            ? t("writing.visual.processDiagram", label)
+            : label}
+        </Badge>
         <span className="text-xs font-medium text-slate-500">
-          Visual information
+          {t("writing.visual.information", "Visual information")}
         </span>
       </div>
       <div className="min-w-0 overflow-hidden rounded-md border border-slate-200 bg-white p-4">
@@ -95,13 +107,15 @@ function StructuredVisual({ visual }: { visual: StructuredWritingVisualData }) {
               {visual.description}
             </p>
           ) : null}
-          {visual.unit ? (
+          {"unit" in visual && visual.unit ? (
             <p className="mt-1 text-xs font-medium text-slate-500">
-              Unit: {visual.unit}
+              {t("writing.visual.unit", "Unit")}: {visual.unit}
             </p>
           ) : null}
         </div>
-        {visual.type === "table" ? (
+        {visual.type === "process_diagram" ? (
+          <ProcessDiagram visual={visual} />
+        ) : visual.type === "table" ? (
           <StructuredTable visual={visual} />
         ) : (
           <div className="h-[320px] w-full min-w-0">
@@ -115,7 +129,69 @@ function StructuredVisual({ visual }: { visual: StructuredWritingVisualData }) {
   );
 }
 
-function renderChart(visual: StructuredWritingVisualData) {
+function ProcessDiagram({
+  visual,
+}: {
+  visual: Extract<StructuredWritingVisualData, { type: "process_diagram" }>;
+}) {
+  const { t } = useI18n();
+
+  return (
+    <div className="min-w-0 space-y-4">
+      <div className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-[repeat(auto-fit,minmax(160px,1fr))]">
+        {visual.stages.map((stage, index) => {
+          const isLast = index === visual.stages.length - 1;
+
+          return (
+            <div key={`${stage.label}-${index}`} className="min-w-0">
+              <div className="flex min-w-0 items-stretch gap-3 md:block">
+                <div className="min-w-0 flex-1 rounded-md border border-slate-200 bg-slate-50 p-4">
+                  <div className="mb-2 flex items-center gap-2">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-950 text-xs font-semibold text-white">
+                      {index + 1}
+                    </span>
+                    <h4 className="min-w-0 text-sm font-semibold text-slate-950">
+                      {stage.label}
+                    </h4>
+                  </div>
+                  <p className="text-sm leading-6 text-slate-600">
+                    {stage.description}
+                  </p>
+                </div>
+
+                {!isLast ? (
+                  <>
+                    <div
+                      className="hidden justify-center py-3 text-slate-400 md:flex"
+                      aria-hidden="true"
+                    >
+                      <ArrowRight className="h-5 w-5" />
+                    </div>
+                    <div
+                      className="flex items-center py-1 text-slate-400 md:hidden"
+                      aria-hidden="true"
+                    >
+                      <ArrowDown className="h-5 w-5" />
+                    </div>
+                  </>
+                ) : null}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {visual.is_cycle ? (
+        <div className="flex items-center gap-2 rounded-md border border-teal-100 bg-teal-50 px-3 py-2 text-sm font-medium text-teal-800">
+          <RotateCcw className="h-4 w-4" aria-hidden="true" />
+          {t("writing.visual.cycleContinues", "Cycle continues")}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function renderChart(visual: ChartWritingVisualData) {
   if (visual.type === "line_chart") {
     return (
       <LineChart data={visual.data} margin={{ top: 8, right: 12, bottom: 8, left: 0 }}>
@@ -185,7 +261,7 @@ function renderChart(visual: StructuredWritingVisualData) {
   );
 }
 
-function StructuredTable({ visual }: { visual: StructuredWritingVisualData }) {
+function StructuredTable({ visual }: { visual: ChartWritingVisualData }) {
   const columns = [visual.xKey, ...visual.series.map((series) => series.key)];
   const labels = [
     visual.xKey,
