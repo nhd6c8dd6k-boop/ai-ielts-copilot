@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Clock3, FileText, PenLine } from "lucide-react";
+import { CheckCircle2, Clock3, FileText, PenLine } from "lucide-react";
 
 import { LocalizedText } from "@/components/i18n/localized-text";
 import { AppShell } from "@/components/layout/app-shell";
@@ -8,16 +8,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { buildLoginRedirectHref } from "@/lib/auth/redirect";
-import { isUserSignedIn } from "@/server/services/auth-session";
+import { getCurrentUserId } from "@/server/services/auth-session";
 import { getPublishedWritingTaskSummaries } from "@/server/services/writing-practice";
 
 export const dynamic = "force-dynamic";
 
 export default async function WritingPracticePage() {
-  const [tasks, isSignedIn] = await Promise.all([
-    getPublishedWritingTaskSummaries(),
-    isUserSignedIn(),
-  ]);
+  const userId = await getCurrentUserId();
+  const tasks = await getPublishedWritingTaskSummaries(userId);
+  const isSignedIn = Boolean(userId);
 
   return (
     <AppShell>
@@ -95,6 +94,13 @@ export default async function WritingPracticePage() {
                   />
                 </div>
 
+                {isSignedIn && task.completion ? (
+                  <CompletionSummary
+                    band={task.completion.lastBandLabel}
+                    lastPractisedAt={task.completion.lastPractisedAt}
+                  />
+                ) : null}
+
                 <Button asChild className="mt-5 w-full sm:w-auto">
                   <Link
                     href={
@@ -103,7 +109,14 @@ export default async function WritingPracticePage() {
                         : buildLoginRedirectHref(`/practice/writing/${task.id}`)
                     }
                   >
-                    <LocalizedText k="writing.start" fallback="Start Writing" />
+                    {task.completion ? (
+                      <LocalizedText
+                        k="practice.practiceAgain"
+                        fallback="Practice again"
+                      />
+                    ) : (
+                      <LocalizedText k="writing.start" fallback="Start Writing" />
+                    )}
                   </Link>
                 </Button>
               </CardContent>
@@ -140,6 +153,33 @@ export default async function WritingPracticePage() {
         </Card>
       )}
     </AppShell>
+  );
+}
+
+function CompletionSummary({
+  band,
+  lastPractisedAt,
+}: {
+  band: string;
+  lastPractisedAt: string;
+}) {
+  return (
+    <div className="mt-5 rounded-md border border-teal-200 bg-teal-50 p-3 text-sm text-teal-900">
+      <div className="flex flex-wrap items-center gap-2">
+        <Badge className="bg-white text-teal-800">
+          <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+          <LocalizedText k="practice.completed" fallback="Completed" />
+        </Badge>
+        <span>
+          <LocalizedText k="practice.lastBand" fallback="Last band" />:{" "}
+          <span className="font-semibold">{band}</span>
+        </span>
+      </div>
+      <p className="mt-2 text-xs text-teal-800">
+        <LocalizedText k="practice.lastPractised" fallback="Last practised" />:{" "}
+        {new Date(lastPractisedAt).toLocaleDateString()}
+      </p>
+    </div>
   );
 }
 

@@ -1,5 +1,11 @@
 import Link from "next/link";
-import { Clock3, FileQuestion, Headphones, Radio } from "lucide-react";
+import {
+  CheckCircle2,
+  Clock3,
+  FileQuestion,
+  Headphones,
+  Radio,
+} from "lucide-react";
 
 import { LocalizedText } from "@/components/i18n/localized-text";
 import { AppShell } from "@/components/layout/app-shell";
@@ -8,16 +14,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { buildLoginRedirectHref } from "@/lib/auth/redirect";
-import { isUserSignedIn } from "@/server/services/auth-session";
+import { getCurrentUserId } from "@/server/services/auth-session";
 import { getPublishedListeningSummaries } from "@/server/services/listening-practice";
 
 export const dynamic = "force-dynamic";
 
 export default async function ListeningPracticePage() {
-  const [listeningSets, isSignedIn] = await Promise.all([
-    getPublishedListeningSummaries(),
-    isUserSignedIn(),
-  ]);
+  const userId = await getCurrentUserId();
+  const listeningSets = await getPublishedListeningSummaries(userId);
+  const isSignedIn = Boolean(userId);
 
   return (
     <AppShell>
@@ -91,6 +96,13 @@ export default async function ListeningPracticePage() {
                   />
                 </div>
 
+                {isSignedIn && set.completion ? (
+                  <CompletionSummary
+                    score={set.completion.lastScoreLabel}
+                    lastPractisedAt={set.completion.lastPractisedAt}
+                  />
+                ) : null}
+
                 <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <p className="text-xs text-slate-500">
                     <LocalizedText k="practice.added" fallback="Added" />{" "}
@@ -106,10 +118,17 @@ export default async function ListeningPracticePage() {
                             )
                       }
                     >
-                      <LocalizedText
-                        k="practice.startPractice"
-                        fallback="Start Practice"
-                      />
+                      {set.completion ? (
+                        <LocalizedText
+                          k="practice.practiceAgain"
+                          fallback="Practice again"
+                        />
+                      ) : (
+                        <LocalizedText
+                          k="practice.listening.cta"
+                          fallback="Start Listening"
+                        />
+                      )}
                     </Link>
                   </Button>
                 </div>
@@ -155,6 +174,33 @@ export default async function ListeningPracticePage() {
         </Card>
       )}
     </AppShell>
+  );
+}
+
+function CompletionSummary({
+  score,
+  lastPractisedAt,
+}: {
+  score: string;
+  lastPractisedAt: string;
+}) {
+  return (
+    <div className="mt-5 rounded-md border border-teal-200 bg-teal-50 p-3 text-sm text-teal-900">
+      <div className="flex flex-wrap items-center gap-2">
+        <Badge className="bg-white text-teal-800">
+          <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+          <LocalizedText k="practice.completed" fallback="Completed" />
+        </Badge>
+        <span>
+          <LocalizedText k="practice.lastScore" fallback="Last score" />:{" "}
+          <span className="font-semibold">{score}</span>
+        </span>
+      </div>
+      <p className="mt-2 text-xs text-teal-800">
+        <LocalizedText k="practice.lastPractised" fallback="Last practised" />:{" "}
+        {new Date(lastPractisedAt).toLocaleDateString()}
+      </p>
+    </div>
   );
 }
 

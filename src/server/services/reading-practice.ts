@@ -11,6 +11,13 @@ export type PublishedReadingSummary = {
   questionCount: number;
   estimatedTimeMinutes: number;
   createdAt: string;
+  completion: PracticeCompletionSummary | null;
+};
+
+export type PracticeCompletionSummary = {
+  completed: true;
+  lastScoreLabel: string;
+  lastPractisedAt: string;
 };
 
 export type ReadingPracticeQuestion = {
@@ -75,7 +82,7 @@ type RawAnswerRow = {
   synonyms: unknown;
 };
 
-export const getPublishedReadingSummaries = cache(async () => {
+export const getPublishedReadingSummaries = cache(async (userId?: string | null) => {
   if (!isSupabaseConfigured()) {
     return [];
   }
@@ -114,6 +121,10 @@ export const getPublishedReadingSummaries = cache(async () => {
     counts.set(question.set_id, (counts.get(question.set_id) ?? 0) + 1);
   });
 
+  const completionBySetId = userId
+    ? await getReadingCompletionBySetId({ userId, setIds })
+    : new Map<string, PracticeCompletionSummary>();
+
   return (sets ?? []).map(
     (set): PublishedReadingSummary => ({
       id: set.id,
@@ -123,9 +134,54 @@ export const getPublishedReadingSummaries = cache(async () => {
       questionCount: counts.get(set.id) ?? 0,
       estimatedTimeMinutes: estimateReadingTime(set.length_words),
       createdAt: set.created_at,
+      completion: completionBySetId.get(set.id) ?? null,
     }),
-  );
+  ).sort(sortIncompleteFirst);
 });
+
+async function getReadingCompletionBySetId({
+  userId,
+  setIds,
+}: {
+  userId: string;
+  setIds: string[];
+}) {
+  const admin = createSupabaseAdminClient();
+  const { data, error } = await admin
+    .from("practice_history")
+    .select("set_id,correct_count,total_questions,submitted_at,created_at")
+    .eq("user_id", userId)
+    .eq("skill", "reading")
+    .in("set_id", setIds)
+    .order("submitted_at", { ascending: false });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const completionBySetId = new Map<string, PracticeCompletionSummary>();
+
+  for (const attempt of data ?? []) {
+    if (!attempt.set_id || completionBySetId.has(attempt.set_id)) {
+      continue;
+    }
+
+    completionBySetId.set(attempt.set_id, {
+      completed: true,
+      lastScoreLabel: `${attempt.correct_count}/${attempt.total_questions}`,
+      lastPractisedAt: attempt.submitted_at ?? attempt.created_at,
+    });
+  }
+
+  return completionBySetId;
+}
+
+function sortIncompleteFirst(
+  a: { completion: PracticeCompletionSummary | null },
+  b: { completion: PracticeCompletionSummary | null },
+) {
+  return Number(Boolean(a.completion)) - Number(Boolean(b.completion));
+}
 
 export const getPublishedReadingPracticeSet = cache(async (id: string) => {
   if (!isSupabaseConfigured()) {

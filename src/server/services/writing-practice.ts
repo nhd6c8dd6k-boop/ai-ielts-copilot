@@ -20,6 +20,13 @@ export type PublishedWritingTaskSummary = {
   bandTarget: number | null;
   estimatedTimeMinutes: number;
   createdAt: string;
+  completion: WritingCompletionSummary | null;
+};
+
+export type WritingCompletionSummary = {
+  completed: true;
+  lastBandLabel: string;
+  lastPractisedAt: string;
 };
 
 export type PublishedWritingTask = PublishedWritingTaskSummary & {
@@ -90,7 +97,8 @@ type UsageSummary = {
   estimatedCost: number;
 };
 
-export const getPublishedWritingTaskSummaries = cache(async () => {
+export const getPublishedWritingTaskSummaries = cache(
+  async (userId?: string | null) => {
   if (!isSupabaseConfigured()) {
     return [];
   }
@@ -107,6 +115,11 @@ export const getPublishedWritingTaskSummaries = cache(async () => {
     throw new Error(error.message);
   }
 
+  const taskIds = (data ?? []).map((task) => task.id);
+  const completionByTaskId = userId
+    ? await getWritingCompletionByTaskId({ userId, taskIds })
+    : new Map<string, WritingCompletionSummary>();
+
   return (data ?? []).map(
     (task): PublishedWritingTaskSummary => ({
       id: task.id,
@@ -122,9 +135,61 @@ export const getPublishedWritingTaskSummaries = cache(async () => {
       bandTarget: task.band_target,
       estimatedTimeMinutes: getSuggestedTimeMinutes(task.task_type),
       createdAt: task.created_at,
+      completion: completionByTaskId.get(task.id) ?? null,
     }),
-  );
-});
+  ).sort(sortIncompleteFirst);
+  },
+);
+
+async function getWritingCompletionByTaskId({
+  userId,
+  taskIds,
+}: {
+  userId: string;
+  taskIds: string[];
+}) {
+  if (!taskIds.length) {
+    return new Map<string, WritingCompletionSummary>();
+  }
+
+  const admin = createSupabaseAdminClient();
+  const { data, error } = await admin
+    .from("writing_attempts")
+    .select("writing_task_id,overall_band,created_at")
+    .eq("user_id", userId)
+    .in("writing_task_id", taskIds)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const completionByTaskId = new Map<string, WritingCompletionSummary>();
+
+  for (const attempt of data ?? []) {
+    if (
+      !attempt.writing_task_id ||
+      completionByTaskId.has(attempt.writing_task_id)
+    ) {
+      continue;
+    }
+
+    completionByTaskId.set(attempt.writing_task_id, {
+      completed: true,
+      lastBandLabel: Number(attempt.overall_band).toFixed(1),
+      lastPractisedAt: attempt.created_at,
+    });
+  }
+
+  return completionByTaskId;
+}
+
+function sortIncompleteFirst(
+  a: { completion: WritingCompletionSummary | null },
+  b: { completion: WritingCompletionSummary | null },
+) {
+  return Number(Boolean(a.completion)) - Number(Boolean(b.completion));
+}
 
 export const getPublishedWritingTask = cache(async (id: string) => {
   if (!isSupabaseConfigured()) {
@@ -169,6 +234,7 @@ export const getPublishedWritingTask = cache(async (id: string) => {
     minimumWords: getMinimumWords(taskType),
     sampleAnswerBand7: data.sample_answer_band_7,
     sampleAnswerBand8: data.sample_answer_band_8,
+    completion: null,
     createdAt: data.created_at,
   } satisfies PublishedWritingTask;
 });
