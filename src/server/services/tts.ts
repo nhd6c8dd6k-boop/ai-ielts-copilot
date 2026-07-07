@@ -96,7 +96,7 @@ export type GenerateSpeechResult = {
 const OPENAI_TTS_MODEL = "gpt-4o-mini-tts";
 const DEFAULT_OPENAI_VOICE: TtsVoice = "alloy";
 const APPROX_TTS_COST_PER_MILLION_CHARS = 15;
-const MAX_MULTI_VOICE_SEGMENTS = 24;
+const MAX_MULTI_VOICE_SEGMENTS = 96;
 
 export async function generateSpeech({
   provider = "openai",

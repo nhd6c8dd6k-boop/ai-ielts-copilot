@@ -159,15 +159,15 @@ function pickSectionThreeVoice(
   speakerIndex: number,
 ) {
   if (TUTOR_ROLE_PATTERN.test(speaker)) {
-    return pickRandomAvailableVoice(TUTOR_STYLE_VOICES, usedVoices);
+    return pickPreferredAvailableVoice(["onyx", "verse", "alloy"], usedVoices);
   }
 
   if (STUDENT_A_PATTERN.test(speaker) || FEMALE_ROLE_PATTERN.test(speaker)) {
-    return pickRandomAvailableVoice(STUDENT_A_STYLE_VOICES, usedVoices);
+    return pickPreferredAvailableVoice(["shimmer", "nova", "coral"], usedVoices);
   }
 
   if (STUDENT_B_PATTERN.test(speaker) || MALE_ROLE_PATTERN.test(speaker)) {
-    return pickRandomAvailableVoice(STUDENT_B_STYLE_VOICES, usedVoices);
+    return pickPreferredAvailableVoice(["echo", "fable", "sage"], usedVoices);
   }
 
   if (STUDENT_ROLE_PATTERN.test(speaker)) {
@@ -240,4 +240,15 @@ function pickRandomAvailableVoice(
   );
 
   return pickRandomVoice(fallbackVoices.length ? fallbackVoices : voices);
+}
+
+function pickPreferredAvailableVoice(
+  voices: TtsVoice[],
+  usedVoices: Set<TtsVoice>,
+) {
+  return (
+    voices.find((voice) => !usedVoices.has(voice)) ??
+    FALLBACK_DISTINCT_VOICES.find((voice) => !usedVoices.has(voice)) ??
+    voices[0]
+  );
 }
