@@ -72,6 +72,7 @@ type HomeCopy = {
   whoItems: string[];
   betaFreeTitle: string;
   betaFreeText: string;
+  betaRewardText: string;
   emailLabel: string;
   xiaohongshuLabel: string;
   pillars: Pillar[];
@@ -164,6 +165,8 @@ const copy = {
     betaFreeTitle: "Beta 免费测试中",
     betaFreeText:
       "AI IELTS Copilot 目前还在 Beta 测试阶段。你可以免费体验 Reading、Listening 和 Writing 练习功能。如果遇到问题、页面不好用，或者有建议，欢迎通过邮箱或小红书反馈。",
+    betaRewardText:
+      "Beta 测试福利：前 10 名注册并完成一次练习的用户，正式付费版上线后可获得 1 个月 Pro 体验。",
     emailLabel: "邮箱",
     xiaohongshuLabel: "小红书",
     pillars: [
@@ -295,6 +298,8 @@ const copy = {
     betaFreeTitle: "Free beta testing",
     betaFreeText:
       "AI IELTS Copilot is currently in beta. You can try Reading, Listening, and Writing practice for free. If something feels unclear or inconvenient, please send feedback by email or Xiaohongshu.",
+    betaRewardText:
+      "Beta tester reward: The first 10 users who sign up and complete one practice session will receive 1 month of Pro access when paid plans launch.",
     emailLabel: "Email",
     xiaohongshuLabel: "Xiaohongshu",
     pillars: [
@@ -612,6 +617,9 @@ export default function Home() {
                   </h2>
                   <p className="mt-3 text-sm leading-6 text-slate-600">
                     {t.betaFreeText}
+                  </p>
+                  <p className="mt-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
+                    {t.betaRewardText}
                   </p>
                 </div>
                 <div className="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-700">

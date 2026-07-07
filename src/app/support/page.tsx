@@ -27,6 +27,12 @@ export default function SupportPage() {
             fallback="AI IELTS Copilot is currently in beta. If you find a bug, have trouble using the site, or want to suggest an improvement, please contact us."
           />
         </p>
+        <p className="mt-5 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
+          <LocalizedText
+            k="support.betaReward"
+            fallback="Beta tester reward: The first 10 users who sign up and complete one practice session will receive 1 month of Pro access when paid plans launch."
+          />
+        </p>
 
         <div className="mt-10 grid gap-4 md:grid-cols-2">
           <Card>

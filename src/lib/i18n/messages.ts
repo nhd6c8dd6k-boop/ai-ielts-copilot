@@ -296,6 +296,8 @@ export const messages: Record<Language, Record<string, string>> = {
     "pricing.betaAccess": "Beta Access",
     "pricing.betaBody":
       "Use the current beta product while the practice experience is being tested and improved.",
+    "pricing.betaReward":
+      "Beta tester reward: The first 10 users who sign up and complete one practice session will receive 1 month of Pro access when paid plans launch.",
     "pricing.duringBeta": "during beta",
     "pricing.startPracticing": "Start practicing",
     "pricing.proInactive": "Pro plans are not active during beta",
@@ -312,6 +314,8 @@ export const messages: Record<Language, Record<string, string>> = {
     "support.title": "Support & Beta Feedback",
     "support.description":
       "AI IELTS Copilot is currently in beta. If you find a bug, have trouble using the site, or want to suggest an improvement, please contact us.",
+    "support.betaReward":
+      "Beta tester reward: The first 10 users who sign up and complete one practice session will receive 1 month of Pro access when paid plans launch.",
     "support.email": "Email:",
     "support.xiaohongshu": "Xiaohongshu:",
     "support.emailHelp":
@@ -584,6 +588,8 @@ export const messages: Record<Language, Record<string, string>> = {
     "pricing.availableNow": "当前可用",
     "pricing.betaAccess": "Beta 免费体验",
     "pricing.betaBody": "在 Beta 阶段免费体验当前产品，我们会根据早期用户反馈继续改进练习体验。",
+    "pricing.betaReward":
+      "Beta 测试福利：前 10 名注册并完成一次练习的用户，正式付费版上线后可获得 1 个月 Pro 体验。",
     "pricing.duringBeta": "Beta 阶段",
     "pricing.startPracticing": "开始练习",
     "pricing.proInactive": "Beta 阶段暂未开启 Pro 计划",
@@ -599,6 +605,8 @@ export const messages: Record<Language, Record<string, string>> = {
     "support.title": "支持与 Beta 反馈",
     "support.description":
       "AI IELTS Copilot 目前处于 Beta 测试阶段。如果你遇到问题、使用问题，或者有改进建议，欢迎通过邮箱或小红书联系。",
+    "support.betaReward":
+      "Beta 测试福利：前 10 名注册并完成一次练习的用户，正式付费版上线后可获得 1 个月 Pro 体验。",
     "support.email": "邮箱：",
     "support.xiaohongshu": "小红书：",
     "support.emailHelp": "适合反馈问题、登录问题、付款疑问或较长的建议。",

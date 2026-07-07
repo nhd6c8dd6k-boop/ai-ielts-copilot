@@ -61,6 +61,12 @@ export default function PricingPage() {
                     fallback="Use the current beta product while the practice experience is being tested and improved."
                   />
                 </p>
+                <p className="mt-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
+                  <LocalizedText
+                    k="pricing.betaReward"
+                    fallback="Beta tester reward: The first 10 users who sign up and complete one practice session will receive 1 month of Pro access when paid plans launch."
+                  />
+                </p>
               </div>
               <div className="text-right">
                 <div className="text-4xl font-semibold tracking-tight text-slate-950">
