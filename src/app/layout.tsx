@@ -11,17 +11,36 @@ import type { Language } from "@/lib/i18n/messages";
 import { Providers } from "./providers";
 import "./globals.css";
 
+const publicSiteUrl = "https://aiieltscopilot.com";
+const siteDescription =
+  "Computer IELTS-style Reading, Listening, and Writing practice with automatic scoring, AI writing feedback, and dashboard progress tracking.";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(publicSiteUrl),
   title: {
     default: "AI IELTS Copilot",
     template: "%s | AI IELTS Copilot",
   },
-  description:
-    "AI generated IELTS practice, estimated scoring, and Computer IELTS simulation.",
+  description: siteDescription,
   icons: {
-    icon: "/icon.svg",
-    shortcut: "/icon.svg",
-    apple: "/icon.svg",
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/icon.png", type: "image/png", sizes: "512x512" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
+  openGraph: {
+    type: "website",
+    url: publicSiteUrl,
+    siteName: "AI IELTS Copilot",
+    title: "AI IELTS Copilot",
+    description: siteDescription,
+  },
+  twitter: {
+    card: "summary",
+    title: "AI IELTS Copilot",
+    description: siteDescription,
   },
 };
 
