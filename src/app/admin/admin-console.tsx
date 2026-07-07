@@ -29,6 +29,7 @@ import type {
   AdminContentStatus,
   AdminContentType,
   AdminDashboardData,
+  AdminUserActivityItem,
 } from "@/server/services/admin-dashboard";
 import { readingBands, readingQuestionTypes, readingTopics } from "@/features/ai-reading/constants";
 import {
@@ -41,7 +42,13 @@ import {
   writingTopics,
 } from "@/features/ai-writing/constants";
 
-type AdminTab = "generate" | "content" | "users" | "prompts" | "logs";
+type AdminTab =
+  | "generate"
+  | "content"
+  | "users"
+  | "userActivity"
+  | "prompts"
+  | "logs";
 type GenerateMode = "reading" | "listening" | "writing";
 
 const contentTypeTabs: Array<{
@@ -249,6 +256,35 @@ const users = [
   ["reviewer@example.com", "Admin", "Active"],
 ];
 
+const demoUserActivity: AdminUserActivityItem[] = [
+  {
+    userId: "demo-student",
+    email: "student.demo@example.com",
+    signedUpAt: new Date().toISOString(),
+    lastActivityAt: new Date().toISOString(),
+    readingAttempts: 1,
+    listeningAttempts: 1,
+    writingAttempts: 0,
+    totalAttempts: 2,
+    latestAttemptType: "Listening",
+    latestAttemptScore: "Band 6.5",
+    betaRewardEligible: true,
+  },
+  {
+    userId: "new-user",
+    email: "new.user@example.com",
+    signedUpAt: new Date().toISOString(),
+    lastActivityAt: null,
+    readingAttempts: 0,
+    listeningAttempts: 0,
+    writingAttempts: 0,
+    totalAttempts: 0,
+    latestAttemptType: null,
+    latestAttemptScore: null,
+    betaRewardEligible: false,
+  },
+];
+
 const prompts = [
   ["reading-generator", "v1", "English questions, Chinese explanations"],
   ["writing-grader", "v1", "IELTS criteria estimate with bilingual feedback"],
@@ -258,6 +294,7 @@ const prompts = [
 const demoData: AdminDashboardData = {
   content: demoContent,
   users,
+  userActivity: demoUserActivity,
   prompts,
   promptTemplates: [],
   logs: ["Admin console opened", "Demo prompt templates loaded"],
@@ -734,6 +771,7 @@ export function AdminConsole({
           ["generate", "Generate"],
           ["content", "Content"],
           ["users", "Users"],
+          ["userActivity", "User Activity"],
           ["prompts", "Prompts"],
           ["logs", "Logs"],
         ].map(([value, label]) => (
@@ -1037,6 +1075,10 @@ export function AdminConsole({
             headers={["Email", "Plan", "Status"]}
             rows={data.users}
           />
+        ) : null}
+
+        {activeTab === "userActivity" ? (
+          <UserActivityTable rows={data.userActivity} />
         ) : null}
 
         {activeTab === "prompts" ? (
@@ -2622,4 +2664,130 @@ function DataTable({
       </CardContent>
     </Card>
   );
+}
+
+function UserActivityTable({ rows }: { rows: AdminUserActivityItem[] }) {
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <CardTitle>User Activity</CardTitle>
+            <p className="mt-2 text-sm leading-6 text-slate-500">
+              Recent beta user activity, sorted by last activity time. Reward
+              eligibility means the user has completed at least one practice
+              session.
+            </p>
+          </div>
+          <Badge className="w-fit bg-teal-50 text-teal-800">
+            {rows.filter((row) => row.betaRewardEligible).length} eligible
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="overflow-x-auto rounded-md border border-slate-200">
+          <table className="min-w-[980px] w-full text-left text-sm">
+            <thead className="bg-slate-50 text-slate-500">
+              <tr>
+                {[
+                  "Email",
+                  "Signed up",
+                  "Last activity",
+                  "Reading",
+                  "Listening",
+                  "Writing",
+                  "Total",
+                  "Latest",
+                  "Reward",
+                ].map((header) => (
+                  <th key={header} className="px-4 py-3 font-medium">
+                    {header}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200 bg-white">
+              {rows.length ? (
+                rows.map((row) => (
+                  <tr key={row.userId}>
+                    <td className="max-w-[240px] px-4 py-3 font-medium text-slate-950">
+                      <span className="block truncate" title={row.email}>
+                        {row.email}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-slate-700">
+                      {formatAdminDate(row.signedUpAt)}
+                    </td>
+                    <td className="px-4 py-3 text-slate-700">
+                      {formatAdminDate(row.lastActivityAt)}
+                    </td>
+                    <td className="px-4 py-3 text-slate-700">
+                      {row.readingAttempts}
+                    </td>
+                    <td className="px-4 py-3 text-slate-700">
+                      {row.listeningAttempts}
+                    </td>
+                    <td className="px-4 py-3 text-slate-700">
+                      {row.writingAttempts}
+                    </td>
+                    <td className="px-4 py-3 font-medium text-slate-950">
+                      {row.totalAttempts}
+                    </td>
+                    <td className="px-4 py-3 text-slate-700">
+                      {row.latestAttemptType ? (
+                        <div className="space-y-1">
+                          <div className="font-medium text-slate-950">
+                            {row.latestAttemptType}
+                          </div>
+                          <div className="text-xs text-slate-500">
+                            {row.latestAttemptScore ?? "No score"}
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-slate-400">No attempts</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <Badge
+                        className={
+                          row.betaRewardEligible
+                            ? "bg-teal-50 text-teal-800"
+                            : "bg-slate-100 text-slate-600"
+                        }
+                      >
+                        {row.betaRewardEligible ? "Eligible" : "Not yet"}
+                      </Badge>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan={9}
+                    className="px-4 py-8 text-center text-sm text-slate-500"
+                  >
+                    No user activity yet.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function formatAdminDate(value: string | null) {
+  if (!value) {
+    return "No activity";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Unknown";
+  }
+
+  return date.toLocaleString();
 }

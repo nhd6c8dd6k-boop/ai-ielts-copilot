@@ -14,9 +14,24 @@ export type AdminContentItem = {
   audioUrl?: string | null;
 };
 
+export type AdminUserActivityItem = {
+  userId: string;
+  email: string;
+  signedUpAt: string | null;
+  lastActivityAt: string | null;
+  readingAttempts: number;
+  listeningAttempts: number;
+  writingAttempts: number;
+  totalAttempts: number;
+  latestAttemptType: "Reading" | "Listening" | "Writing" | null;
+  latestAttemptScore: string | null;
+  betaRewardEligible: boolean;
+};
+
 export type AdminDashboardData = {
   content: AdminContentItem[];
   users: string[][];
+  userActivity: AdminUserActivityItem[];
   prompts: string[][];
   promptTemplates: Array<{
     id: string;
@@ -25,6 +40,15 @@ export type AdminDashboardData = {
     skill: "reading" | "listening" | "writing" | "speaking";
   }>;
   logs: string[];
+};
+
+type AdminUserActivityAccumulator = {
+  readingAttempts: number;
+  listeningAttempts: number;
+  writingAttempts: number;
+  latestAttemptType: "Reading" | "Listening" | "Writing" | null;
+  latestAttemptScore: string | null;
+  latestAttemptAt: string | null;
 };
 
 export async function getAdminDashboardData(): Promise<AdminDashboardData> {
@@ -37,6 +61,7 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
     subscriptions,
     prompts,
     logs,
+    userActivity,
   ] = await Promise.all([
     admin
       .from("reading_sets")
@@ -70,6 +95,7 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
       .select("action,target_type,created_at")
       .order("created_at", { ascending: false })
       .limit(30),
+    getUserActivity(admin),
   ]);
 
   const subscriptionByUserId = new Map(
@@ -114,6 +140,7 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
         `${user.role} · ${subscription?.status ?? user.status}`,
       ];
     }),
+    userActivity,
     prompts: (prompts.data ?? []).map((prompt) => [
       prompt.name,
       `v${prompt.version}`,
@@ -132,6 +159,177 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
         ).toLocaleString()}`,
     ),
   };
+}
+
+export async function getUserActivity(
+  admin = createSupabaseAdminClient(),
+  limit = 100,
+): Promise<AdminUserActivityItem[]> {
+  const [usersResult, profilesResult, practiceResult, writingResult] =
+    await Promise.all([
+      admin
+        .from("users")
+        .select("id,email,role,status,created_at")
+        .order("created_at", { ascending: false })
+        .limit(500),
+      admin.from("profiles").select("id,role,created_at").limit(500),
+      admin
+        .from("practice_history")
+        .select(
+          "user_id,skill,title,score_label,score,band_estimate,submitted_at,created_at",
+        )
+        .in("skill", ["reading", "listening"])
+        .order("submitted_at", { ascending: false })
+        .limit(5000),
+      admin
+        .from("writing_attempts")
+        .select("user_id,overall_band,created_at")
+        .order("created_at", { ascending: false })
+        .limit(5000),
+    ]);
+
+  const profileByUserId = new Map(
+    (profilesResult.data ?? []).map((profile) => [profile.id, profile]),
+  );
+
+  const activityByUserId = new Map<string, AdminUserActivityAccumulator>();
+
+  const ensureActivity = (userId: string) => {
+    const existing = activityByUserId.get(userId);
+
+    if (existing) {
+      return existing;
+    }
+
+    const activity: AdminUserActivityAccumulator = {
+      readingAttempts: 0,
+      listeningAttempts: 0,
+      writingAttempts: 0,
+      latestAttemptType: null,
+      latestAttemptScore: null,
+      latestAttemptAt: null,
+    };
+    activityByUserId.set(userId, activity);
+    return activity;
+  };
+
+  for (const attempt of practiceResult.data ?? []) {
+    const activity = ensureActivity(attempt.user_id);
+    const skill = attempt.skill === "listening" ? "Listening" : "Reading";
+
+    if (skill === "Reading") {
+      activity.readingAttempts += 1;
+    } else {
+      activity.listeningAttempts += 1;
+    }
+
+    updateLatestAttempt(activity, {
+      type: skill,
+      score: formatPracticeAttemptScore(attempt),
+      attemptedAt: attempt.submitted_at ?? attempt.created_at ?? null,
+    });
+  }
+
+  for (const attempt of writingResult.data ?? []) {
+    const activity = ensureActivity(attempt.user_id);
+    activity.writingAttempts += 1;
+    updateLatestAttempt(activity, {
+      type: "Writing",
+      score:
+        attempt.overall_band == null
+          ? null
+          : `Band ${Number(attempt.overall_band).toFixed(1)}`,
+      attemptedAt: attempt.created_at ?? null,
+    });
+  }
+
+  return (usersResult.data ?? [])
+    .map((user) => {
+      const profile = profileByUserId.get(user.id);
+      const activity = activityByUserId.get(user.id) ?? {
+        readingAttempts: 0,
+        listeningAttempts: 0,
+        writingAttempts: 0,
+        latestAttemptType: null,
+        latestAttemptScore: null,
+        latestAttemptAt: null,
+      };
+      const totalAttempts =
+        activity.readingAttempts +
+        activity.listeningAttempts +
+        activity.writingAttempts;
+
+      return {
+        userId: user.id,
+        email: user.email,
+        signedUpAt: user.created_at ?? profile?.created_at ?? null,
+        lastActivityAt: activity.latestAttemptAt,
+        readingAttempts: activity.readingAttempts,
+        listeningAttempts: activity.listeningAttempts,
+        writingAttempts: activity.writingAttempts,
+        totalAttempts,
+        latestAttemptType: activity.latestAttemptType,
+        latestAttemptScore: activity.latestAttemptScore,
+        betaRewardEligible: totalAttempts > 0,
+      };
+    })
+    .sort((a, b) => {
+      const aTime = Date.parse(a.lastActivityAt ?? a.signedUpAt ?? "");
+      const bTime = Date.parse(b.lastActivityAt ?? b.signedUpAt ?? "");
+
+      return (
+        (Number.isFinite(bTime) ? bTime : 0) -
+        (Number.isFinite(aTime) ? aTime : 0)
+      );
+    })
+    .slice(0, limit);
+}
+
+function updateLatestAttempt(
+  activity: {
+    latestAttemptType: "Reading" | "Listening" | "Writing" | null;
+    latestAttemptScore: string | null;
+    latestAttemptAt: string | null;
+  },
+  attempt: {
+    type: "Reading" | "Listening" | "Writing";
+    score: string | null;
+    attemptedAt: string | null;
+  },
+) {
+  const currentTime = Date.parse(activity.latestAttemptAt ?? "");
+  const nextTime = Date.parse(attempt.attemptedAt ?? "");
+
+  if (
+    attempt.attemptedAt &&
+    (!activity.latestAttemptAt ||
+      (Number.isFinite(nextTime) ? nextTime : 0) >
+        (Number.isFinite(currentTime) ? currentTime : 0))
+  ) {
+    activity.latestAttemptType = attempt.type;
+    activity.latestAttemptScore = attempt.score;
+    activity.latestAttemptAt = attempt.attemptedAt;
+  }
+}
+
+function formatPracticeAttemptScore(attempt: {
+  score_label: string | null;
+  score: number | null;
+  band_estimate: number | null;
+}) {
+  if (attempt.band_estimate != null) {
+    return `Band ${Number(attempt.band_estimate).toFixed(1)}`;
+  }
+
+  if (attempt.score_label) {
+    return attempt.score_label;
+  }
+
+  if (attempt.score != null) {
+    return `${Number(attempt.score).toFixed(0)}%`;
+  }
+
+  return null;
 }
 
 function formatSource(source: string) {
