@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -624,24 +625,36 @@ export default function Home() {
                     {t.betaRewardText}
                   </p>
                 </div>
-                <div className="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-700">
-                  <p>
-                    <span className="font-medium text-slate-950">
-                      {t.emailLabel}:
-                    </span>{" "}
-                    <a
-                      href={`mailto:${supportEmail}`}
-                      className="font-medium text-teal-800 underline-offset-4 hover:underline"
-                    >
-                      {supportEmail}
-                    </a>
-                  </p>
-                  <p className="mt-2">
-                    <span className="font-medium text-slate-950">
-                      {t.xiaohongshuLabel}:
-                    </span>{" "}
-                    {xiaohongshuAccount}
-                  </p>
+                <div className="space-y-4">
+                  <div className="overflow-hidden rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+                    <Image
+                      src="/brand/full-logo.png"
+                      alt="AI IELTS Copilot logo"
+                      width={1536}
+                      height={1024}
+                      sizes="(min-width: 1024px) 360px, calc(100vw - 4rem)"
+                      className="mx-auto h-auto w-full max-w-[22rem]"
+                    />
+                  </div>
+                  <div className="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-700">
+                    <p>
+                      <span className="font-medium text-slate-950">
+                        {t.emailLabel}:
+                      </span>{" "}
+                      <a
+                        href={`mailto:${supportEmail}`}
+                        className="font-medium text-teal-800 underline-offset-4 hover:underline"
+                      >
+                        {supportEmail}
+                      </a>
+                    </p>
+                    <p className="mt-2">
+                      <span className="font-medium text-slate-950">
+                        {t.xiaohongshuLabel}:
+                      </span>{" "}
+                      {xiaohongshuAccount}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
