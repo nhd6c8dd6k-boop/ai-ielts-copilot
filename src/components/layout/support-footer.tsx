@@ -45,6 +45,20 @@ export function SupportFooter() {
               <Mail className="h-4 w-4" aria-hidden="true" />
               {t("footer.support", "Support & Beta Feedback")}
             </Link>
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+              <Link
+                href="/privacy"
+                className="font-medium text-slate-600 underline-offset-4 hover:text-slate-950 hover:underline"
+              >
+                {t("footer.privacy", "Privacy Policy")}
+              </Link>
+              <Link
+                href="/terms"
+                className="font-medium text-slate-600 underline-offset-4 hover:text-slate-950 hover:underline"
+              >
+                {t("footer.terms", "Terms of Use")}
+              </Link>
+            </div>
           </div>
         </div>
       </div>

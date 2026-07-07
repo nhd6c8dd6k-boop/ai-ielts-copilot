@@ -30,6 +30,8 @@ export const messages: Record<Language, Record<string, string>> = {
     "footer.beta":
       "This is a beta version. Your feedback helps us improve the practice experience.",
     "footer.support": "Support & Beta Feedback",
+    "footer.privacy": "Privacy Policy",
+    "footer.terms": "Terms of Use",
 
     "betaRewardModal.title": "Beta tester reward 🎁",
     "betaRewardModal.body":
@@ -360,6 +362,8 @@ export const messages: Record<Language, Record<string, string>> = {
     "footer.xiaohongshu": "小红书：",
     "footer.beta": "当前是 Beta 测试版，欢迎反馈问题和建议。",
     "footer.support": "支持与 Beta 反馈",
+    "footer.privacy": "隐私政策",
+    "footer.terms": "使用条款",
 
     "betaRewardModal.title": "Beta 测试福利 🎁",
     "betaRewardModal.body":
