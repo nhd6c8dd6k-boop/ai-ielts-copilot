@@ -69,9 +69,6 @@ type HomeCopy = {
   stepsBadge: string;
   stepsTitle: string;
   steps: string[][];
-  whoTitle: string;
-  whoEyebrow: string;
-  whoItems: string[];
   betaFreeTitle: string;
   betaFreeText: string;
   betaRewardText: string;
@@ -155,14 +152,6 @@ const copy = {
       ["选择练习项目", "选择 Reading、Listening 或 Writing。"],
       ["完成练习", "在接近机考的页面中完成题目或写作任务。"],
       ["查看结果", "查看分数、答案解析，以及 Writing AI 反馈。"],
-    ],
-    whoEyebrow: "适合谁",
-    whoTitle: "适合这些同学",
-    whoItems: [
-      "第一次考雅思，不知道机考长什么样",
-      "想自己练 Reading / Listening / Writing",
-      "想让 AI 帮忙看作文问题",
-      "想先免费体验雅思练习流程",
     ],
     betaFreeTitle: "Beta 免费测试中",
     betaFreeText:
@@ -288,14 +277,6 @@ const copy = {
         "Review your results",
         "Check your score, answers, explanations, and AI writing feedback where available.",
       ],
-    ],
-    whoEyebrow: "Who is this for?",
-    whoTitle: "Built for these students",
-    whoItems: [
-      "First-time IELTS candidates who want to understand the computer test flow",
-      "Students who want to practise Reading, Listening, and Writing independently",
-      "Writers who want AI help identifying essay problems",
-      "Learners who want to try the practice experience for free during beta",
     ],
     betaFreeTitle: "Free beta testing",
     betaFreeText:
@@ -435,33 +416,6 @@ export default function Home() {
                   </div>
                 );
               })}
-            </div>
-          </div>
-        </section>
-
-        <section className="border-b border-slate-200 bg-white">
-          <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-            <div className="max-w-2xl">
-              <Badge>{t.whoEyebrow}</Badge>
-              <h2 className="mt-5 text-3xl font-semibold tracking-tight text-slate-950">
-                {t.whoTitle}
-              </h2>
-            </div>
-            <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              {t.whoItems.map((item) => (
-                <div
-                  key={item}
-                  className="rounded-lg border border-slate-200 bg-[#fbfbf8] p-5"
-                >
-                  <CheckCircle2
-                    className="h-5 w-5 text-teal-700"
-                    aria-hidden="true"
-                  />
-                  <p className="mt-4 text-sm leading-6 text-slate-700">
-                    {item}
-                  </p>
-                </div>
-              ))}
             </div>
           </div>
         </section>
