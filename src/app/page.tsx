@@ -16,7 +16,6 @@ import {
 } from "lucide-react";
 
 import { BrandLogo } from "@/components/brand/brand-logo";
-import { LanguageSwitcher } from "@/components/i18n/language-switcher";
 import { useI18n } from "@/components/i18n/language-provider";
 import { MarketingHeader } from "@/components/layout/marketing-header";
 import { BetaRewardModal } from "@/components/marketing/beta-reward-modal";
@@ -348,7 +347,6 @@ export default function Home() {
                   {t.beta}
                 </Badge>
                 <Badge className="bg-white/80">{t.badge}</Badge>
-                <LanguageSwitcher compact />
               </div>
               <div className="mt-6 flex justify-center">
                 <BrandLogo

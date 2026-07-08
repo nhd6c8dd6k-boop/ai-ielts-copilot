@@ -124,20 +124,22 @@ export function HeaderAuthNav() {
     return (
       <div
         aria-label={t("nav.login", "Checking sign-in status")}
-        className="h-9 w-40 rounded-md bg-slate-100"
+        className="h-9 w-20 rounded-md bg-slate-100 sm:w-40"
       />
     );
   }
 
   if (mode !== "supabase" || !user) {
     return (
-      <div className="flex items-center gap-2">
-        <Button asChild variant="ghost" size="sm">
+      <div className="flex min-w-0 items-center gap-1 sm:gap-2">
+        <Button asChild variant="ghost" size="sm" className="hidden min-[390px]:inline-flex">
           <Link href="/login">{t("nav.login", "Log in")}</Link>
         </Button>
-        <Button asChild size="sm">
-          <Link href="/register">
-            {t("nav.register", "Start free")}
+        <Button asChild size="sm" className="px-2 sm:px-3">
+          <Link href="/register" aria-label={t("nav.register", "Start free")}>
+            <span className="hidden min-[430px]:inline">
+              {t("nav.register", "Start free")}
+            </span>
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </Link>
         </Button>
@@ -148,11 +150,13 @@ export function HeaderAuthNav() {
   const isAdmin = user.role === "admin";
 
   return (
-    <div className="flex items-center gap-2">
-      <Button asChild variant="ghost" size="sm">
-        <Link href="/dashboard">
+    <div className="flex min-w-0 items-center gap-1 sm:gap-2">
+      <Button asChild variant="ghost" size="sm" className="px-2 sm:px-3">
+        <Link href="/dashboard" aria-label={t("nav.dashboard", "Dashboard")}>
           <LayoutDashboard className="h-4 w-4" aria-hidden="true" />
-          {t("nav.dashboard", "Dashboard")}
+          <span className="hidden min-[520px]:inline">
+            {t("nav.dashboard", "Dashboard")}
+          </span>
         </Link>
       </Button>
       <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
@@ -162,10 +166,12 @@ export function HeaderAuthNav() {
         </Link>
       </Button>
       {isAdmin ? (
-        <Button asChild variant="ghost" size="sm">
-          <Link href="/admin">
+        <Button asChild variant="ghost" size="sm" className="px-2 sm:px-3">
+          <Link href="/admin" aria-label={t("nav.admin", "Admin")}>
             <Shield className="h-4 w-4" aria-hidden="true" />
-            {t("nav.admin", "Admin")}
+            <span className="hidden min-[520px]:inline">
+              {t("nav.admin", "Admin")}
+            </span>
           </Link>
         </Button>
       ) : null}
@@ -175,11 +181,19 @@ export function HeaderAuthNav() {
         size="sm"
         onClick={signOut}
         disabled={isSigningOut}
+        aria-label={
+          isSigningOut
+            ? t("nav.signingOut", "Signing out")
+            : t("nav.signOut", "Sign out")
+        }
+        className="px-2 sm:px-3"
       >
         <LogOut className="h-4 w-4" aria-hidden="true" />
-        {isSigningOut
-          ? t("nav.signingOut", "Signing out")
-          : t("nav.signOut", "Sign out")}
+        <span className="hidden min-[520px]:inline">
+          {isSigningOut
+            ? t("nav.signingOut", "Signing out")
+            : t("nav.signOut", "Sign out")}
+        </span>
       </Button>
     </div>
   );
