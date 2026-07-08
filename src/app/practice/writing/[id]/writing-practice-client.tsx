@@ -189,8 +189,8 @@ export function WritingPracticeClient({
         </div>
       ) : null}
 
-      <div className="grid gap-6 xl:grid-cols-[420px_1fr]">
-        <Card className="h-fit">
+      <div className="grid items-start gap-6 xl:grid-cols-[420px_1fr]">
+        <Card className="h-fit self-start">
           <CardHeader>
             <CardTitle>{t("writing.prompt", "Writing prompt")}</CardTitle>
           </CardHeader>
@@ -219,7 +219,7 @@ export function WritingPracticeClient({
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="h-fit self-start">
           <CardHeader>
             <div className="flex flex-wrap items-center justify-between gap-3">
               <CardTitle>{t("writing.essayEditor", "Essay editor")}</CardTitle>
