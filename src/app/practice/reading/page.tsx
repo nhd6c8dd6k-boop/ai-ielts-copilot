@@ -4,6 +4,7 @@ import { BookOpen, CheckCircle2, Clock3, FileText } from "lucide-react";
 import { LocalizedText } from "@/components/i18n/localized-text";
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/layout/page-header";
+import { PracticeCategoryTabs } from "@/components/practice/practice-category-tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,9 +14,31 @@ import { getPublishedReadingSummaries } from "@/server/services/reading-practice
 
 export const dynamic = "force-dynamic";
 
-export default async function ReadingPracticePage() {
+const readingCategoryTabs = [
+  { value: "all", labelKey: "practice.filter.all", fallback: "All" },
+  { value: "education", labelKey: "practice.filter.education", fallback: "Education" },
+  { value: "environment", labelKey: "practice.filter.environment", fallback: "Environment" },
+  { value: "technology", labelKey: "practice.filter.technology", fallback: "Technology" },
+  { value: "health", labelKey: "practice.filter.health", fallback: "Health" },
+  { value: "society", labelKey: "practice.filter.society", fallback: "Society" },
+  { value: "business", labelKey: "practice.filter.business", fallback: "Business" },
+] as const;
+
+type ReadingCategory = (typeof readingCategoryTabs)[number]["value"];
+
+type PageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function ReadingPracticePage({ searchParams }: PageProps) {
+  const activeCategory = normalizeReadingCategory(
+    getCategoryParam(await searchParams),
+  );
   const userId = await getCurrentUserId();
   const readingSets = await getPublishedReadingSummaries(userId);
+  const visibleReadingSets = readingSets.filter((set) =>
+    matchesReadingCategory(set.topic, activeCategory),
+  );
   const isSignedIn = Boolean(userId);
 
   return (
@@ -36,9 +59,14 @@ export default async function ReadingPracticePage() {
         />
       </div>
 
-      {readingSets.length ? (
+      <PracticeCategoryTabs
+        activeCategory={activeCategory}
+        tabs={[...readingCategoryTabs]}
+      />
+
+      {visibleReadingSets.length ? (
         <div className="grid gap-4 xl:grid-cols-2">
-          {readingSets.map((set) => (
+          {visibleReadingSets.map((set) => (
             <Card key={set.id}>
               <CardHeader>
                 <div className="flex flex-wrap items-start justify-between gap-3">
@@ -124,10 +152,17 @@ export default async function ReadingPracticePage() {
                 aria-hidden="true"
               />
               <h2 className="mt-5 text-lg font-semibold text-slate-950">
-                <LocalizedText
-                  k="reading.emptyTitle"
-                  fallback="No Reading practice sets yet."
-                />
+                {activeCategory === "all" ? (
+                  <LocalizedText
+                    k="reading.emptyTitle"
+                    fallback="No Reading practice sets yet."
+                  />
+                ) : (
+                  <LocalizedText
+                    k="practice.filter.empty"
+                    fallback="No practice tasks in this category yet."
+                  />
+                )}
               </h2>
               <p className="mt-3 text-sm leading-6 text-slate-600">
                 <LocalizedText
@@ -202,4 +237,26 @@ function InfoMetric({
       <p className="mt-1 font-medium text-slate-950">{value}</p>
     </div>
   );
+}
+
+function getCategoryParam(
+  searchParams?: Record<string, string | string[] | undefined>,
+) {
+  const category = searchParams?.category;
+
+  return Array.isArray(category) ? category[0] : category;
+}
+
+function normalizeReadingCategory(category?: string): ReadingCategory {
+  return readingCategoryTabs.some((tab) => tab.value === category)
+    ? (category as ReadingCategory)
+    : "all";
+}
+
+function matchesReadingCategory(topic: string, category: ReadingCategory) {
+  if (category === "all") {
+    return true;
+  }
+
+  return topic.toLowerCase().includes(category);
 }

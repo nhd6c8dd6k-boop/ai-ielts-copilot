@@ -16,6 +16,7 @@ export type PublishedWritingTaskSummary = {
   topic: string;
   title: string;
   promptSummary: string;
+  visualType: StructuredWritingVisualData["type"] | null;
   visualTypeLabel: string | null;
   bandTarget: number | null;
   estimatedTimeMinutes: number;
@@ -121,22 +122,28 @@ export const getPublishedWritingTaskSummaries = cache(
     : new Map<string, WritingCompletionSummary>();
 
   return (data ?? []).map(
-    (task): PublishedWritingTaskSummary => ({
-      id: task.id,
-      taskType: normalizeTaskType(task.task_type),
-      topic: task.topic,
-      title: buildWritingTaskTitle(task.task_type, task.topic),
-      promptSummary: summarizePrompt(task.prompt),
-      visualTypeLabel: getWritingVisualTypeLabel({
-        prompt: task.prompt,
-        taskType: normalizeTaskType(task.task_type),
-        visualData: task.visual_data,
-      }),
-      bandTarget: task.band_target,
-      estimatedTimeMinutes: getSuggestedTimeMinutes(task.task_type),
-      createdAt: task.created_at,
-      completion: completionByTaskId.get(task.id) ?? null,
-    }),
+    (task): PublishedWritingTaskSummary => {
+      const taskType = normalizeTaskType(task.task_type);
+      const structuredVisualData = normalizeWritingVisualData(task.visual_data);
+
+      return {
+        id: task.id,
+        taskType,
+        topic: task.topic,
+        title: buildWritingTaskTitle(task.task_type, task.topic),
+        promptSummary: summarizePrompt(task.prompt),
+        visualType: structuredVisualData?.type ?? null,
+        visualTypeLabel: getWritingVisualTypeLabel({
+          prompt: task.prompt,
+          taskType,
+          visualData: task.visual_data,
+        }),
+        bandTarget: task.band_target,
+        estimatedTimeMinutes: getSuggestedTimeMinutes(task.task_type),
+        createdAt: task.created_at,
+        completion: completionByTaskId.get(task.id) ?? null,
+      };
+    },
   ).sort(sortIncompleteFirst);
   },
 );
@@ -215,6 +222,7 @@ export const getPublishedWritingTask = cache(async (id: string) => {
   }
 
   const taskType = normalizeTaskType(data.task_type);
+  const structuredVisualData = normalizeWritingVisualData(data.visual_data);
 
   return {
     id: data.id,
@@ -222,8 +230,9 @@ export const getPublishedWritingTask = cache(async (id: string) => {
     topic: data.topic,
     title: buildWritingTaskTitle(taskType, data.topic),
     prompt: data.prompt,
-    visualData: normalizeWritingVisualData(data.visual_data),
+    visualData: structuredVisualData,
     promptSummary: summarizePrompt(data.prompt),
+    visualType: structuredVisualData?.type ?? null,
     visualTypeLabel: getWritingVisualTypeLabel({
       prompt: data.prompt,
       taskType,

@@ -10,6 +10,7 @@ import {
 import { LocalizedText } from "@/components/i18n/localized-text";
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/layout/page-header";
+import { PracticeCategoryTabs } from "@/components/practice/practice-category-tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,9 +20,45 @@ import { getPublishedListeningSummaries } from "@/server/services/listening-prac
 
 export const dynamic = "force-dynamic";
 
-export default async function ListeningPracticePage() {
+const listeningCategoryTabs = [
+  { value: "all", labelKey: "practice.filter.all", fallback: "All" },
+  {
+    value: "section-1",
+    labelKey: "practice.filter.listening.section1",
+    fallback: "Section 1: Daily conversation",
+  },
+  {
+    value: "section-2",
+    labelKey: "practice.filter.listening.section2",
+    fallback: "Section 2: Public information",
+  },
+  {
+    value: "section-3",
+    labelKey: "practice.filter.listening.section3",
+    fallback: "Section 3: Academic discussion",
+  },
+  {
+    value: "section-4",
+    labelKey: "practice.filter.listening.section4",
+    fallback: "Section 4: Academic lecture",
+  },
+] as const;
+
+type ListeningCategory = (typeof listeningCategoryTabs)[number]["value"];
+
+type PageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function ListeningPracticePage({ searchParams }: PageProps) {
+  const activeCategory = normalizeListeningCategory(
+    getCategoryParam(await searchParams),
+  );
   const userId = await getCurrentUserId();
   const listeningSets = await getPublishedListeningSummaries(userId);
+  const visibleListeningSets = listeningSets.filter((set) =>
+    matchesListeningCategory(set.section, activeCategory),
+  );
   const isSignedIn = Boolean(userId);
 
   return (
@@ -42,9 +79,14 @@ export default async function ListeningPracticePage() {
         />
       </div>
 
-      {listeningSets.length ? (
+      <PracticeCategoryTabs
+        activeCategory={activeCategory}
+        tabs={[...listeningCategoryTabs]}
+      />
+
+      {visibleListeningSets.length ? (
         <div className="grid gap-4 xl:grid-cols-2">
-          {listeningSets.map((set) => (
+          {visibleListeningSets.map((set) => (
             <Card key={set.id}>
               <CardHeader>
                 <div className="flex flex-wrap items-start justify-between gap-3">
@@ -150,10 +192,17 @@ export default async function ListeningPracticePage() {
                 />
               </Badge>
               <h2 className="mt-4 text-lg font-semibold text-slate-950">
-                <LocalizedText
-                  k="listening.emptyTitle"
-                  fallback="No Listening practice sets yet. Please check back later."
-                />
+                {activeCategory === "all" ? (
+                  <LocalizedText
+                    k="listening.emptyTitle"
+                    fallback="No Listening practice sets yet. Please check back later."
+                  />
+                ) : (
+                  <LocalizedText
+                    k="practice.filter.empty"
+                    fallback="No practice tasks in this category yet."
+                  />
+                )}
               </h2>
               <p className="mt-3 text-sm leading-6 text-slate-600">
                 <LocalizedText
@@ -232,4 +281,29 @@ function InfoMetric({
 
 function formatAudioAvailability(status: string) {
   return status === "ready" ? "Ready to play" : "Available soon";
+}
+
+function getCategoryParam(
+  searchParams?: Record<string, string | string[] | undefined>,
+) {
+  const category = searchParams?.category;
+
+  return Array.isArray(category) ? category[0] : category;
+}
+
+function normalizeListeningCategory(category?: string): ListeningCategory {
+  return listeningCategoryTabs.some((tab) => tab.value === category)
+    ? (category as ListeningCategory)
+    : "all";
+}
+
+function matchesListeningCategory(
+  section: number | string,
+  category: ListeningCategory,
+) {
+  if (category === "all") {
+    return true;
+  }
+
+  return `section-${String(section).match(/[1-4]/)?.[0] ?? ""}` === category;
 }

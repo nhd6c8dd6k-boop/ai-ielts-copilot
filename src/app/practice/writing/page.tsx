@@ -4,6 +4,7 @@ import { CheckCircle2, Clock3, FileText, PenLine } from "lucide-react";
 import { LocalizedText } from "@/components/i18n/localized-text";
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/layout/page-header";
+import { PracticeCategoryTabs } from "@/components/practice/practice-category-tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,9 +14,30 @@ import { getPublishedWritingTaskSummaries } from "@/server/services/writing-prac
 
 export const dynamic = "force-dynamic";
 
-export default async function WritingPracticePage() {
+const writingCategoryTabs = [
+  { value: "all", labelKey: "practice.filter.all", fallback: "All" },
+  { value: "task-1", labelKey: "practice.filter.task1", fallback: "Task 1" },
+  { value: "task-2", labelKey: "practice.filter.task2", fallback: "Task 2" },
+  { value: "charts", labelKey: "practice.filter.charts", fallback: "Charts" },
+  { value: "tables", labelKey: "practice.filter.tables", fallback: "Tables" },
+  { value: "process", labelKey: "practice.filter.process", fallback: "Process" },
+] as const;
+
+type WritingCategory = (typeof writingCategoryTabs)[number]["value"];
+
+type PageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function WritingPracticePage({ searchParams }: PageProps) {
+  const activeCategory = normalizeWritingCategory(
+    getCategoryParam(await searchParams),
+  );
   const userId = await getCurrentUserId();
   const tasks = await getPublishedWritingTaskSummaries(userId);
+  const visibleTasks = tasks.filter((task) =>
+    matchesWritingCategory(task, activeCategory),
+  );
   const isSignedIn = Boolean(userId);
 
   return (
@@ -36,9 +58,14 @@ export default async function WritingPracticePage() {
         />
       </div>
 
-      {tasks.length ? (
+      <PracticeCategoryTabs
+        activeCategory={activeCategory}
+        tabs={[...writingCategoryTabs]}
+      />
+
+      {visibleTasks.length ? (
         <div className="grid gap-4 xl:grid-cols-2">
-          {tasks.map((task) => (
+          {visibleTasks.map((task) => (
             <Card key={task.id}>
               <CardHeader>
                 <div className="flex flex-wrap items-start justify-between gap-3">
@@ -137,10 +164,17 @@ export default async function WritingPracticePage() {
                 />
               </Badge>
               <h2 className="mt-4 text-lg font-semibold text-slate-950">
-                <LocalizedText
-                  k="writing.emptyTitle"
-                  fallback="No Writing practice tasks yet. Please check back later."
-                />
+                {activeCategory === "all" ? (
+                  <LocalizedText
+                    k="writing.emptyTitle"
+                    fallback="No Writing practice tasks yet. Please check back later."
+                  />
+                ) : (
+                  <LocalizedText
+                    k="practice.filter.empty"
+                    fallback="No practice tasks in this category yet."
+                  />
+                )}
               </h2>
               <p className="mt-3 text-sm leading-6 text-slate-600">
                 <LocalizedText
@@ -203,4 +237,56 @@ function InfoMetric({
       <p className="mt-1 font-medium text-slate-950">{value}</p>
     </div>
   );
+}
+
+function getCategoryParam(
+  searchParams?: Record<string, string | string[] | undefined>,
+) {
+  const category = searchParams?.category;
+
+  return Array.isArray(category) ? category[0] : category;
+}
+
+function normalizeWritingCategory(category?: string): WritingCategory {
+  return writingCategoryTabs.some((tab) => tab.value === category)
+    ? (category as WritingCategory)
+    : "all";
+}
+
+function matchesWritingCategory(
+  task: {
+    taskType: 1 | 2;
+    visualType:
+      | "bar_chart"
+      | "line_chart"
+      | "pie_chart"
+      | "table"
+      | "process_diagram"
+      | null;
+  },
+  category: WritingCategory,
+) {
+  if (category === "all") {
+    return true;
+  }
+
+  if (category === "task-1") {
+    return task.taskType === 1;
+  }
+
+  if (category === "task-2") {
+    return task.taskType === 2;
+  }
+
+  if (category === "charts") {
+    return ["bar_chart", "line_chart", "pie_chart"].includes(
+      task.visualType ?? "",
+    );
+  }
+
+  if (category === "tables") {
+    return task.visualType === "table";
+  }
+
+  return task.visualType === "process_diagram";
 }
