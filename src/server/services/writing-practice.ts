@@ -4,6 +4,7 @@ import { z } from "zod";
 import { isSupabaseConfigured } from "@/lib/env";
 import { createOpenAIClient } from "@/lib/openai/client";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { countWords } from "@/lib/word-count";
 import {
   getWritingVisualTypeLabel,
   normalizeWritingVisualData,
@@ -83,6 +84,8 @@ const writingFeedbackOutputSchema = z.object({
     "AI score is an estimate and does not represent an official IELTS score.",
   ),
 });
+
+type WritingFeedbackOutput = z.infer<typeof writingFeedbackOutputSchema>;
 
 export const submitWritingPracticeSchema = z.object({
   writingTaskId: z.string().uuid(),
@@ -266,13 +269,6 @@ export async function submitWritingPractice({
   }
 
   const wordCount = countWords(essay);
-  const minimumWords = getMinimumWords(task.taskType);
-
-  if (wordCount < minimumWords) {
-    throw new Error(
-      `Please write at least ${minimumWords} words for Task ${task.taskType}.`,
-    );
-  }
 
   const { data: feedback, usage } = await gradeWritingWithOpenAI({
     task,
@@ -426,10 +422,6 @@ export async function getWritingAttemptResult({
   } satisfies WritingAttemptResult;
 }
 
-export function countWords(value: string) {
-  return value.trim().split(/\s+/).filter(Boolean).length;
-}
-
 export function getSuggestedTimeMinutes(taskType: number) {
   return normalizeTaskType(taskType) === 1 ? 20 : 40;
 }
@@ -454,8 +446,20 @@ async function gradeWritingWithOpenAI({
     input: [
       {
         role: "system",
-        content:
-          "You are an IELTS Writing examiner and coach. Estimate a non-official IELTS Writing band using Task Response or Task Achievement, Coherence and Cohesion, Lexical Resource, and Grammatical Range and Accuracy. Return strict JSON only. Feedback should be useful for Chinese IELTS learners. The task prompt and essay are in English; feedback_zh must be Chinese and feedback_en must be English.",
+        content: [
+          "You are a strict IELTS Writing examiner. Estimate a non-official IELTS Writing band using IELTS public band descriptor principles.",
+          "Be conservative. Do not reward fluent-looking but generic writing too highly. Penalize limited development, inaccurate grammar, repetitive vocabulary, weak cohesion, memorized-sounding phrases, unclear task response, and vague examples.",
+          "Score exactly four criteria: Task Achievement / Task Response, Coherence and Cohesion, Lexical Resource, and Grammatical Range and Accuracy.",
+          "Band 8 is rare. Only assign 8.0 or above when the response fully addresses the task, has clear and well-developed ideas, strong cohesion, wide and precise vocabulary, mostly error-free grammar, flexible sentence structures, and few noticeable errors.",
+          "Band 7 requires a clear position or overview, logical development, some less common vocabulary, good grammatical control, and errors that do not reduce clarity.",
+          "Band 6 is appropriate when the task is addressed but development is uneven, ideas are relevant but general, cohesion is mechanical or sometimes unclear, vocabulary is adequate but repetitive, and grammar has noticeable errors despite attempted complex sentences.",
+          "If the response sounds polished but lacks specific development, examples, data comparison, or clear analysis, do not assign a high band.",
+          "For Task 1, require a clear overview, accurate main trends/features, and key data comparisons. If there is no overview, Task Achievement is usually no higher than 6.0. Do not reward simple listing of data as a high band.",
+          "For Task 2, require a clear answer to the question, a clear position, sufficiently developed arguments, specific examples, and no major drift from the prompt.",
+          "If the essay is under the minimum word count, explicitly mention it and cap the score conservatively. Task Achievement / Task Response must be affected.",
+          "Feedback should explain why the essay is not the next higher band and include one or two specific examples from the essay when possible.",
+          "Return strict JSON only. Feedback should be useful for Chinese IELTS learners. The task prompt and essay are in English; feedback_zh must be Chinese and feedback_en must be English.",
+        ].join(" "),
       },
       {
         role: "user",
@@ -466,10 +470,14 @@ async function gradeWritingWithOpenAI({
           visual_data: task.visualData,
           band_target: task.bandTarget,
           word_count: wordCount,
+          minimum_words: getMinimumWords(task.taskType),
           essay,
           requirements: [
             "Do not claim this is an official IELTS score.",
+            "Use 0.5 band increments for all scores.",
+            "Be stricter than a general writing coach. Do not inflate scores to encourage the learner.",
             "Identify practical grammar and vocabulary improvements.",
+            "Explain the main score-limiting issues clearly.",
             "Provide Band 7 and Band 8 sample answers in English.",
           ],
         }),
@@ -487,8 +495,15 @@ async function gradeWritingWithOpenAI({
   const usage = extractUsage(model, response);
 
   try {
+    const parsedFeedback = writingFeedbackOutputSchema.parse(
+      JSON.parse(response.output_text),
+    );
+
     return {
-      data: writingFeedbackOutputSchema.parse(JSON.parse(response.output_text)),
+      data: applyConservativeWritingScore(parsedFeedback, {
+        taskType: task.taskType,
+        wordCount,
+      }),
       usage,
     };
   } catch (error) {
@@ -498,6 +513,112 @@ async function gradeWritingWithOpenAI({
         : "OpenAI returned invalid writing feedback JSON.",
     );
   }
+}
+
+function applyConservativeWritingScore(
+  feedback: WritingFeedbackOutput,
+  {
+    taskType,
+    wordCount,
+  }: {
+    taskType: 1 | 2;
+    wordCount: number;
+  },
+): WritingFeedbackOutput {
+  const minimumWords = getMinimumWords(taskType);
+  const underlengthCap = getUnderlengthCap(wordCount, minimumWords);
+  const taskResponse = normalizeCriterionBand(
+    underlengthCap == null
+      ? feedback.task_response
+      : Math.min(feedback.task_response, underlengthCap),
+  );
+  const coherenceCohesion = normalizeCriterionBand(feedback.coherence_cohesion);
+  const lexicalResource = normalizeCriterionBand(feedback.lexical_resource);
+  const grammaticalRangeAccuracy = normalizeCriterionBand(
+    feedback.grammatical_range_accuracy,
+  );
+  const criteria = [
+    taskResponse,
+    coherenceCohesion,
+    lexicalResource,
+    grammaticalRangeAccuracy,
+  ];
+  const rawAverage =
+    criteria.reduce((total, criterion) => total + criterion, 0) /
+    criteria.length;
+  const minimumCriterion = Math.min(...criteria);
+  let overallBand = roundToNearestHalf(rawAverage);
+
+  overallBand = Math.min(overallBand, minimumCriterion + 1);
+
+  if (
+    overallBand >= 8 &&
+    (criteria.some((criterion) => criterion < 7.5) ||
+      criteria.filter((criterion) => criterion >= 8).length < 3)
+  ) {
+    overallBand = 7.5;
+  }
+
+  if (underlengthCap != null) {
+    overallBand = Math.min(overallBand, underlengthCap);
+  }
+
+  overallBand = normalizeCriterionBand(overallBand);
+
+  return {
+    ...feedback,
+    overall_band: overallBand,
+    task_response: taskResponse,
+    coherence_cohesion: coherenceCohesion,
+    lexical_resource: lexicalResource,
+    grammatical_range_accuracy: grammaticalRangeAccuracy,
+    feedback_zh:
+      underlengthCap == null
+        ? feedback.feedback_zh
+        : appendUnderlengthNote(
+            feedback.feedback_zh,
+            `字数低于 Task ${taskType} 的最低要求（${minimumWords} 词），Task Achievement / Task Response 和 overall band 已被保守限制。`,
+          ),
+    feedback_en:
+      underlengthCap == null
+        ? feedback.feedback_en
+        : appendUnderlengthNote(
+            feedback.feedback_en,
+            `The response is under the Task ${taskType} minimum of ${minimumWords} words, so Task Achievement / Task Response and the overall band have been capped conservatively.`,
+          ),
+  };
+}
+
+function getUnderlengthCap(wordCount: number, minimumWords: number) {
+  if (wordCount >= minimumWords) {
+    return null;
+  }
+
+  const ratio = wordCount / minimumWords;
+
+  if (ratio < 0.7) {
+    return 5;
+  }
+
+  if (ratio < 0.9) {
+    return 5.5;
+  }
+
+  return 6;
+}
+
+function appendUnderlengthNote(feedback: string, note: string) {
+  return feedback.toLowerCase().includes("under")
+    ? feedback
+    : `${feedback}\n\n${note}`;
+}
+
+function normalizeCriterionBand(score: number) {
+  return Math.min(9, Math.max(0, roundToNearestHalf(score)));
+}
+
+function roundToNearestHalf(score: number) {
+  return Math.round(score * 2) / 2;
 }
 
 function buildWritingTaskTitle(taskType: number, topic: string) {

@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { WritingTaskVisual } from "@/components/writing/writing-task-visual";
+import { countWords } from "@/lib/word-count";
 import type { PublishedWritingTask } from "@/server/services/writing-practice";
 
 type WritingPracticeClientProps = {
@@ -287,10 +288,6 @@ export function WritingPracticeClient({
       </div>
     </AppShell>
   );
-}
-
-function countWords(value: string) {
-  return value.trim().split(/\s+/).filter(Boolean).length;
 }
 
 function formatTime(totalSeconds: number) {
