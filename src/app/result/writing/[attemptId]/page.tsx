@@ -8,6 +8,10 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  LocalizedFeedbackList,
+  LocalizedScoreSummary,
+} from "@/components/writing/localized-writing-feedback";
 import { WritingTaskVisual } from "@/components/writing/writing-task-visual";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getWritingAttemptResult } from "@/server/services/writing-practice";
@@ -58,28 +62,11 @@ export default async function WritingResultPage({
         />
       </div>
 
-      {result.scoreSummary.length ? (
-        <Card className="mt-4 border-sky-100 bg-sky-50/60">
-          <CardHeader>
-            <CardTitle>
-              <LocalizedText
-                k="result.scoreSummary"
-                fallback="Score summary"
-              />
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-2 text-sm leading-6 text-slate-700">
-              {result.scoreSummary.map((item) => (
-                <li key={item} className="flex gap-2">
-                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-sky-500" />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-      ) : null}
+      <LocalizedScoreSummary
+        fallbackItems={result.scoreSummary}
+        zhItems={result.scoreSummaryZh}
+        enItems={result.scoreSummaryEn}
+      />
 
       <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <Metric
@@ -183,25 +170,33 @@ export default async function WritingResultPage({
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <FeedbackList
+        <LocalizedFeedbackList
           title="Grammar Issues"
           titleKey="result.grammarIssues"
-          items={result.grammarIssues}
+          fallbackItems={result.grammarIssues}
+          zhItems={result.grammarIssuesZh}
+          enItems={result.grammarIssuesEn}
         />
-        <FeedbackList
+        <LocalizedFeedbackList
           title="Vocabulary Upgrades"
           titleKey="result.vocabularyUpgrades"
-          items={result.vocabularyUpgrades}
+          fallbackItems={result.vocabularyUpgrades}
+          zhItems={result.vocabularyUpgradesZh}
+          enItems={result.vocabularyUpgradesEn}
         />
-        <FeedbackList
+        <LocalizedFeedbackList
           title="Sentence Improvements"
           titleKey="result.sentenceImprovements"
-          items={result.sentenceImprovements}
+          fallbackItems={result.sentenceImprovements}
+          zhItems={result.sentenceImprovementsZh}
+          enItems={result.sentenceImprovementsEn}
         />
-        <FeedbackList
+        <LocalizedFeedbackList
           title="Next Steps"
           titleKey="result.nextSteps"
-          items={result.nextSteps}
+          fallbackItems={result.nextSteps}
+          zhItems={result.nextStepsZh}
+          enItems={result.nextStepsEn}
         />
       </div>
 
@@ -269,41 +264,6 @@ function FeedbackBox({
         <p className="whitespace-pre-wrap text-sm leading-7 text-slate-700">
           {text}
         </p>
-      </CardContent>
-    </Card>
-  );
-}
-
-function FeedbackList({
-  title,
-  titleKey,
-  items,
-}: {
-  title: string;
-  titleKey?: string;
-  items: string[];
-}) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>
-          {titleKey ? <LocalizedText k={titleKey} fallback={title} /> : title}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {items.length ? (
-          <ul className="space-y-2 text-sm leading-6 text-slate-700">
-            {items.map((item) => (
-              <li key={item} className="rounded-md bg-slate-50 p-3">
-                {item}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-sm text-slate-500">
-            <LocalizedText k="result.noItems" fallback="No items returned." />
-          </p>
-        )}
       </CardContent>
     </Card>
   );

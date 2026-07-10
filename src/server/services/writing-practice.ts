@@ -56,10 +56,20 @@ export type WritingAttemptResult = {
   feedbackZh: string;
   feedbackEn: string;
   grammarIssues: string[];
+  grammarIssuesZh: string[];
+  grammarIssuesEn: string[];
   vocabularyUpgrades: string[];
+  vocabularyUpgradesZh: string[];
+  vocabularyUpgradesEn: string[];
   sentenceImprovements: string[];
+  sentenceImprovementsZh: string[];
+  sentenceImprovementsEn: string[];
   nextSteps: string[];
+  nextStepsZh: string[];
+  nextStepsEn: string[];
   scoreSummary: string[];
+  scoreSummaryZh: string[];
+  scoreSummaryEn: string[];
   sampleAnswerBand7: string;
   sampleAnswerBand8: string;
   disclaimer: string;
@@ -76,10 +86,20 @@ const writingFeedbackOutputSchema = z.object({
   feedback_zh: z.string().min(1),
   feedback_en: z.string().min(1),
   grammar_issues: z.array(z.string()).default([]),
+  grammar_issues_zh: z.array(z.string()).default([]),
+  grammar_issues_en: z.array(z.string()).default([]),
   vocabulary_upgrades: z.array(z.string()).default([]),
+  vocabulary_upgrades_zh: z.array(z.string()).default([]),
+  vocabulary_upgrades_en: z.array(z.string()).default([]),
   sentence_improvements: z.array(z.string()).default([]),
+  sentence_improvements_zh: z.array(z.string()).default([]),
+  sentence_improvements_en: z.array(z.string()).default([]),
   next_steps: z.array(z.string()).default([]),
+  next_steps_zh: z.array(z.string()).default([]),
+  next_steps_en: z.array(z.string()).default([]),
   score_summary: z.array(z.string().min(1)).min(3).max(5),
+  score_summary_zh: z.array(z.string().min(1)).min(3).max(5),
+  score_summary_en: z.array(z.string().min(1)).min(3).max(5),
   sample_answer_band_7: z.string().min(1),
   sample_answer_band_8: z.string().min(1),
   disclaimer: z.literal(
@@ -416,10 +436,60 @@ export async function getWritingAttemptResult({
     feedbackZh: attempt.feedback_zh,
     feedbackEn: attempt.feedback_en,
     grammarIssues: normalizeStringArray(attempt.grammar_issues),
+    grammarIssuesZh: normalizeRawStringArray(
+      attempt.raw_ai_output,
+      "grammar_issues_zh",
+      normalizeStringArray(attempt.grammar_issues),
+    ),
+    grammarIssuesEn: normalizeRawStringArray(
+      attempt.raw_ai_output,
+      "grammar_issues_en",
+      normalizeStringArray(attempt.grammar_issues),
+    ),
     vocabularyUpgrades: normalizeStringArray(attempt.vocabulary_upgrades),
+    vocabularyUpgradesZh: normalizeRawStringArray(
+      attempt.raw_ai_output,
+      "vocabulary_upgrades_zh",
+      normalizeStringArray(attempt.vocabulary_upgrades),
+    ),
+    vocabularyUpgradesEn: normalizeRawStringArray(
+      attempt.raw_ai_output,
+      "vocabulary_upgrades_en",
+      normalizeStringArray(attempt.vocabulary_upgrades),
+    ),
     sentenceImprovements: normalizeStringArray(attempt.sentence_improvements),
+    sentenceImprovementsZh: normalizeRawStringArray(
+      attempt.raw_ai_output,
+      "sentence_improvements_zh",
+      normalizeStringArray(attempt.sentence_improvements),
+    ),
+    sentenceImprovementsEn: normalizeRawStringArray(
+      attempt.raw_ai_output,
+      "sentence_improvements_en",
+      normalizeStringArray(attempt.sentence_improvements),
+    ),
     nextSteps: normalizeStringArray(attempt.next_steps),
+    nextStepsZh: normalizeRawStringArray(
+      attempt.raw_ai_output,
+      "next_steps_zh",
+      normalizeStringArray(attempt.next_steps),
+    ),
+    nextStepsEn: normalizeRawStringArray(
+      attempt.raw_ai_output,
+      "next_steps_en",
+      normalizeStringArray(attempt.next_steps),
+    ),
     scoreSummary: normalizeScoreSummary(attempt.raw_ai_output),
+    scoreSummaryZh: normalizeRawStringArray(
+      attempt.raw_ai_output,
+      "score_summary_zh",
+      normalizeScoreSummary(attempt.raw_ai_output),
+    ).slice(0, 5),
+    scoreSummaryEn: normalizeRawStringArray(
+      attempt.raw_ai_output,
+      "score_summary_en",
+      normalizeScoreSummary(attempt.raw_ai_output),
+    ).slice(0, 5),
     sampleAnswerBand7: attempt.sample_answer_band_7,
     sampleAnswerBand8: attempt.sample_answer_band_8,
     disclaimer:
@@ -472,6 +542,8 @@ async function gradeWritingWithOpenAI({
           "If the essay is under the minimum word count, explicitly mention it and cap the score conservatively. Task Achievement / Task Response must be affected.",
           "Feedback should explain why the essay is not the next higher band and include one or two specific examples from the essay when possible.",
           "Return score_summary as 3 to 5 concise strings. Each item must be specific, score-limiting, and aligned with the criteria scores. Include one clear next focus. If the response is underlength, mention underlength in score_summary. If Task 1 lacks an overview, mention that. If Task 2 has vague opinions or generic examples, mention that. Do not use praise such as excellent unless the score genuinely supports it.",
+          "Also return bilingual array fields for the result page: score_summary_zh, score_summary_en, grammar_issues_zh, grammar_issues_en, vocabulary_upgrades_zh, vocabulary_upgrades_en, sentence_improvements_zh, sentence_improvements_en, next_steps_zh, and next_steps_en. The *_zh arrays must be Simplified Chinese with useful IELTS terms kept in English only when helpful. The *_en arrays must be English.",
+          "Set the legacy arrays score_summary, grammar_issues, vocabulary_upgrades, sentence_improvements, and next_steps to the requested response language, but always include both zh and en array versions too.",
           responseLanguageInstruction,
           "Return strict JSON only. Feedback should be useful for Chinese IELTS learners. The task prompt and essay are in English; feedback_zh must be Chinese and feedback_en must be English.",
         ].join(" "),
@@ -497,6 +569,7 @@ async function gradeWritingWithOpenAI({
             language === "zh"
               ? "Return score_summary, grammar_issues, vocabulary_upgrades, sentence_improvements, and next_steps in Simplified Chinese. Keep short English IELTS terms only when useful."
               : "Return score_summary, grammar_issues, vocabulary_upgrades, sentence_improvements, and next_steps in English.",
+            "Always return both Chinese and English versions in score_summary_zh/score_summary_en, grammar_issues_zh/grammar_issues_en, vocabulary_upgrades_zh/vocabulary_upgrades_en, sentence_improvements_zh/sentence_improvements_en, and next_steps_zh/next_steps_en.",
             "Return score_summary with 3 to 5 short bullet-style strings. Focus on why this band was assigned, the biggest deduction, the gap to the next band, and the next priority.",
             "Provide Band 7 and Band 8 sample answers in English.",
           ],
@@ -595,6 +668,22 @@ function applyConservativeWritingScore(
           taskType,
           minimumWords,
         });
+  const scoreSummaryZh =
+    underlengthCap == null
+      ? feedback.score_summary_zh
+      : ensureUnderlengthScoreSummary(feedback.score_summary_zh, {
+          language: "zh",
+          taskType,
+          minimumWords,
+        });
+  const scoreSummaryEn =
+    underlengthCap == null
+      ? feedback.score_summary_en
+      : ensureUnderlengthScoreSummary(feedback.score_summary_en, {
+          language: "en",
+          taskType,
+          minimumWords,
+        });
 
   return {
     ...feedback,
@@ -604,6 +693,8 @@ function applyConservativeWritingScore(
     lexical_resource: lexicalResource,
     grammatical_range_accuracy: grammaticalRangeAccuracy,
     score_summary: scoreSummary,
+    score_summary_zh: scoreSummaryZh,
+    score_summary_en: scoreSummaryEn,
     feedback_zh:
       underlengthCap == null
         ? feedback.feedback_zh
@@ -754,4 +845,19 @@ function normalizeScoreSummary(rawAiOutput: unknown) {
   return normalizeStringArray(
     (rawAiOutput as { score_summary?: unknown }).score_summary,
   ).slice(0, 5);
+}
+
+function normalizeRawStringArray(
+  rawAiOutput: unknown,
+  key: string,
+  fallback: string[],
+) {
+  if (!rawAiOutput || typeof rawAiOutput !== "object" || !(key in rawAiOutput)) {
+    return fallback;
+  }
+
+  const value = (rawAiOutput as Record<string, unknown>)[key];
+  const normalized = normalizeStringArray(value);
+
+  return normalized.length ? normalized : fallback;
 }
