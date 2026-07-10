@@ -75,6 +75,11 @@ export function createMockWritingFeedback(essay: string): WritingFeedback {
       "你的作文已经能够回应题目，并且有基本段落结构。下一步需要把中心立场写得更明确，同时让每个主体段都有更具体的例子和解释链条。",
     feedbackEn:
       "The essay addresses the task and shows a workable structure. To move higher, make the central position more explicit and develop each body paragraph with clearer examples and explanation.",
+    scoreSummary: [
+      "观点基本相关，但主体段展开还不够具体。 / The ideas are relevant, but the body paragraphs need more specific development.",
+      "结构可以看懂，但衔接有时比较机械。 / The structure is clear enough, but cohesion is sometimes mechanical.",
+      "下一步重点练习用具体例子支撑每个观点。 / Next focus: practise supporting each main idea with concrete examples.",
+    ],
     grammarIssues: [
       "Check subject-verb agreement in longer sentences.",
       "Avoid sentence fragments after transition phrases.",

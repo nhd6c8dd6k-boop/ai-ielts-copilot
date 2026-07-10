@@ -46,6 +46,7 @@ export const writingFeedbackSchema = z.object({
   }),
   feedbackZh: z.string().min(1),
   feedbackEn: z.string().min(1),
+  scoreSummary: z.array(z.string().min(1)).min(3).max(5),
   grammarIssues: z.array(z.string()).default([]),
   vocabularyUpgrades: z.array(z.string()).default([]),
   band7Sample: z.string().min(1),

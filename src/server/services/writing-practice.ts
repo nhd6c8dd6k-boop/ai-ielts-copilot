@@ -59,6 +59,7 @@ export type WritingAttemptResult = {
   vocabularyUpgrades: string[];
   sentenceImprovements: string[];
   nextSteps: string[];
+  scoreSummary: string[];
   sampleAnswerBand7: string;
   sampleAnswerBand8: string;
   disclaimer: string;
@@ -78,6 +79,7 @@ const writingFeedbackOutputSchema = z.object({
   vocabulary_upgrades: z.array(z.string()).default([]),
   sentence_improvements: z.array(z.string()).default([]),
   next_steps: z.array(z.string()).default([]),
+  score_summary: z.array(z.string().min(1)).min(3).max(5),
   sample_answer_band_7: z.string().min(1),
   sample_answer_band_8: z.string().min(1),
   disclaimer: z.literal(
@@ -367,7 +369,7 @@ export async function getWritingAttemptResult({
   const { data: attempt, error } = await admin
     .from("writing_attempts")
     .select(
-      "id,user_id,writing_task_id,essay,word_count,overall_band,task_response,coherence_cohesion,lexical_resource,grammatical_range_accuracy,feedback_zh,feedback_en,grammar_issues,vocabulary_upgrades,sentence_improvements,next_steps,sample_answer_band_7,sample_answer_band_8,time_spent_seconds,created_at",
+      "id,user_id,writing_task_id,essay,word_count,overall_band,task_response,coherence_cohesion,lexical_resource,grammatical_range_accuracy,feedback_zh,feedback_en,grammar_issues,vocabulary_upgrades,sentence_improvements,next_steps,sample_answer_band_7,sample_answer_band_8,raw_ai_output,time_spent_seconds,created_at",
     )
     .eq("id", attemptId)
     .eq("user_id", userId)
@@ -413,6 +415,7 @@ export async function getWritingAttemptResult({
     vocabularyUpgrades: normalizeStringArray(attempt.vocabulary_upgrades),
     sentenceImprovements: normalizeStringArray(attempt.sentence_improvements),
     nextSteps: normalizeStringArray(attempt.next_steps),
+    scoreSummary: normalizeScoreSummary(attempt.raw_ai_output),
     sampleAnswerBand7: attempt.sample_answer_band_7,
     sampleAnswerBand8: attempt.sample_answer_band_8,
     disclaimer:
@@ -458,6 +461,7 @@ async function gradeWritingWithOpenAI({
           "For Task 2, require a clear answer to the question, a clear position, sufficiently developed arguments, specific examples, and no major drift from the prompt.",
           "If the essay is under the minimum word count, explicitly mention it and cap the score conservatively. Task Achievement / Task Response must be affected.",
           "Feedback should explain why the essay is not the next higher band and include one or two specific examples from the essay when possible.",
+          "Return score_summary as 3 to 5 concise bilingual strings. Each item must be specific, score-limiting, and aligned with the criteria scores. Include one clear next focus. If the response is underlength, mention underlength in score_summary. If Task 1 lacks an overview, mention that. If Task 2 has vague opinions or generic examples, mention that. Do not use praise such as excellent unless the score genuinely supports it.",
           "Return strict JSON only. Feedback should be useful for Chinese IELTS learners. The task prompt and essay are in English; feedback_zh must be Chinese and feedback_en must be English.",
         ].join(" "),
       },
@@ -478,6 +482,7 @@ async function gradeWritingWithOpenAI({
             "Be stricter than a general writing coach. Do not inflate scores to encourage the learner.",
             "Identify practical grammar and vocabulary improvements.",
             "Explain the main score-limiting issues clearly.",
+            "Return score_summary with 3 to 5 short bilingual bullet-style strings. Focus on why this band was assigned, the biggest deduction, the gap to the next band, and the next priority.",
             "Provide Band 7 and Band 8 sample answers in English.",
           ],
         }),
@@ -564,6 +569,13 @@ function applyConservativeWritingScore(
   }
 
   overallBand = normalizeCriterionBand(overallBand);
+  const scoreSummary =
+    underlengthCap == null
+      ? feedback.score_summary
+      : ensureUnderlengthScoreSummary(feedback.score_summary, {
+          taskType,
+          minimumWords,
+        });
 
   return {
     ...feedback,
@@ -572,6 +584,7 @@ function applyConservativeWritingScore(
     coherence_cohesion: coherenceCohesion,
     lexical_resource: lexicalResource,
     grammatical_range_accuracy: grammaticalRangeAccuracy,
+    score_summary: scoreSummary,
     feedback_zh:
       underlengthCap == null
         ? feedback.feedback_zh
@@ -611,6 +624,32 @@ function appendUnderlengthNote(feedback: string, note: string) {
   return feedback.toLowerCase().includes("under")
     ? feedback
     : `${feedback}\n\n${note}`;
+}
+
+function ensureUnderlengthScoreSummary(
+  scoreSummary: string[],
+  {
+    taskType,
+    minimumWords,
+  }: {
+    taskType: 1 | 2;
+    minimumWords: number;
+  },
+) {
+  const alreadyMentionsUnderlength = scoreSummary.some((item) =>
+    /underlength|under the.*minimum|word count|minimum words|字数|低于/i.test(
+      item,
+    ),
+  );
+
+  if (alreadyMentionsUnderlength) {
+    return scoreSummary.slice(0, 5);
+  }
+
+  return [
+    `字数低于 Task ${taskType} 的最低要求（${minimumWords} 词），这会明显限制 Task Achievement / Task Response 和总 Band。 / The response is under the Task ${taskType} minimum of ${minimumWords} words, which clearly limits Task Achievement / Task Response and the overall band.`,
+    ...scoreSummary,
+  ].slice(0, 5);
 }
 
 function normalizeCriterionBand(score: number) {
@@ -678,4 +717,18 @@ function normalizeStringArray(value: unknown) {
   return Array.isArray(value)
     ? value.filter((item): item is string => typeof item === "string")
     : [];
+}
+
+function normalizeScoreSummary(rawAiOutput: unknown) {
+  if (
+    !rawAiOutput ||
+    typeof rawAiOutput !== "object" ||
+    !("score_summary" in rawAiOutput)
+  ) {
+    return [];
+  }
+
+  return normalizeStringArray(
+    (rawAiOutput as { score_summary?: unknown }).score_summary,
+  ).slice(0, 5);
 }

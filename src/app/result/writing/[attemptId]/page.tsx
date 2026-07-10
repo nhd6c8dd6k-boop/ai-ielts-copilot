@@ -56,6 +56,32 @@ export default async function WritingResultPage({
           labelKey="result.overallBand"
           value={result.overallBand.toFixed(1)}
         />
+      </div>
+
+      {result.scoreSummary.length ? (
+        <Card className="mt-4 border-sky-100 bg-sky-50/60">
+          <CardHeader>
+            <CardTitle>
+              <LocalizedText
+                k="result.scoreSummary"
+                fallback="Score summary"
+              />
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-2 text-sm leading-6 text-slate-700">
+              {result.scoreSummary.map((item) => (
+                <li key={item} className="flex gap-2">
+                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-sky-500" />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <Metric
           label="Task Response"
           labelKey="result.criteriaFeedback"
