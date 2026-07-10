@@ -53,23 +53,12 @@ export type WritingAttemptResult = {
   coherenceCohesion: number;
   lexicalResource: number;
   grammaticalRangeAccuracy: number;
-  feedbackZh: string;
-  feedbackEn: string;
+  feedback: string;
   grammarIssues: string[];
-  grammarIssuesZh: string[];
-  grammarIssuesEn: string[];
   vocabularyUpgrades: string[];
-  vocabularyUpgradesZh: string[];
-  vocabularyUpgradesEn: string[];
   sentenceImprovements: string[];
-  sentenceImprovementsZh: string[];
-  sentenceImprovementsEn: string[];
   nextSteps: string[];
-  nextStepsZh: string[];
-  nextStepsEn: string[];
   scoreSummary: string[];
-  scoreSummaryZh: string[];
-  scoreSummaryEn: string[];
   sampleAnswerBand7: string;
   sampleAnswerBand8: string;
   disclaimer: string;
@@ -83,23 +72,12 @@ const writingFeedbackOutputSchema = z.object({
   coherence_cohesion: z.number().min(0).max(9),
   lexical_resource: z.number().min(0).max(9),
   grammatical_range_accuracy: z.number().min(0).max(9),
-  feedback_zh: z.string().min(1),
-  feedback_en: z.string().min(1),
+  feedback: z.string().min(1),
   grammar_issues: z.array(z.string()).default([]),
-  grammar_issues_zh: z.array(z.string()).default([]),
-  grammar_issues_en: z.array(z.string()).default([]),
   vocabulary_upgrades: z.array(z.string()).default([]),
-  vocabulary_upgrades_zh: z.array(z.string()).default([]),
-  vocabulary_upgrades_en: z.array(z.string()).default([]),
   sentence_improvements: z.array(z.string()).default([]),
-  sentence_improvements_zh: z.array(z.string()).default([]),
-  sentence_improvements_en: z.array(z.string()).default([]),
   next_steps: z.array(z.string()).default([]),
-  next_steps_zh: z.array(z.string()).default([]),
-  next_steps_en: z.array(z.string()).default([]),
   score_summary: z.array(z.string().min(1)).min(3).max(5),
-  score_summary_zh: z.array(z.string().min(1)).min(3).max(5),
-  score_summary_en: z.array(z.string().min(1)).min(3).max(5),
   sample_answer_band_7: z.string().min(1),
   sample_answer_band_8: z.string().min(1),
   disclaimer: z.literal(
@@ -314,8 +292,8 @@ export async function submitWritingPractice({
       coherence_cohesion: feedback.coherence_cohesion,
       lexical_resource: feedback.lexical_resource,
       grammatical_range_accuracy: feedback.grammatical_range_accuracy,
-      feedback_zh: feedback.feedback_zh,
-      feedback_en: feedback.feedback_en,
+      feedback_zh: feedback.feedback,
+      feedback_en: feedback.feedback,
       grammar_issues: feedback.grammar_issues,
       vocabulary_upgrades: feedback.vocabulary_upgrades,
       sentence_improvements: feedback.sentence_improvements,
@@ -433,63 +411,16 @@ export async function getWritingAttemptResult({
     coherenceCohesion: Number(attempt.coherence_cohesion),
     lexicalResource: Number(attempt.lexical_resource),
     grammaticalRangeAccuracy: Number(attempt.grammatical_range_accuracy),
-    feedbackZh: attempt.feedback_zh,
-    feedbackEn: attempt.feedback_en,
+    feedback: normalizeFeedbackText(
+      attempt.raw_ai_output,
+      attempt.feedback_zh,
+      attempt.feedback_en,
+    ),
     grammarIssues: normalizeStringArray(attempt.grammar_issues),
-    grammarIssuesZh: normalizeRawStringArray(
-      attempt.raw_ai_output,
-      "grammar_issues_zh",
-      normalizeStringArray(attempt.grammar_issues),
-    ),
-    grammarIssuesEn: normalizeRawStringArray(
-      attempt.raw_ai_output,
-      "grammar_issues_en",
-      normalizeStringArray(attempt.grammar_issues),
-    ),
     vocabularyUpgrades: normalizeStringArray(attempt.vocabulary_upgrades),
-    vocabularyUpgradesZh: normalizeRawStringArray(
-      attempt.raw_ai_output,
-      "vocabulary_upgrades_zh",
-      normalizeStringArray(attempt.vocabulary_upgrades),
-    ),
-    vocabularyUpgradesEn: normalizeRawStringArray(
-      attempt.raw_ai_output,
-      "vocabulary_upgrades_en",
-      normalizeStringArray(attempt.vocabulary_upgrades),
-    ),
     sentenceImprovements: normalizeStringArray(attempt.sentence_improvements),
-    sentenceImprovementsZh: normalizeRawStringArray(
-      attempt.raw_ai_output,
-      "sentence_improvements_zh",
-      normalizeStringArray(attempt.sentence_improvements),
-    ),
-    sentenceImprovementsEn: normalizeRawStringArray(
-      attempt.raw_ai_output,
-      "sentence_improvements_en",
-      normalizeStringArray(attempt.sentence_improvements),
-    ),
     nextSteps: normalizeStringArray(attempt.next_steps),
-    nextStepsZh: normalizeRawStringArray(
-      attempt.raw_ai_output,
-      "next_steps_zh",
-      normalizeStringArray(attempt.next_steps),
-    ),
-    nextStepsEn: normalizeRawStringArray(
-      attempt.raw_ai_output,
-      "next_steps_en",
-      normalizeStringArray(attempt.next_steps),
-    ),
     scoreSummary: normalizeScoreSummary(attempt.raw_ai_output),
-    scoreSummaryZh: normalizeRawStringArray(
-      attempt.raw_ai_output,
-      "score_summary_zh",
-      normalizeScoreSummary(attempt.raw_ai_output),
-    ).slice(0, 5),
-    scoreSummaryEn: normalizeRawStringArray(
-      attempt.raw_ai_output,
-      "score_summary_en",
-      normalizeScoreSummary(attempt.raw_ai_output),
-    ).slice(0, 5),
     sampleAnswerBand7: attempt.sample_answer_band_7,
     sampleAnswerBand8: attempt.sample_answer_band_8,
     disclaimer:
@@ -520,8 +451,8 @@ async function gradeWritingWithOpenAI({
 }) {
   const responseLanguageInstruction =
     language === "zh"
-      ? "The learner's UI language is Simplified Chinese. Return score_summary, grammar_issues, vocabulary_upgrades, sentence_improvements, and next_steps mainly in Simplified Chinese. IELTS terms such as Task Response, Coherence and Cohesion, Lexical Resource, Grammar, Band, overview, and topic sentence may remain in English when useful, but explanations must be Chinese."
-      : "The learner's UI language is English. Return score_summary, grammar_issues, vocabulary_upgrades, sentence_improvements, and next_steps in English.";
+      ? "The learner's UI language is Simplified Chinese. Write feedback, score_summary, grammar_issues, vocabulary_upgrades, sentence_improvements, and next_steps in Simplified Chinese. IELTS terms such as Band, Task Response, Coherence and Cohesion, Lexical Resource, Grammatical Range and Accuracy, overview, and topic sentence may remain in English if useful, but explanations and advice must be Chinese. Do not provide a separate English version."
+      : "The learner's UI language is English. Write feedback, score_summary, grammar_issues, vocabulary_upgrades, sentence_improvements, and next_steps in English. Do not provide a separate Chinese version.";
   const model = "gpt-5.2";
   const openai = createOpenAIClient();
   const response = await openai.responses.create({
@@ -542,10 +473,8 @@ async function gradeWritingWithOpenAI({
           "If the essay is under the minimum word count, explicitly mention it and cap the score conservatively. Task Achievement / Task Response must be affected.",
           "Feedback should explain why the essay is not the next higher band and include one or two specific examples from the essay when possible.",
           "Return score_summary as 3 to 5 concise strings. Each item must be specific, score-limiting, and aligned with the criteria scores. Include one clear next focus. If the response is underlength, mention underlength in score_summary. If Task 1 lacks an overview, mention that. If Task 2 has vague opinions or generic examples, mention that. Do not use praise such as excellent unless the score genuinely supports it.",
-          "Also return bilingual array fields for the result page: score_summary_zh, score_summary_en, grammar_issues_zh, grammar_issues_en, vocabulary_upgrades_zh, vocabulary_upgrades_en, sentence_improvements_zh, sentence_improvements_en, next_steps_zh, and next_steps_en. The *_zh arrays must be Simplified Chinese with useful IELTS terms kept in English only when helpful. The *_en arrays must be English.",
-          "Set the legacy arrays score_summary, grammar_issues, vocabulary_upgrades, sentence_improvements, and next_steps to the requested response language, but always include both zh and en array versions too.",
           responseLanguageInstruction,
-          "Return strict JSON only. Feedback should be useful for Chinese IELTS learners. The task prompt and essay are in English; feedback_zh must be Chinese and feedback_en must be English.",
+          "Return strict JSON only. The task prompt and essay are in English, but feedback content must follow the requested UI language.",
         ].join(" "),
       },
       {
@@ -567,9 +496,8 @@ async function gradeWritingWithOpenAI({
             "Identify practical grammar and vocabulary improvements.",
             "Explain the main score-limiting issues clearly.",
             language === "zh"
-              ? "Return score_summary, grammar_issues, vocabulary_upgrades, sentence_improvements, and next_steps in Simplified Chinese. Keep short English IELTS terms only when useful."
-              : "Return score_summary, grammar_issues, vocabulary_upgrades, sentence_improvements, and next_steps in English.",
-            "Always return both Chinese and English versions in score_summary_zh/score_summary_en, grammar_issues_zh/grammar_issues_en, vocabulary_upgrades_zh/vocabulary_upgrades_en, sentence_improvements_zh/sentence_improvements_en, and next_steps_zh/next_steps_en.",
+              ? "Return only Simplified Chinese feedback content. Do not include a full English feedback version."
+              : "Return only English feedback content. Do not include a full Chinese feedback version.",
             "Return score_summary with 3 to 5 short bullet-style strings. Focus on why this band was assigned, the biggest deduction, the gap to the next band, and the next priority.",
             "Provide Band 7 and Band 8 sample answers in English.",
           ],
@@ -668,22 +596,12 @@ function applyConservativeWritingScore(
           taskType,
           minimumWords,
         });
-  const scoreSummaryZh =
-    underlengthCap == null
-      ? feedback.score_summary_zh
-      : ensureUnderlengthScoreSummary(feedback.score_summary_zh, {
-          language: "zh",
-          taskType,
-          minimumWords,
-        });
-  const scoreSummaryEn =
-    underlengthCap == null
-      ? feedback.score_summary_en
-      : ensureUnderlengthScoreSummary(feedback.score_summary_en, {
-          language: "en",
-          taskType,
-          minimumWords,
-        });
+  const nextSteps =
+    language === "zh"
+      ? ensureChineseNextSteps(feedback.next_steps, {
+          isUnderlength: underlengthCap != null,
+        })
+      : feedback.next_steps;
 
   return {
     ...feedback,
@@ -693,21 +611,15 @@ function applyConservativeWritingScore(
     lexical_resource: lexicalResource,
     grammatical_range_accuracy: grammaticalRangeAccuracy,
     score_summary: scoreSummary,
-    score_summary_zh: scoreSummaryZh,
-    score_summary_en: scoreSummaryEn,
-    feedback_zh:
+    next_steps: nextSteps,
+    feedback:
       underlengthCap == null
-        ? feedback.feedback_zh
+        ? feedback.feedback
         : appendUnderlengthNote(
-            feedback.feedback_zh,
-            `字数低于 Task ${taskType} 的最低要求（${minimumWords} 词），Task Achievement / Task Response 和 overall band 已被保守限制。`,
-          ),
-    feedback_en:
-      underlengthCap == null
-        ? feedback.feedback_en
-        : appendUnderlengthNote(
-            feedback.feedback_en,
-            `The response is under the Task ${taskType} minimum of ${minimumWords} words, so Task Achievement / Task Response and the overall band have been capped conservatively.`,
+            feedback.feedback,
+            language === "zh"
+              ? `字数低于 Task ${taskType} 的最低要求（${minimumWords} 词），Task Achievement / Task Response 和 overall band 已被保守限制。`
+              : `The response is under the Task ${taskType} minimum of ${minimumWords} words, so Task Achievement / Task Response and the overall band have been capped conservatively.`,
           ),
   };
 }
@@ -764,6 +676,44 @@ function ensureUnderlengthScoreSummary(
       : `The response is under the Task ${taskType} minimum of ${minimumWords} words, which clearly limits Task Achievement / Task Response and the overall band.`,
     ...scoreSummary,
   ].slice(0, 5);
+}
+
+function ensureChineseNextSteps(
+  nextSteps: string[],
+  { isUnderlength }: { isUnderlength: boolean },
+) {
+  if (
+    nextSteps.length &&
+    nextSteps.every((step) => containsChineseText(step) || !looksMostlyEnglish(step))
+  ) {
+    return nextSteps;
+  }
+
+  if (isUnderlength) {
+    return [
+      "这篇作文低于最低字数要求，下一次先确保达到字数要求。",
+      "主体段需要加入更具体的解释、例子或数据比较。",
+      "提交前检查是否完整回应题目要求，并保留足够时间检查语法和拼写。",
+    ];
+  }
+
+  return [
+    "下一篇作文先重点解决最影响分数的一个问题，不要同时改太多方面。",
+    "针对 Task Response / Task Achievement，练习更具体地展开观点、例子或数据比较。",
+    "针对 Coherence and Cohesion，注意段落之间的逻辑连接，避免只用机械连接词。",
+    "针对 Lexical Resource 和 Grammar，减少重复表达，并检查复杂句准确性。",
+  ];
+}
+
+function containsChineseText(value: string) {
+  return /[\u3400-\u9fff]/.test(value);
+}
+
+function looksMostlyEnglish(value: string) {
+  const letters = value.match(/[A-Za-z]/g)?.length ?? 0;
+  const chinese = value.match(/[\u3400-\u9fff]/g)?.length ?? 0;
+
+  return letters > 20 && letters > chinese * 2;
 }
 
 function normalizeCriterionBand(score: number) {
@@ -847,17 +797,19 @@ function normalizeScoreSummary(rawAiOutput: unknown) {
   ).slice(0, 5);
 }
 
-function normalizeRawStringArray(
+function normalizeFeedbackText(
   rawAiOutput: unknown,
-  key: string,
-  fallback: string[],
+  feedbackZh: string,
+  feedbackEn: string,
 ) {
-  if (!rawAiOutput || typeof rawAiOutput !== "object" || !(key in rawAiOutput)) {
-    return fallback;
+  if (
+    rawAiOutput &&
+    typeof rawAiOutput === "object" &&
+    "feedback" in rawAiOutput &&
+    typeof (rawAiOutput as { feedback?: unknown }).feedback === "string"
+  ) {
+    return (rawAiOutput as { feedback: string }).feedback;
   }
 
-  const value = (rawAiOutput as Record<string, unknown>)[key];
-  const normalized = normalizeStringArray(value);
-
-  return normalized.length ? normalized : fallback;
+  return feedbackZh || feedbackEn;
 }
