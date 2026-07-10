@@ -34,6 +34,7 @@ export const generatedWritingTaskSchema = z.object({
 export const gradeWritingInputSchema = z.object({
   task: generatedWritingTaskSchema,
   essay: z.string().min(80),
+  language: z.enum(["zh", "en"]).default("en"),
 });
 
 export const writingFeedbackSchema = z.object({

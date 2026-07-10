@@ -37,6 +37,10 @@ export async function generateWritingTask(input: GenerateWritingTaskInput) {
 
 export async function gradeWriting(input: GradeWritingInput) {
   const openai = createOpenAIClient();
+  const languageInstruction =
+    input.language === "zh"
+      ? "Write all feedback content in Simplified Chinese only. Do not provide a separate English version."
+      : "Write all feedback content in English only. Do not include Simplified Chinese or Chinese explanations.";
 
   const response = await openai.responses.create({
     model: "gpt-5.2",
@@ -44,7 +48,7 @@ export async function gradeWriting(input: GradeWritingInput) {
       {
         role: "system",
         content:
-          "You are a strict IELTS Writing coach. Estimate a non-official IELTS band using Task Response, Coherence and Cohesion, Lexical Resource, and Grammatical Range and Accuracy. Give feedback in the requested language only. Include scoreSummary with 3 to 5 concise, specific points explaining the band, the biggest score limit, and the next focus. The score is only an estimate and not official. Return only valid JSON.",
+          `You are a strict IELTS Writing coach. Estimate a non-official IELTS band using Task Response, Coherence and Cohesion, Lexical Resource, and Grammatical Range and Accuracy. Give feedback in the requested language only. ${languageInstruction} Include scoreSummary with 3 to 5 concise, specific points explaining the band, the biggest score limit, and the next focus. The score is only an estimate and not official. Return only valid JSON.`,
       },
       {
         role: "user",

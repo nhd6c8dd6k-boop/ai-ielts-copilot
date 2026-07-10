@@ -452,7 +452,7 @@ async function gradeWritingWithOpenAI({
   const responseLanguageInstruction =
     language === "zh"
       ? "The learner's UI language is Simplified Chinese. Write feedback, score_summary, grammar_issues, vocabulary_upgrades, sentence_improvements, and next_steps in Simplified Chinese. IELTS terms such as Band, Task Response, Coherence and Cohesion, Lexical Resource, Grammatical Range and Accuracy, overview, and topic sentence may remain in English if useful, but explanations and advice must be Chinese. Do not provide a separate English version."
-      : "The learner's UI language is English. Write feedback, score_summary, grammar_issues, vocabulary_upgrades, sentence_improvements, and next_steps in English. Do not provide a separate Chinese version.";
+      : "The learner's UI language is English. Write all feedback content in English only. Do not write Chinese explanations. Do not include Simplified Chinese. Do not provide bilingual feedback. feedback, score_summary, grammar_issues, vocabulary_upgrades, sentence_improvements, and next_steps must all be in English.";
   const model = "gpt-5.2";
   const openai = createOpenAIClient();
   const response = await openai.responses.create({
@@ -497,7 +497,7 @@ async function gradeWritingWithOpenAI({
             "Explain the main score-limiting issues clearly.",
             language === "zh"
               ? "Return only Simplified Chinese feedback content. Do not include a full English feedback version."
-              : "Return only English feedback content. Do not include a full Chinese feedback version.",
+              : "Return only English feedback content. Do not include Chinese characters, Chinese explanations, or a full Chinese feedback version.",
             "Return score_summary with 3 to 5 short bullet-style strings. Focus on why this band was assigned, the biggest deduction, the gap to the next band, and the next priority.",
             "Provide Band 7 and Band 8 sample answers in English.",
           ],
@@ -596,27 +596,29 @@ function applyConservativeWritingScore(
           taskType,
           minimumWords,
         });
-  const nextSteps =
-    language === "zh"
-      ? ensureChineseNextSteps(feedback.next_steps, {
-          isUnderlength: underlengthCap != null,
-        })
-      : feedback.next_steps;
+  const sanitizedFeedback = sanitizeFeedbackLanguage(
+    {
+      ...feedback,
+      score_summary: scoreSummary,
+    },
+    {
+      isUnderlength: underlengthCap != null,
+      language,
+    },
+  );
 
   return {
-    ...feedback,
+    ...sanitizedFeedback,
     overall_band: overallBand,
     task_response: taskResponse,
     coherence_cohesion: coherenceCohesion,
     lexical_resource: lexicalResource,
     grammatical_range_accuracy: grammaticalRangeAccuracy,
-    score_summary: scoreSummary,
-    next_steps: nextSteps,
     feedback:
       underlengthCap == null
-        ? feedback.feedback
+        ? sanitizedFeedback.feedback
         : appendUnderlengthNote(
-            feedback.feedback,
+            sanitizedFeedback.feedback,
             language === "zh"
               ? `字数低于 Task ${taskType} 的最低要求（${minimumWords} 词），Task Achievement / Task Response 和 overall band 已被保守限制。`
               : `The response is under the Task ${taskType} minimum of ${minimumWords} words, so Task Achievement / Task Response and the overall band have been capped conservatively.`,
@@ -646,6 +648,169 @@ function appendUnderlengthNote(feedback: string, note: string) {
   return feedback.toLowerCase().includes("under")
     ? feedback
     : `${feedback}\n\n${note}`;
+}
+
+function sanitizeFeedbackLanguage(
+  feedback: WritingFeedbackOutput,
+  {
+    isUnderlength,
+    language,
+  }: {
+    isUnderlength: boolean;
+    language: "zh" | "en";
+  },
+): WritingFeedbackOutput {
+  if (language === "en") {
+    return {
+      ...feedback,
+      feedback: containsChineseText(feedback.feedback)
+        ? ENGLISH_FEEDBACK_FALLBACK
+        : feedback.feedback,
+      grammar_issues: containsChineseText(feedback.grammar_issues.join(" "))
+        ? ENGLISH_GRAMMAR_ISSUES_FALLBACK
+        : feedback.grammar_issues,
+      vocabulary_upgrades: containsChineseText(
+        feedback.vocabulary_upgrades.join(" "),
+      )
+        ? ENGLISH_VOCABULARY_UPGRADES_FALLBACK
+        : feedback.vocabulary_upgrades,
+      sentence_improvements: containsChineseText(
+        feedback.sentence_improvements.join(" "),
+      )
+        ? ENGLISH_SENTENCE_IMPROVEMENTS_FALLBACK
+        : feedback.sentence_improvements,
+      next_steps: containsChineseText(feedback.next_steps.join(" "))
+        ? getEnglishNextStepsFallback(isUnderlength)
+        : feedback.next_steps,
+      score_summary: containsChineseText(feedback.score_summary.join(" "))
+        ? getEnglishScoreSummaryFallback(isUnderlength)
+        : feedback.score_summary,
+    };
+  }
+
+  return {
+    ...feedback,
+    feedback: looksMostlyEnglish(feedback.feedback)
+      ? CHINESE_FEEDBACK_FALLBACK
+      : feedback.feedback,
+    grammar_issues: feedback.grammar_issues.every(
+      (item) => containsChineseText(item) || !looksMostlyEnglish(item),
+    )
+      ? feedback.grammar_issues
+      : CHINESE_GRAMMAR_ISSUES_FALLBACK,
+    vocabulary_upgrades: feedback.vocabulary_upgrades.every(
+      (item) => containsChineseText(item) || !looksMostlyEnglish(item),
+    )
+      ? feedback.vocabulary_upgrades
+      : CHINESE_VOCABULARY_UPGRADES_FALLBACK,
+    sentence_improvements: feedback.sentence_improvements.every(
+      (item) => containsChineseText(item) || !looksMostlyEnglish(item),
+    )
+      ? feedback.sentence_improvements
+      : CHINESE_SENTENCE_IMPROVEMENTS_FALLBACK,
+    next_steps: ensureChineseNextSteps(feedback.next_steps, {
+      isUnderlength,
+    }),
+    score_summary: feedback.score_summary.every(
+      (item) => containsChineseText(item) || !looksMostlyEnglish(item),
+    )
+      ? feedback.score_summary
+      : getChineseScoreSummaryFallback(isUnderlength),
+  };
+}
+
+const ENGLISH_FEEDBACK_FALLBACK =
+  "The response addresses the task to some extent, but the development, language control, and clarity need improvement before it can reach a higher band.";
+
+const ENGLISH_GRAMMAR_ISSUES_FALLBACK = [
+  "Review sentence structure and verb forms for accuracy.",
+  "Use complex sentences carefully so that meaning stays clear.",
+  "Check articles, plurals, and subject-verb agreement before submitting.",
+];
+
+const ENGLISH_VOCABULARY_UPGRADES_FALLBACK = [
+  "Replace repeated general words with more precise task-related vocabulary.",
+  "Use academic collocations naturally instead of memorized phrases.",
+  "Choose words that clearly match the argument, data, or example.",
+];
+
+const ENGLISH_SENTENCE_IMPROVEMENTS_FALLBACK = [
+  "Develop simple claims into fuller sentences with a reason or example.",
+  "Use linking phrases only where they show a real logical relationship.",
+  "Combine related ideas carefully to improve flow without creating grammar errors.",
+];
+
+const CHINESE_FEEDBACK_FALLBACK =
+  "这篇作文在一定程度上回应了题目，但观点展开、语言准确性和表达清晰度还需要提升，才能达到更高 Band。";
+
+const CHINESE_GRAMMAR_ISSUES_FALLBACK = [
+  "检查句子结构和动词形式，避免影响意思清晰度。",
+  "使用复杂句时先保证准确，再追求句型变化。",
+  "提交前重点检查冠词、复数和主谓一致。",
+];
+
+const CHINESE_VOCABULARY_UPGRADES_FALLBACK = [
+  "减少重复的泛泛表达，换成更贴合题目的词汇。",
+  "自然使用学术搭配，不要堆砌背诵短语。",
+  "选择能准确表达论点、数据或例子的词。",
+];
+
+const CHINESE_SENTENCE_IMPROVEMENTS_FALLBACK = [
+  "把简单观点扩展成包含原因或例子的完整句子。",
+  "连接词要服务于真实逻辑关系，避免机械堆叠。",
+  "合并相关信息时注意语法准确，避免句子过长失控。",
+];
+
+function getEnglishScoreSummaryFallback(isUnderlength: boolean) {
+  if (isUnderlength) {
+    return [
+      "The response is significantly under the minimum word requirement, which limits Task Response.",
+      "Ideas are not developed enough to support a higher band.",
+      "The next priority is to write a complete response with enough explanation and examples.",
+    ];
+  }
+
+  return [
+    "The response addresses the task only to a limited extent.",
+    "The main score limit is underdeveloped ideas and examples.",
+    "Cohesion needs to feel more logical, not just dependent on simple linking words.",
+    "The next priority is to develop each body paragraph with clearer support.",
+  ];
+}
+
+function getChineseScoreSummaryFallback(isUnderlength: boolean) {
+  if (isUnderlength) {
+    return [
+      "这篇作文低于最低字数要求，明显限制了 Task Response / Task Achievement。",
+      "观点和例子展开不足，因此很难支撑更高 Band。",
+      "下一篇的优先任务是先写完整，再提升语言质量。",
+    ];
+  }
+
+  return [
+    "这篇作文回应了题目的一部分，但展开还不够充分。",
+    "主要扣分点是观点、例子或数据比较不够具体。",
+    "段落衔接需要更自然，不要只依赖机械连接词。",
+    "下一篇优先练习把每个主体段写得更完整。",
+  ];
+}
+
+function getEnglishNextStepsFallback(isUnderlength: boolean) {
+  if (isUnderlength) {
+    return [
+      "Make sure your response reaches the minimum word requirement before submitting.",
+      "Develop each body paragraph with clearer explanation and more specific examples.",
+      "Review grammar accuracy, especially sentence structure and verb forms.",
+      "Use more precise vocabulary and avoid repeating general expressions.",
+    ];
+  }
+
+  return [
+    "Focus on the single issue that most limits your score in the next essay.",
+    "Develop Task Response / Task Achievement with clearer explanation, examples, or data comparison.",
+    "Improve Coherence and Cohesion by making paragraph logic clearer.",
+    "Reduce repeated vocabulary and check the accuracy of complex sentences.",
+  ];
 }
 
 function ensureUnderlengthScoreSummary(
