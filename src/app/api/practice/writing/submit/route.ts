@@ -59,6 +59,7 @@ export async function POST(request: Request) {
       userId: user.id,
       writingTaskId: input.writingTaskId,
       essay: input.essay,
+      language: input.language,
       timeSpentSeconds: input.timeSpentSeconds,
     });
 

@@ -31,7 +31,7 @@ export function WritingPracticeClient({
   task,
   isAiFeedbackAvailable,
 }: WritingPracticeClientProps) {
-  const { t } = useI18n();
+  const { language, t } = useI18n();
   const router = useRouter();
   const draftStorageKey = `ai-ielts-writing-draft-${task.id}`;
   const [essay, setEssay] = useState("");
@@ -88,6 +88,7 @@ export function WritingPracticeClient({
         body: JSON.stringify({
           writingTaskId: task.id,
           essay,
+          language,
           timeSpentSeconds: secondsElapsed,
         }),
       });

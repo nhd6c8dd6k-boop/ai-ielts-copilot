@@ -83,17 +83,27 @@ export default async function WritingResultPage({
 
       <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <Metric
-          label="Task Response"
-          labelKey="result.criteriaFeedback"
+          label={result.taskType === 1 ? "Task Achievement" : "Task Response"}
+          labelKey={
+            result.taskType === 1
+              ? "result.taskAchievement"
+              : "result.taskResponse"
+          }
           value={result.taskResponse.toFixed(1)}
         />
         <Metric
-          label="Coherence"
+          label="Coherence and Cohesion"
+          labelKey="result.coherenceCohesion"
           value={result.coherenceCohesion.toFixed(1)}
         />
-        <Metric label="Lexical" value={result.lexicalResource.toFixed(1)} />
         <Metric
-          label="Grammar"
+          label="Lexical Resource"
+          labelKey="result.lexicalResource"
+          value={result.lexicalResource.toFixed(1)}
+        />
+        <Metric
+          label="Grammatical Range and Accuracy"
+          labelKey="result.grammaticalRangeAccuracy"
           value={result.grammaticalRangeAccuracy.toFixed(1)}
         />
       </div>

@@ -92,6 +92,7 @@ type WritingFeedbackOutput = z.infer<typeof writingFeedbackOutputSchema>;
 export const submitWritingPracticeSchema = z.object({
   writingTaskId: z.string().uuid(),
   essay: z.string().trim().min(1, "Essay is required."),
+  language: z.enum(["zh", "en"]).default("en"),
   timeSpentSeconds: z.number().int().nonnegative().default(0),
 });
 
@@ -257,11 +258,13 @@ export async function submitWritingPractice({
   userId,
   writingTaskId,
   essay,
+  language,
   timeSpentSeconds,
 }: {
   userId: string;
   writingTaskId: string;
   essay: string;
+  language: "zh" | "en";
   timeSpentSeconds: number;
 }) {
   const task = await getPublishedWritingTask(writingTaskId);
@@ -275,6 +278,7 @@ export async function submitWritingPractice({
   const { data: feedback, usage } = await gradeWritingWithOpenAI({
     task,
     essay,
+    language,
     wordCount,
   });
   const admin = createSupabaseAdminClient();
@@ -436,12 +440,18 @@ export function getMinimumWords(taskType: number) {
 async function gradeWritingWithOpenAI({
   task,
   essay,
+  language,
   wordCount,
 }: {
   task: PublishedWritingTask;
   essay: string;
+  language: "zh" | "en";
   wordCount: number;
 }) {
+  const responseLanguageInstruction =
+    language === "zh"
+      ? "The learner's UI language is Simplified Chinese. Return score_summary, grammar_issues, vocabulary_upgrades, sentence_improvements, and next_steps mainly in Simplified Chinese. IELTS terms such as Task Response, Coherence and Cohesion, Lexical Resource, Grammar, Band, overview, and topic sentence may remain in English when useful, but explanations must be Chinese."
+      : "The learner's UI language is English. Return score_summary, grammar_issues, vocabulary_upgrades, sentence_improvements, and next_steps in English.";
   const model = "gpt-5.2";
   const openai = createOpenAIClient();
   const response = await openai.responses.create({
@@ -461,7 +471,8 @@ async function gradeWritingWithOpenAI({
           "For Task 2, require a clear answer to the question, a clear position, sufficiently developed arguments, specific examples, and no major drift from the prompt.",
           "If the essay is under the minimum word count, explicitly mention it and cap the score conservatively. Task Achievement / Task Response must be affected.",
           "Feedback should explain why the essay is not the next higher band and include one or two specific examples from the essay when possible.",
-          "Return score_summary as 3 to 5 concise bilingual strings. Each item must be specific, score-limiting, and aligned with the criteria scores. Include one clear next focus. If the response is underlength, mention underlength in score_summary. If Task 1 lacks an overview, mention that. If Task 2 has vague opinions or generic examples, mention that. Do not use praise such as excellent unless the score genuinely supports it.",
+          "Return score_summary as 3 to 5 concise strings. Each item must be specific, score-limiting, and aligned with the criteria scores. Include one clear next focus. If the response is underlength, mention underlength in score_summary. If Task 1 lacks an overview, mention that. If Task 2 has vague opinions or generic examples, mention that. Do not use praise such as excellent unless the score genuinely supports it.",
+          responseLanguageInstruction,
           "Return strict JSON only. Feedback should be useful for Chinese IELTS learners. The task prompt and essay are in English; feedback_zh must be Chinese and feedback_en must be English.",
         ].join(" "),
       },
@@ -473,6 +484,7 @@ async function gradeWritingWithOpenAI({
           prompt: task.prompt,
           visual_data: task.visualData,
           band_target: task.bandTarget,
+          response_language: language,
           word_count: wordCount,
           minimum_words: getMinimumWords(task.taskType),
           essay,
@@ -482,7 +494,10 @@ async function gradeWritingWithOpenAI({
             "Be stricter than a general writing coach. Do not inflate scores to encourage the learner.",
             "Identify practical grammar and vocabulary improvements.",
             "Explain the main score-limiting issues clearly.",
-            "Return score_summary with 3 to 5 short bilingual bullet-style strings. Focus on why this band was assigned, the biggest deduction, the gap to the next band, and the next priority.",
+            language === "zh"
+              ? "Return score_summary, grammar_issues, vocabulary_upgrades, sentence_improvements, and next_steps in Simplified Chinese. Keep short English IELTS terms only when useful."
+              : "Return score_summary, grammar_issues, vocabulary_upgrades, sentence_improvements, and next_steps in English.",
+            "Return score_summary with 3 to 5 short bullet-style strings. Focus on why this band was assigned, the biggest deduction, the gap to the next band, and the next priority.",
             "Provide Band 7 and Band 8 sample answers in English.",
           ],
         }),
@@ -506,6 +521,7 @@ async function gradeWritingWithOpenAI({
 
     return {
       data: applyConservativeWritingScore(parsedFeedback, {
+        language,
         taskType: task.taskType,
         wordCount,
       }),
@@ -523,9 +539,11 @@ async function gradeWritingWithOpenAI({
 function applyConservativeWritingScore(
   feedback: WritingFeedbackOutput,
   {
+    language,
     taskType,
     wordCount,
   }: {
+    language: "zh" | "en";
     taskType: 1 | 2;
     wordCount: number;
   },
@@ -573,6 +591,7 @@ function applyConservativeWritingScore(
     underlengthCap == null
       ? feedback.score_summary
       : ensureUnderlengthScoreSummary(feedback.score_summary, {
+          language,
           taskType,
           minimumWords,
         });
@@ -629,9 +648,11 @@ function appendUnderlengthNote(feedback: string, note: string) {
 function ensureUnderlengthScoreSummary(
   scoreSummary: string[],
   {
+    language,
     taskType,
     minimumWords,
   }: {
+    language: "zh" | "en";
     taskType: 1 | 2;
     minimumWords: number;
   },
@@ -647,7 +668,9 @@ function ensureUnderlengthScoreSummary(
   }
 
   return [
-    `字数低于 Task ${taskType} 的最低要求（${minimumWords} 词），这会明显限制 Task Achievement / Task Response 和总 Band。 / The response is under the Task ${taskType} minimum of ${minimumWords} words, which clearly limits Task Achievement / Task Response and the overall band.`,
+    language === "zh"
+      ? `字数低于 Task ${taskType} 的最低要求（${minimumWords} 词），这会明显限制 Task Achievement / Task Response 和总 Band。`
+      : `The response is under the Task ${taskType} minimum of ${minimumWords} words, which clearly limits Task Achievement / Task Response and the overall band.`,
     ...scoreSummary,
   ].slice(0, 5);
 }
