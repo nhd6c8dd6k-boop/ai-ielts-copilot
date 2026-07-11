@@ -291,6 +291,42 @@ const cases = [
     },
   },
   {
+    name: "Task 2 broad development and list-like examples cap overall at 6.5",
+    input: {
+      taskType: 2,
+      wordCount: 305,
+      criteria: {
+        taskResponse: 6.5,
+        coherenceCohesion: 7,
+        lexicalResource: 6.5,
+        grammaticalRangeAccuracy: 7,
+      },
+      taskSpecificFeedback: {
+        task_type: "task2",
+        items: [
+          { label: "Position", status: "strong" },
+          {
+            label: "Idea development",
+            status: "needs_work",
+            feedback:
+              "Main ideas are relevant but developed in a broad way.",
+          },
+          {
+            label: "Examples",
+            status: "needs_work",
+            feedback:
+              "Examples mostly list situations rather than a specific illustrative case.",
+          },
+          { label: "Paragraphing", status: "strong" },
+          { label: "Task response", status: "needs_work" },
+        ],
+      },
+    },
+    assert: (result) => {
+      assert.equal(result.overallBand <= 6.5, true);
+    },
+  },
+  {
     name: "Task 2 mature 7.0 is not capped for mild idea-development needs-work",
     input: {
       taskType: 2,
@@ -321,6 +357,42 @@ const cases = [
       assert.equal(result.taskResponse, 7);
       assert.equal(result.coherenceCohesion, 7);
       assert.equal(result.lexicalResource, 7);
+      assert.equal(result.overallBand, 7);
+    },
+  },
+  {
+    name: "Task 2 mature 7.0 keeps mild idea and example needs-work",
+    input: {
+      taskType: 2,
+      wordCount: 315,
+      criteria: {
+        taskResponse: 7,
+        coherenceCohesion: 7,
+        lexicalResource: 7,
+        grammaticalRangeAccuracy: 7,
+      },
+      taskSpecificFeedback: {
+        task_type: "task2",
+        items: [
+          { label: "Position", status: "strong" },
+          {
+            label: "Idea development",
+            status: "needs_work",
+            feedback:
+              "The position is clear and ideas are relevant, but the explanation could be deeper.",
+          },
+          {
+            label: "Examples",
+            status: "needs_work",
+            feedback:
+              "Examples are present and useful, but some could be more specific.",
+          },
+          { label: "Paragraphing", status: "strong" },
+          { label: "Task response", status: "strong" },
+        ],
+      },
+    },
+    assert: (result) => {
       assert.equal(result.overallBand, 7);
     },
   },

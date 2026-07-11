@@ -419,6 +419,17 @@ function applyTask2Caps(
     );
   }
 
+  if (
+    hasSevereTask2DevelopmentCombination(ideaDevelopment, examples)
+  ) {
+    result.overallCap = minCap(result.overallCap, 6.5);
+    result.coherenceCap = minCap(result.coherenceCap, 7);
+    result.lexicalCap = minCap(result.lexicalCap, 7);
+    result.overallReasons.push(
+      "Overall band capped because Task 2 idea development and examples are both still too general.",
+    );
+  }
+
   if (paragraphing?.status === "missing") {
     result.coherenceCap = minCap(result.coherenceCap, 5.5);
   } else if (isSevereTaskSpecificIssue(paragraphing, 2)) {
@@ -515,6 +526,30 @@ function isSevereTaskSpecificIssue(
   return getSevereTaskSpecificPattern(taskType).test(item.normalizedFeedback);
 }
 
+function hasSevereTask2DevelopmentCombination(
+  ideaDevelopment:
+    | (WritingTaskSpecificItem & {
+        normalizedFeedback: string;
+      })
+    | undefined,
+  examples:
+    | (WritingTaskSpecificItem & {
+        normalizedFeedback: string;
+      })
+    | undefined,
+) {
+  if (
+    ideaDevelopment?.status !== "needs_work" ||
+    examples?.status !== "needs_work"
+  ) {
+    return false;
+  }
+
+  const combinedFeedback = `${ideaDevelopment.normalizedFeedback} ${examples.normalizedFeedback}`;
+
+  return getTask2BroadDevelopmentPattern().test(combinedFeedback);
+}
+
 function getSevereTaskSpecificPattern(taskType: WritingTaskType) {
   const sharedChinese =
     "缺失|不足|不够|有限|泛泛|缺少|没有明确|没有具体例子|没有比较|主要问题";
@@ -546,15 +581,45 @@ function getSevereTaskSpecificPattern(taskType: WritingTaskType) {
       "insufficient",
       "underdeveloped",
       "too general",
+      "broad way",
+      "developed in a broad way",
+      "broadly developed",
+      "mostly lists",
+      "mostly list",
+      "rather than a specific",
+      "specific illustrative case",
+      "not a specific illustrative case",
+      "lacks a specific example",
+      "lacks specific examples",
+      "without a specific example",
+      "without specific examples",
+      "general rather than specific",
+      "too broad",
+      "broad examples",
+      "generic examples",
+      "generic support",
+      "limited support",
       "lacks support",
       "no specific example",
       "does not fully address",
       "major issue",
       "unclear position",
+      "过于宽泛",
+      "不够具体",
+      "例子不具体",
+      "缺少具体例子",
+      "只是罗列",
+      "主要是罗列",
+      "缺乏支撑",
+      "支撑不足",
       sharedChinese,
     ].join("|"),
     "i",
   );
+}
+
+function getTask2BroadDevelopmentPattern() {
+  return /broad way|developed in a broad way|broadly developed|mostly lists|mostly list|rather than a specific|specific illustrative case|not a specific illustrative case|lacks a specific example|lacks specific examples|without a specific example|without specific examples|general rather than specific|too broad|broad examples|generic examples|generic support|limited support|lacks support|not specific|underdeveloped|too general|泛泛|过于宽泛|不够具体|例子不具体|缺少具体例子|只是罗列|主要是罗列|缺乏支撑|支撑不足/i;
 }
 
 function minCap(current: number | null, next: number) {
