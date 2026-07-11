@@ -14,6 +14,7 @@ import {
   calibrateWritingScores,
   getMinimumWordsForWritingTask,
 } from "@/server/services/writing-scoring";
+import { sanitizeScoreSummaryBands } from "@/server/services/writing-feedback-sanitizer";
 
 export type PublishedWritingTaskSummary = {
   id: string;
@@ -534,6 +535,7 @@ async function gradeWritingWithOpenAI({
           "If the essay is under the minimum word count, explicitly mention it and cap the score conservatively. Task Achievement / Task Response must be affected.",
           "Feedback should explain why the essay is not the next higher band and include one or two specific examples from the essay when possible.",
           "Return score_summary as 3 to 5 concise strings. Each item must be specific, score-limiting, and aligned with the criteria scores. Include one clear next focus. If the response is underlength, mention underlength in score_summary. If Task 1 lacks an overview, mention that. If Task 2 has vague opinions or generic examples, mention that. Do not use praise such as excellent unless the score genuinely supports it.",
+          "Do not include any numeric band scores in score_summary. Do not write phrases such as TR 7.5, TA 6.5, CC 7, LR: Band 7, GRA 7.0, Task Response 7, Task Achievement: Band 5.5, Coherence and Cohesion 7.0, Lexical Resource = 7, or Grammatical Range and Accuracy: 6.5. The server may calibrate the final scores after your response, so score_summary must describe strengths, limits, and next focus without quoting criterion bands.",
           "Return sentence_improvements as 2 to 4 objects with original, improved, and explanation. original must be a real sentence or clear phrase from the learner's essay. Do not invent sentences the learner did not write. improved must be a more natural, accurate, higher-band version. explanation must explain the specific language or development improvement in the requested UI language. If the essay is very short, still provide at least one phrase-level improvement.",
           "Return task_specific_feedback with task_type set to task1 for Task 1 and task2 for Task 2. For Task 1, only assess Overview, Key features, Data comparison, Accuracy, and Objective reporting. For Task 2, only assess Position, Idea development, Examples, Paragraphing, and Task response. Each item must use status strong, needs_work, or missing, and feedback must be specific and consistent with the score. Low-scoring essays should not receive many strong statuses.",
           responseLanguageInstruction,
@@ -563,6 +565,7 @@ async function gradeWritingWithOpenAI({
               ? "Return only Simplified Chinese feedback content. Do not include a full English feedback version."
               : "Return only English feedback content. Do not include Chinese characters, Chinese explanations, or a full Chinese feedback version.",
             "Return score_summary with 3 to 5 short bullet-style strings. Focus on why this band was assigned, the biggest deduction, the gap to the next band, and the next priority.",
+            "Do not include numeric band scores in score_summary because the server calculates calibrated final bands after model output.",
             "Return sentence_improvements as structured objects: original, improved, explanation. original must quote or closely match the learner's essay.",
             task.taskType === 1
               ? "Return task_specific_feedback for Task 1 only: Overview, Key features, Data comparison, Accuracy, Objective reporting. Do not include Task 2 position/example logic."
@@ -635,7 +638,7 @@ function applyConservativeWritingScore(
   });
   const scoreSummary =
     !isUnderlength
-      ? feedback.score_summary
+      ? sanitizeScoreSummaryBands(feedback.score_summary)
       : ensureUnderlengthScoreSummary(feedback.score_summary, {
           language,
           taskType,
@@ -1066,16 +1069,17 @@ function ensureUnderlengthScoreSummary(
       item,
     ),
   );
+  const sanitizedScoreSummary = sanitizeScoreSummaryBands(scoreSummary);
 
   if (alreadyMentionsUnderlength) {
-    return scoreSummary.slice(0, 5);
+    return sanitizedScoreSummary.slice(0, 5);
   }
 
   return [
     language === "zh"
       ? `字数低于 Task ${taskType} 的最低要求（${minimumWords} 词），这会明显限制 Task Achievement / Task Response 和总 Band。`
       : `The response is under the Task ${taskType} minimum of ${minimumWords} words, which clearly limits Task Achievement / Task Response and the overall band.`,
-    ...scoreSummary,
+    ...sanitizedScoreSummary,
   ].slice(0, 5);
 }
 

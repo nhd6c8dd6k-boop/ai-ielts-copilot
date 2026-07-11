@@ -4,19 +4,45 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import ts from "typescript";
 
-const sourcePath = new URL("../src/server/services/writing-scoring.ts", import.meta.url);
-const source = await readFile(sourcePath, "utf8");
-const compiled = ts.transpileModule(source, {
-  compilerOptions: {
-    module: ts.ModuleKind.ES2022,
-    target: ts.ScriptTarget.ES2022,
-  },
-});
 const tempDir = await mkdtemp(join(tmpdir(), "writing-scoring-"));
-const compiledPath = join(tempDir, "writing-scoring.mjs");
-await writeFile(compiledPath, compiled.outputText);
+const compilerOptions = {
+  module: ts.ModuleKind.ES2022,
+  target: ts.ScriptTarget.ES2022,
+};
 
+async function compileService(sourceFileName, outputFileName) {
+  const sourcePath = new URL(`../src/server/services/${sourceFileName}`, import.meta.url);
+  const source = await readFile(sourcePath, "utf8");
+  const compiled = ts.transpileModule(source, { compilerOptions });
+  const compiledPath = join(tempDir, outputFileName);
+  await writeFile(compiledPath, compiled.outputText);
+  return compiledPath;
+}
+
+const compiledPath = await compileService("writing-scoring.ts", "writing-scoring.mjs");
+const sanitizerPath = await compileService(
+  "writing-feedback-sanitizer.ts",
+  "writing-feedback-sanitizer.mjs",
+);
 const { calibrateWritingScores } = await import(`file://${compiledPath}`);
+const { sanitizeScoreSummaryBands } = await import(`file://${sanitizerPath}`);
+
+const sanitizedSummary = sanitizeScoreSummaryBands([
+  "TR 7.5: ideas are relevant but still general.",
+  "Task Response: Band 7 should not remain in summary.",
+  "CC 6.5 / LR 7 / GRA 7: fluent but uneven.",
+  "The response is under 250 words and needs 3 paragraphs.",
+  "下一步重点：不要写 TA 6.5 或 GRA Band 7.0 这种分数字样。",
+]);
+
+assert.equal(sanitizedSummary.some((item) => /\b(?:TR|TA|CC|LR|GRA)\s*(?:[:=]|[-–])?\s*(?:Band\s*)?[0-9]/i.test(item)), false);
+assert.equal(sanitizedSummary.some((item) => /Task Response\s*:?\s*Band\s*7/i.test(item)), false);
+assert.equal(sanitizedSummary.some((item) => /Band\s*[0-9](?:\.[05])?/i.test(item)), false);
+assert.equal(sanitizedSummary.some((item) => /250 words/.test(item)), true);
+assert.equal(sanitizedSummary.some((item) => /3 paragraphs/.test(item)), true);
+assert.equal(sanitizedSummary.some((item) => /\s{2,}|^[\s:;,.=\-–]+|[\s:;,.=\-–]+$/.test(item)), false);
+assert.equal(sanitizedSummary.some((item) => /(^|\s)\/($|\s|[:;,.=\-–])/.test(item)), false);
+console.log("PASS score_summary sanitizer removes criterion bands and preserves word counts");
 
 const task2WeakFeedback = {
   task_type: "task2",
@@ -35,6 +61,17 @@ const task2MatureFeedback = {
     { label: "Position", status: "strong" },
     { label: "Idea development", status: "strong" },
     { label: "Examples", status: "needs_work" },
+    { label: "Paragraphing", status: "strong" },
+    { label: "Task response", status: "strong" },
+  ],
+};
+
+const task2StrongFeedback = {
+  task_type: "task2",
+  items: [
+    { label: "Position", status: "strong" },
+    { label: "Idea development", status: "strong" },
+    { label: "Examples", status: "strong" },
     { label: "Paragraphing", status: "strong" },
     { label: "Task response", status: "strong" },
   ],
@@ -160,7 +197,7 @@ const cases = [
     },
     assert: (result) => {
       assert.equal(result.taskResponse <= 6.5, true);
-      assert.equal(result.overallBand <= 7, true);
+      assert.equal(result.overallBand <= 6.5, true);
     },
   },
   {
@@ -175,6 +212,52 @@ const cases = [
         grammaticalRangeAccuracy: 7,
       },
       taskSpecificFeedback: task1CompleteFeedback,
+    },
+    assert: (result) => {
+      assert.equal(result.overallBand, 7);
+    },
+  },
+  {
+    name: "Task 2 limited idea development prevents CC/LR inflation",
+    input: {
+      taskType: 2,
+      wordCount: 307,
+      criteria: {
+        taskResponse: 7.5,
+        coherenceCohesion: 7.5,
+        lexicalResource: 7.5,
+        grammaticalRangeAccuracy: 7,
+      },
+      taskSpecificFeedback: {
+        task_type: "task2",
+        items: [
+          { label: "Position", status: "strong" },
+          { label: "Idea development", status: "needs_work" },
+          { label: "Examples", status: "strong" },
+          { label: "Paragraphing", status: "strong" },
+          { label: "Task response", status: "strong" },
+        ],
+      },
+    },
+    assert: (result) => {
+      assert.equal(result.taskResponse <= 6.5, true);
+      assert.equal(result.coherenceCohesion <= 7, true);
+      assert.equal(result.lexicalResource <= 7, true);
+      assert.equal(result.overallBand <= 6.5, true);
+    },
+  },
+  {
+    name: "Task 2 mature 7.0 is not capped when evidence is strong",
+    input: {
+      taskType: 2,
+      wordCount: 310,
+      criteria: {
+        taskResponse: 7,
+        coherenceCohesion: 7,
+        lexicalResource: 7,
+        grammaticalRangeAccuracy: 7,
+      },
+      taskSpecificFeedback: task2StrongFeedback,
     },
     assert: (result) => {
       assert.equal(result.overallBand, 7);
@@ -236,6 +319,23 @@ const cases = [
     assert: (result) => {
       assert.equal(result.grammaticalRangeAccuracy <= 6.5, true);
       assert.equal(result.overallBand <= 6.5, true);
+    },
+  },
+  {
+    name: "Band 8+ still requires all criteria to support it",
+    input: {
+      taskType: 2,
+      wordCount: 330,
+      criteria: {
+        taskResponse: 8.5,
+        coherenceCohesion: 8,
+        lexicalResource: 8,
+        grammaticalRangeAccuracy: 7,
+      },
+      taskSpecificFeedback: task2StrongFeedback,
+    },
+    assert: (result) => {
+      assert.equal(result.overallBand <= 7.5, true);
     },
   },
 ];

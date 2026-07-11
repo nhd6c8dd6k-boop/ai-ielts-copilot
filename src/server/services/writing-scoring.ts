@@ -121,6 +121,11 @@ export function calibrateWritingScores({
     );
   }
 
+  if (taskSpecificCaps.overallCap != null) {
+    overallBand = Math.min(overallBand, taskSpecificCaps.overallCap);
+    appliedCaps.push(...taskSpecificCaps.overallReasons);
+  }
+
   return {
     taskResponse,
     coherenceCohesion,
@@ -205,13 +210,17 @@ function getTaskSpecificCaps(
     coherenceCap: number | null;
     lexicalCap: number | null;
     grammarCap: number | null;
+    overallCap: number | null;
     reasons: string[];
+    overallReasons: string[];
   } = {
     taskResponseCap: null,
     coherenceCap: null,
     lexicalCap: null,
     grammarCap: null,
+    overallCap: null,
     reasons: [],
+    overallReasons: [],
   };
 
   if (!taskSpecificFeedback?.items?.length) {
@@ -302,8 +311,12 @@ function applyTask1Caps(
     );
   } else if (dataComparison?.status === "needs_work") {
     result.taskResponseCap = minCap(result.taskResponseCap, 6.5);
+    result.overallCap = minCap(result.overallCap, 6.5);
     result.reasons.push(
       "Task Achievement capped because data comparisons are limited.",
+    );
+    result.overallReasons.push(
+      "Overall band capped because Task 1 data comparison is still limited.",
     );
   }
 
@@ -362,25 +375,45 @@ function applyTask2Caps(
 
   if (ideaDevelopment?.status === "missing") {
     result.taskResponseCap = minCap(result.taskResponseCap, 5.5);
+    result.overallCap = minCap(result.overallCap, 6.5);
     result.reasons.push(
       "Task Response capped because ideas are not developed.",
     );
+    result.overallReasons.push(
+      "Overall band capped because Task 2 idea development is not sufficient for a higher score.",
+    );
   } else if (ideaDevelopment?.status === "needs_work") {
     result.taskResponseCap = minCap(result.taskResponseCap, 6.5);
+    result.coherenceCap = minCap(result.coherenceCap, 7);
+    result.lexicalCap = minCap(result.lexicalCap, 7);
+    result.overallCap = minCap(result.overallCap, 6.5);
     result.reasons.push(
       "Task Response capped because idea development is limited.",
+    );
+    result.overallReasons.push(
+      "Overall band capped because Task 2 idea development is not sufficient for a higher score.",
     );
   }
 
   if (examples?.status === "missing") {
     result.taskResponseCap = minCap(result.taskResponseCap, 6);
+    result.overallCap = minCap(result.overallCap, 6.5);
     result.reasons.push(
       "Task Response capped because support or examples are missing.",
     );
+    result.overallReasons.push(
+      "Overall band capped because Task 2 support or examples are missing.",
+    );
   } else if (examples?.status === "needs_work") {
     result.taskResponseCap = minCap(result.taskResponseCap, 6.5);
+    result.coherenceCap = minCap(result.coherenceCap, 7);
+    result.lexicalCap = minCap(result.lexicalCap, 7);
+    result.overallCap = minCap(result.overallCap, 6.5);
     result.reasons.push(
       "Task Response capped because examples are too general or weakly linked.",
+    );
+    result.overallReasons.push(
+      "Overall band capped because Task 2 examples are too general or weakly linked.",
     );
   }
 
