@@ -108,6 +108,10 @@ export default async function WritingResultPage({
         />
       </div>
 
+      {result.taskSpecificFeedback ? (
+        <TaskSpecificFeedbackCard feedback={result.taskSpecificFeedback} />
+      ) : null}
+
       <div className="mt-6 flex flex-wrap gap-3">
         <Button asChild>
           <Link href="/practice/writing">
@@ -188,11 +192,7 @@ export default async function WritingResultPage({
           titleKey="result.vocabularyUpgrades"
           items={result.vocabularyUpgrades}
         />
-        <FeedbackList
-          title="Sentence Improvements"
-          titleKey="result.sentenceImprovements"
-          items={result.sentenceImprovements}
-        />
+        <SentenceImprovementsCard items={result.sentenceImprovements} />
         <FeedbackList
           title="Next Steps"
           titleKey="result.nextSteps"
@@ -217,6 +217,85 @@ export default async function WritingResultPage({
         {result.disclaimer}
       </div>
     </AppShell>
+  );
+}
+
+function TaskSpecificFeedbackCard({
+  feedback,
+}: {
+  feedback: NonNullable<
+    Awaited<ReturnType<typeof getWritingAttemptResult>>
+  >["taskSpecificFeedback"];
+}) {
+  if (!feedback) {
+    return null;
+  }
+
+  return (
+    <Card className="mt-4">
+      <CardHeader>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <CardTitle>
+            <LocalizedText
+              k="result.taskSpecificFeedback"
+              fallback="Task-specific feedback"
+            />
+          </CardTitle>
+          <Badge className="bg-white">
+            {feedback.taskType === "task1" ? "Task 1" : "Task 2"}
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="grid gap-3 md:grid-cols-2">
+          {feedback.items.map((item) => (
+            <div
+              key={`${item.label}-${item.status}`}
+              className="rounded-md border border-slate-200 bg-slate-50 p-3"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="font-medium text-slate-950">{item.label}</p>
+                <StatusBadge status={item.status} />
+              </div>
+              <p className="mt-2 text-sm leading-6 text-slate-700">
+                {item.feedback}
+              </p>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function StatusBadge({
+  status,
+}: {
+  status: "strong" | "needs_work" | "missing";
+}) {
+  const labelKey =
+    status === "strong"
+      ? "result.statusStrong"
+      : status === "needs_work"
+        ? "result.statusNeedsWork"
+        : "result.statusMissing";
+  const fallback =
+    status === "strong"
+      ? "Strong"
+      : status === "needs_work"
+        ? "Needs work"
+        : "Missing";
+  const className =
+    status === "strong"
+      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+      : status === "needs_work"
+        ? "border-amber-200 bg-amber-50 text-amber-700"
+        : "border-rose-200 bg-rose-50 text-rose-700";
+
+  return (
+    <Badge className={className}>
+      <LocalizedText k={labelKey} fallback={fallback} />
+    </Badge>
   );
 }
 
@@ -264,6 +343,79 @@ function FeedbackBox({
         <p className="whitespace-pre-wrap text-sm leading-7 text-slate-700">
           {text}
         </p>
+      </CardContent>
+    </Card>
+  );
+}
+
+function SentenceImprovementsCard({
+  items,
+}: {
+  items: Array<{
+    original: string;
+    improved: string;
+    explanation: string;
+  }>;
+}) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>
+          <LocalizedText
+            k="result.sentenceImprovements"
+            fallback="Sentence Improvements"
+          />
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {items.length ? (
+          <div className="space-y-3 text-sm leading-6 text-slate-700">
+            {items.map((item, index) =>
+              item.improved || item.explanation ? (
+                <div
+                  key={`${item.original.slice(0, 32)}-${index}`}
+                  className="rounded-md bg-slate-50 p-3"
+                >
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    <LocalizedText
+                      k="result.originalSentence"
+                      fallback="Original"
+                    />
+                  </p>
+                  <p className="mt-1 whitespace-pre-wrap text-slate-800">
+                    {item.original}
+                  </p>
+                  <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    <LocalizedText
+                      k="result.improvedSentence"
+                      fallback="Improved"
+                    />
+                  </p>
+                  <p className="mt-1 whitespace-pre-wrap text-slate-800">
+                    {item.improved}
+                  </p>
+                  <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    <LocalizedText k="result.whyRewrite" fallback="Why" />
+                  </p>
+                  <p className="mt-1 whitespace-pre-wrap">
+                    {item.explanation}
+                  </p>
+                </div>
+              ) : (
+                <div
+                  key={`${item.original.slice(0, 32)}-${index}`}
+                  className="rounded-md bg-slate-50 p-3"
+                >
+                  {item.original}
+                </div>
+              ),
+            )}
+          </div>
+        ) : (
+          <p className="text-sm text-slate-500">
+            <LocalizedText k="result.noItems" fallback="No items returned." />
+          </p>
+        )}
       </CardContent>
     </Card>
   );

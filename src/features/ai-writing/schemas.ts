@@ -37,6 +37,26 @@ export const gradeWritingInputSchema = z.object({
   language: z.enum(["zh", "en"]).default("en"),
 });
 
+export const sentenceImprovementSchema = z.object({
+  original: z.string().min(1),
+  improved: z.string().min(1),
+  explanation: z.string().min(1),
+});
+
+export const taskSpecificFeedbackSchema = z.object({
+  taskType: z.enum(["task1", "task2"]),
+  items: z
+    .array(
+      z.object({
+        label: z.string().min(1),
+        status: z.enum(["strong", "needs_work", "missing"]),
+        feedback: z.string().min(1),
+      }),
+    )
+    .min(4)
+    .max(5),
+});
+
 export const writingFeedbackSchema = z.object({
   overallBand: z.number().min(0).max(9),
   criteria: z.object({
@@ -49,6 +69,8 @@ export const writingFeedbackSchema = z.object({
   scoreSummary: z.array(z.string().min(1)).min(3).max(5),
   grammarIssues: z.array(z.string()).default([]),
   vocabularyUpgrades: z.array(z.string()).default([]),
+  sentenceImprovements: z.array(sentenceImprovementSchema).min(1).max(4),
+  taskSpecificFeedback: taskSpecificFeedbackSchema,
   band7Sample: z.string().min(1),
   band8Sample: z.string().min(1),
   band9Sample: z.string().min(1),

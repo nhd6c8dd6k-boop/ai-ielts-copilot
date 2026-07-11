@@ -114,6 +114,110 @@ export function createMockWritingFeedback(
             "bad effects -> adverse consequences",
             "help students -> support learners / improve learning outcomes",
           ],
+    sentenceImprovements:
+      language === "zh"
+        ? [
+            {
+              original: "Schools should focus more on practical skills.",
+              improved:
+                "Schools should place greater emphasis on practical skills while still maintaining academic depth.",
+              explanation:
+                "修改后表达更正式，也避免把 academic subjects 完全排除在外，观点更有 IELTS Task 2 的平衡感。",
+            },
+            {
+              original: "It can help students in the future.",
+              improved:
+                "This can help students manage real-life responsibilities more confidently after graduation.",
+              explanation:
+                "原句比较笼统；修改后说明了具体帮助对象和场景，论证更清楚。",
+            },
+          ]
+        : [
+            {
+              original: "Schools should focus more on practical skills.",
+              improved:
+                "Schools should place greater emphasis on practical skills while still maintaining academic depth.",
+              explanation:
+                "The improved sentence is more formal and gives a more balanced position.",
+            },
+            {
+              original: "It can help students in the future.",
+              improved:
+                "This can help students manage real-life responsibilities more confidently after graduation.",
+              explanation:
+                "The original is too general; the improved version explains the benefit more specifically.",
+            },
+          ],
+    taskSpecificFeedback:
+      language === "zh"
+        ? {
+            taskType: "task2",
+            items: [
+              {
+                label: "立场 Position",
+                status: hasClearPosition ? "strong" : "needs_work",
+                feedback: hasClearPosition
+                  ? "文章有明确回应题目，但开头可以更直接说明同意程度。"
+                  : "立场不够明确，需要在 introduction 里清楚回答题目。",
+              },
+              {
+                label: "观点展开 Idea development",
+                status: "needs_work",
+                feedback: "主体段观点相关，但解释和因果展开还不够充分。",
+              },
+              {
+                label: "例子 Examples",
+                status: "needs_work",
+                feedback: "例子偏泛，需要加入更具体的学习或工作场景。",
+              },
+              {
+                label: "段落结构 Paragraphing",
+                status: "strong",
+                feedback: "段落结构基本清楚，但段落内部衔接可以更自然。",
+              },
+              {
+                label: "任务回应 Task response",
+                status: "needs_work",
+                feedback: "整体回应题目，但需要更深入解释为什么这个观点成立。",
+              },
+            ],
+          }
+        : {
+            taskType: "task2",
+            items: [
+              {
+                label: "Position",
+                status: hasClearPosition ? "strong" : "needs_work",
+                feedback: hasClearPosition
+                  ? "The essay answers the question, but the extent of agreement could be stated more directly."
+                  : "The position is not clear enough and should be stated in the introduction.",
+              },
+              {
+                label: "Idea development",
+                status: "needs_work",
+                feedback:
+                  "The main ideas are relevant, but the explanation and cause-effect development need more detail.",
+              },
+              {
+                label: "Examples",
+                status: "needs_work",
+                feedback:
+                  "The examples are quite general and need a more specific study or workplace context.",
+              },
+              {
+                label: "Paragraphing",
+                status: "strong",
+                feedback:
+                  "The paragraph structure is generally clear, though internal cohesion could be smoother.",
+              },
+              {
+                label: "Task response",
+                status: "needs_work",
+                feedback:
+                  "The response addresses the task, but it needs deeper explanation of why the view is valid.",
+              },
+            ],
+          },
     band7Sample:
       "A Band 7 response would present a clear position, develop two main ideas logically, and use a range of vocabulary with only occasional awkward phrasing.",
     band8Sample:

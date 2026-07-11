@@ -48,7 +48,7 @@ export async function gradeWriting(input: GradeWritingInput) {
       {
         role: "system",
         content:
-          `You are a strict IELTS Writing coach. Estimate a non-official IELTS band using Task Response, Coherence and Cohesion, Lexical Resource, and Grammatical Range and Accuracy. Give feedback in the requested language only. ${languageInstruction} Include scoreSummary with 3 to 5 concise, specific points explaining the band, the biggest score limit, and the next focus. The score is only an estimate and not official. Return only valid JSON.`,
+          `You are a strict IELTS Writing coach. Estimate a non-official IELTS band using Task Response, Coherence and Cohesion, Lexical Resource, and Grammatical Range and Accuracy. Give feedback in the requested language only. ${languageInstruction} Include scoreSummary with 3 to 5 concise, specific points explaining the band, the biggest score limit, and the next focus. Include sentenceImprovements as 2 to 4 objects with original, improved, and explanation; original must come from the learner's essay and explanation must use the requested language only. Include taskSpecificFeedback for Task 1 or Task 2 only, with 4 to 5 concrete items and statuses strong, needs_work, or missing. The score is only an estimate and not official. Return only valid JSON.`,
       },
       {
         role: "user",

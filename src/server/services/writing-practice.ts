@@ -56,7 +56,8 @@ export type WritingAttemptResult = {
   feedback: string;
   grammarIssues: string[];
   vocabularyUpgrades: string[];
-  sentenceImprovements: string[];
+  sentenceImprovements: WritingSentenceImprovement[];
+  taskSpecificFeedback: WritingTaskSpecificFeedback | null;
   nextSteps: string[];
   scoreSummary: string[];
   sampleAnswerBand7: string;
@@ -65,6 +66,43 @@ export type WritingAttemptResult = {
   timeSpentSeconds: number;
   createdAt: string;
 };
+
+export type WritingSentenceImprovement = {
+  original: string;
+  improved: string;
+  explanation: string;
+};
+
+export type WritingTaskSpecificFeedback = {
+  taskType: "task1" | "task2";
+  items: WritingTaskSpecificFeedbackItem[];
+};
+
+export type WritingTaskSpecificFeedbackItem = {
+  label: string;
+  status: "strong" | "needs_work" | "missing";
+  feedback: string;
+};
+
+const sentenceImprovementOutputSchema = z.object({
+  original: z.string().min(1),
+  improved: z.string().min(1),
+  explanation: z.string().min(1),
+});
+
+const taskSpecificFeedbackOutputSchema = z.object({
+  task_type: z.enum(["task1", "task2"]),
+  items: z
+    .array(
+      z.object({
+        label: z.string().min(1),
+        status: z.enum(["strong", "needs_work", "missing"]),
+        feedback: z.string().min(1),
+      }),
+    )
+    .min(4)
+    .max(5),
+});
 
 const writingFeedbackOutputSchema = z.object({
   overall_band: z.number().min(0).max(9),
@@ -75,7 +113,8 @@ const writingFeedbackOutputSchema = z.object({
   feedback: z.string().min(1),
   grammar_issues: z.array(z.string()).default([]),
   vocabulary_upgrades: z.array(z.string()).default([]),
-  sentence_improvements: z.array(z.string()).default([]),
+  sentence_improvements: z.array(sentenceImprovementOutputSchema).min(1).max(4),
+  task_specific_feedback: taskSpecificFeedbackOutputSchema,
   next_steps: z.array(z.string()).default([]),
   score_summary: z.array(z.string().min(1)).min(3).max(5),
   sample_answer_band_7: z.string().min(1),
@@ -296,7 +335,9 @@ export async function submitWritingPractice({
       feedback_en: feedback.feedback,
       grammar_issues: feedback.grammar_issues,
       vocabulary_upgrades: feedback.vocabulary_upgrades,
-      sentence_improvements: feedback.sentence_improvements,
+      sentence_improvements: feedback.sentence_improvements.map(
+        formatSentenceImprovementForStorage,
+      ),
       next_steps: feedback.next_steps,
       sample_answer_band_7: feedback.sample_answer_band_7,
       sample_answer_band_8: feedback.sample_answer_band_8,
@@ -418,7 +459,13 @@ export async function getWritingAttemptResult({
     ),
     grammarIssues: normalizeStringArray(attempt.grammar_issues),
     vocabularyUpgrades: normalizeStringArray(attempt.vocabulary_upgrades),
-    sentenceImprovements: normalizeStringArray(attempt.sentence_improvements),
+    sentenceImprovements: normalizeSentenceImprovements(
+      attempt.raw_ai_output,
+      attempt.sentence_improvements,
+    ),
+    taskSpecificFeedback: normalizeTaskSpecificFeedback(
+      attempt.raw_ai_output,
+    ),
     nextSteps: normalizeStringArray(attempt.next_steps),
     scoreSummary: normalizeScoreSummary(attempt.raw_ai_output),
     sampleAnswerBand7: attempt.sample_answer_band_7,
@@ -451,8 +498,8 @@ async function gradeWritingWithOpenAI({
 }) {
   const responseLanguageInstruction =
     language === "zh"
-      ? "The learner's UI language is Simplified Chinese. Write feedback, score_summary, grammar_issues, vocabulary_upgrades, sentence_improvements, and next_steps in Simplified Chinese. IELTS terms such as Band, Task Response, Coherence and Cohesion, Lexical Resource, Grammatical Range and Accuracy, overview, and topic sentence may remain in English if useful, but explanations and advice must be Chinese. Do not provide a separate English version."
-      : "The learner's UI language is English. Write all feedback content in English only. Do not write Chinese explanations. Do not include Simplified Chinese. Do not provide bilingual feedback. feedback, score_summary, grammar_issues, vocabulary_upgrades, sentence_improvements, and next_steps must all be in English.";
+      ? "The learner's UI language is Simplified Chinese. Write feedback, score_summary, grammar_issues, vocabulary_upgrades, sentence_improvements.explanation, task_specific_feedback.feedback, and next_steps in Simplified Chinese. IELTS terms such as Band, Task Response, Coherence and Cohesion, Lexical Resource, Grammatical Range and Accuracy, overview, and topic sentence may remain in English if useful, but explanations and advice must be Chinese. sentence_improvements.original and sentence_improvements.improved may be English because they quote or rewrite the learner's essay. Do not provide a separate English version."
+      : "The learner's UI language is English. Write all feedback content in English only. Do not write Chinese explanations. Do not include Simplified Chinese. Do not provide bilingual feedback. feedback, score_summary, grammar_issues, vocabulary_upgrades, sentence_improvements.explanation, task_specific_feedback.feedback, and next_steps must all be in English.";
   const model = "gpt-5.2";
   const openai = createOpenAIClient();
   const response = await openai.responses.create({
@@ -473,6 +520,8 @@ async function gradeWritingWithOpenAI({
           "If the essay is under the minimum word count, explicitly mention it and cap the score conservatively. Task Achievement / Task Response must be affected.",
           "Feedback should explain why the essay is not the next higher band and include one or two specific examples from the essay when possible.",
           "Return score_summary as 3 to 5 concise strings. Each item must be specific, score-limiting, and aligned with the criteria scores. Include one clear next focus. If the response is underlength, mention underlength in score_summary. If Task 1 lacks an overview, mention that. If Task 2 has vague opinions or generic examples, mention that. Do not use praise such as excellent unless the score genuinely supports it.",
+          "Return sentence_improvements as 2 to 4 objects with original, improved, and explanation. original must be a real sentence or clear phrase from the learner's essay. Do not invent sentences the learner did not write. improved must be a more natural, accurate, higher-band version. explanation must explain the specific language or development improvement in the requested UI language. If the essay is very short, still provide at least one phrase-level improvement.",
+          "Return task_specific_feedback with task_type set to task1 for Task 1 and task2 for Task 2. For Task 1, only assess Overview, Key features, Data comparison, Accuracy, and Objective reporting. For Task 2, only assess Position, Idea development, Examples, Paragraphing, and Task response. Each item must use status strong, needs_work, or missing, and feedback must be specific and consistent with the score. Low-scoring essays should not receive many strong statuses.",
           responseLanguageInstruction,
           "Return strict JSON only. The task prompt and essay are in English, but feedback content must follow the requested UI language.",
         ].join(" "),
@@ -499,6 +548,10 @@ async function gradeWritingWithOpenAI({
               ? "Return only Simplified Chinese feedback content. Do not include a full English feedback version."
               : "Return only English feedback content. Do not include Chinese characters, Chinese explanations, or a full Chinese feedback version.",
             "Return score_summary with 3 to 5 short bullet-style strings. Focus on why this band was assigned, the biggest deduction, the gap to the next band, and the next priority.",
+            "Return sentence_improvements as structured objects: original, improved, explanation. original must quote or closely match the learner's essay.",
+            task.taskType === 1
+              ? "Return task_specific_feedback for Task 1 only: Overview, Key features, Data comparison, Accuracy, Objective reporting. Do not include Task 2 position/example logic."
+              : "Return task_specific_feedback for Task 2 only: Position, Idea development, Examples, Paragraphing, Task response. Do not include Task 1 overview/data comparison logic.",
             "Provide Band 7 and Band 8 sample answers in English.",
           ],
         }),
@@ -522,6 +575,7 @@ async function gradeWritingWithOpenAI({
 
     return {
       data: applyConservativeWritingScore(parsedFeedback, {
+        essay,
         language,
         taskType: task.taskType,
         wordCount,
@@ -540,10 +594,12 @@ async function gradeWritingWithOpenAI({
 function applyConservativeWritingScore(
   feedback: WritingFeedbackOutput,
   {
+    essay,
     language,
     taskType,
     wordCount,
   }: {
+    essay: string;
     language: "zh" | "en";
     taskType: 1 | 2;
     wordCount: number;
@@ -603,6 +659,7 @@ function applyConservativeWritingScore(
     },
     {
       isUnderlength: underlengthCap != null,
+      essay,
       language,
     },
   );
@@ -653,9 +710,11 @@ function appendUnderlengthNote(feedback: string, note: string) {
 function sanitizeFeedbackLanguage(
   feedback: WritingFeedbackOutput,
   {
+    essay,
     isUnderlength,
     language,
   }: {
+    essay: string;
     isUnderlength: boolean;
     language: "zh" | "en";
   },
@@ -674,11 +733,14 @@ function sanitizeFeedbackLanguage(
       )
         ? ENGLISH_VOCABULARY_UPGRADES_FALLBACK
         : feedback.vocabulary_upgrades,
-      sentence_improvements: containsChineseText(
-        feedback.sentence_improvements.join(" "),
+      sentence_improvements: feedback.sentence_improvements.some((item) =>
+        containsChineseText(`${item.improved} ${item.explanation}`),
       )
-        ? ENGLISH_SENTENCE_IMPROVEMENTS_FALLBACK
+        ? getSentenceImprovementFallback({ essay, language: "en" })
         : feedback.sentence_improvements,
+      task_specific_feedback: sanitizeEnglishTaskSpecificFeedback(
+        feedback.task_specific_feedback,
+      ),
       next_steps: containsChineseText(feedback.next_steps.join(" "))
         ? getEnglishNextStepsFallback(isUnderlength)
         : feedback.next_steps,
@@ -703,11 +765,14 @@ function sanitizeFeedbackLanguage(
     )
       ? feedback.vocabulary_upgrades
       : CHINESE_VOCABULARY_UPGRADES_FALLBACK,
-    sentence_improvements: feedback.sentence_improvements.every(
-      (item) => containsChineseText(item) || !looksMostlyEnglish(item),
+    sentence_improvements: feedback.sentence_improvements.every((item) =>
+      containsChineseText(item.explanation),
     )
       ? feedback.sentence_improvements
-      : CHINESE_SENTENCE_IMPROVEMENTS_FALLBACK,
+      : getSentenceImprovementFallback({ essay, language: "zh" }),
+    task_specific_feedback: sanitizeChineseTaskSpecificFeedback(
+      feedback.task_specific_feedback,
+    ),
     next_steps: ensureChineseNextSteps(feedback.next_steps, {
       isUnderlength,
     }),
@@ -734,12 +799,6 @@ const ENGLISH_VOCABULARY_UPGRADES_FALLBACK = [
   "Choose words that clearly match the argument, data, or example.",
 ];
 
-const ENGLISH_SENTENCE_IMPROVEMENTS_FALLBACK = [
-  "Develop simple claims into fuller sentences with a reason or example.",
-  "Use linking phrases only where they show a real logical relationship.",
-  "Combine related ideas carefully to improve flow without creating grammar errors.",
-];
-
 const CHINESE_FEEDBACK_FALLBACK =
   "这篇作文在一定程度上回应了题目，但观点展开、语言准确性和表达清晰度还需要提升，才能达到更高 Band。";
 
@@ -753,12 +812,6 @@ const CHINESE_VOCABULARY_UPGRADES_FALLBACK = [
   "减少重复的泛泛表达，换成更贴合题目的词汇。",
   "自然使用学术搭配，不要堆砌背诵短语。",
   "选择能准确表达论点、数据或例子的词。",
-];
-
-const CHINESE_SENTENCE_IMPROVEMENTS_FALLBACK = [
-  "把简单观点扩展成包含原因或例子的完整句子。",
-  "连接词要服务于真实逻辑关系，避免机械堆叠。",
-  "合并相关信息时注意语法准确，避免句子过长失控。",
 ];
 
 function getEnglishScoreSummaryFallback(isUnderlength: boolean) {
@@ -811,6 +864,217 @@ function getEnglishNextStepsFallback(isUnderlength: boolean) {
     "Improve Coherence and Cohesion by making paragraph logic clearer.",
     "Reduce repeated vocabulary and check the accuracy of complex sentences.",
   ];
+}
+
+function getSentenceImprovementFallback({
+  essay,
+  language,
+}: {
+  essay: string;
+  language: "zh" | "en";
+}): WritingFeedbackOutput["sentence_improvements"] {
+  const original = extractRewriteSource(essay);
+  const improved =
+    original.length > 20
+      ? `${original.replace(/\s+/g, " ").trim()} This idea should be developed with a clearer reason or example.`
+      : "This idea should be developed with a clearer reason or example.";
+
+  return [
+    {
+      original,
+      improved,
+      explanation:
+        language === "zh"
+          ? "这条改写基于你的原文片段。原句需要加入更清楚的原因或例子，才能支撑更高 Band 的 Task Response / Task Achievement。"
+          : "This rewrite is based on your original wording. The idea needs a clearer reason or example to support a higher band for Task Response / Task Achievement.",
+    },
+  ];
+}
+
+function extractRewriteSource(essay: string) {
+  const trimmed = essay.replace(/\s+/g, " ").trim();
+
+  if (!trimmed) {
+    return "The response does not contain enough text for a full sentence rewrite.";
+  }
+
+  const firstSentence = trimmed.match(/[^.!?]+[.!?]/)?.[0]?.trim();
+
+  if (firstSentence) {
+    return firstSentence;
+  }
+
+  return trimmed.slice(0, 160);
+}
+
+function sanitizeEnglishTaskSpecificFeedback(
+  feedback: WritingFeedbackOutput["task_specific_feedback"],
+) {
+  if (
+    feedback.items.some((item) =>
+      containsChineseText(`${item.label} ${item.feedback}`),
+    )
+  ) {
+    return getEnglishTaskSpecificFallback(feedback.task_type);
+  }
+
+  return feedback;
+}
+
+function sanitizeChineseTaskSpecificFeedback(
+  feedback: WritingFeedbackOutput["task_specific_feedback"],
+) {
+  if (feedback.items.every((item) => containsChineseText(item.feedback))) {
+    return feedback;
+  }
+
+  return getChineseTaskSpecificFallback(feedback.task_type);
+}
+
+function getEnglishTaskSpecificFallback(
+  taskType: WritingFeedbackOutput["task_specific_feedback"]["task_type"],
+): WritingFeedbackOutput["task_specific_feedback"] {
+  if (taskType === "task1") {
+    return {
+      task_type: "task1",
+      items: [
+        {
+          label: "Overview",
+          status: "needs_work",
+          feedback:
+            "The answer needs a clearer overview that summarises the main trend or overall pattern.",
+        },
+        {
+          label: "Key features",
+          status: "needs_work",
+          feedback:
+            "The main features should be selected more clearly instead of describing details equally.",
+        },
+        {
+          label: "Data comparison",
+          status: "needs_work",
+          feedback:
+            "Comparisons need to be more specific and linked to the visual data.",
+        },
+        {
+          label: "Accuracy",
+          status: "needs_work",
+          feedback:
+            "Make sure every figure or trend described accurately matches the prompt and visual information.",
+        },
+        {
+          label: "Objective reporting",
+          status: "strong",
+          feedback:
+            "The response should stay descriptive and avoid personal opinions or explanations outside the data.",
+        },
+      ],
+    };
+  }
+
+  return {
+    task_type: "task2",
+    items: [
+      {
+        label: "Position",
+        status: "needs_work",
+        feedback:
+          "The position needs to be stated more directly and maintained throughout the essay.",
+      },
+      {
+        label: "Idea development",
+        status: "needs_work",
+        feedback:
+          "The main ideas are relevant but need more explanation of cause, effect, or impact.",
+      },
+      {
+        label: "Examples",
+        status: "needs_work",
+        feedback:
+          "Examples should be more specific and clearly connected to the argument.",
+      },
+      {
+        label: "Paragraphing",
+        status: "needs_work",
+        feedback:
+          "Paragraphs should each develop one clear main idea with logical progression.",
+      },
+      {
+        label: "Task response",
+        status: "needs_work",
+        feedback:
+          "The response addresses the task, but the answer needs fuller development to reach a higher band.",
+      },
+    ],
+  };
+}
+
+function getChineseTaskSpecificFallback(
+  taskType: WritingFeedbackOutput["task_specific_feedback"]["task_type"],
+): WritingFeedbackOutput["task_specific_feedback"] {
+  if (taskType === "task1") {
+    return {
+      task_type: "task1",
+      items: [
+        {
+          label: "总览 Overview",
+          status: "needs_work",
+          feedback: "答案需要更清楚的 overview，总结主要趋势或整体特征。",
+        },
+        {
+          label: "主要特征 Key features",
+          status: "needs_work",
+          feedback: "主要特征需要筛选得更明确，不要把所有细节平均描述。",
+        },
+        {
+          label: "数据比较 Data comparison",
+          status: "needs_work",
+          feedback: "数据比较需要更具体，并且要和图表信息直接对应。",
+        },
+        {
+          label: "准确性 Accuracy",
+          status: "needs_work",
+          feedback: "描述数字和趋势时，要确保和题目及 visual information 完全一致。",
+        },
+        {
+          label: "客观描述 Objective reporting",
+          status: "strong",
+          feedback: "Task 1 应保持客观描述，避免加入个人观点或图表外解释。",
+        },
+      ],
+    };
+  }
+
+  return {
+    task_type: "task2",
+    items: [
+      {
+        label: "立场 Position",
+        status: "needs_work",
+        feedback: "立场需要更直接地写清楚，并在全文保持一致。",
+      },
+      {
+        label: "观点展开 Idea development",
+        status: "needs_work",
+        feedback: "观点相关，但需要进一步解释原因、影响或结果。",
+      },
+      {
+        label: "例子 Examples",
+        status: "needs_work",
+        feedback: "例子需要更具体，并且要和论点明确连接。",
+      },
+      {
+        label: "段落结构 Paragraphing",
+        status: "needs_work",
+        feedback: "每个主体段应围绕一个中心观点展开，并保持清楚推进。",
+      },
+      {
+        label: "任务回应 Task response",
+        status: "needs_work",
+        feedback: "文章回应了题目，但展开不足，暂时难以支撑更高 Band。",
+      },
+    ],
+  };
 }
 
 function ensureUnderlengthScoreSummary(
@@ -946,6 +1210,141 @@ function normalizeStringArray(value: unknown) {
   return Array.isArray(value)
     ? value.filter((item): item is string => typeof item === "string")
     : [];
+}
+
+function formatSentenceImprovementForStorage(
+  item: WritingSentenceImprovement,
+) {
+  return `Original: ${item.original}\nImproved: ${item.improved}\nWhy: ${item.explanation}`;
+}
+
+function normalizeSentenceImprovements(
+  rawAiOutput: unknown,
+  legacyValue: unknown,
+): WritingSentenceImprovement[] {
+  const fromRaw =
+    rawAiOutput && typeof rawAiOutput === "object"
+      ? (rawAiOutput as { sentence_improvements?: unknown })
+          .sentence_improvements
+      : null;
+
+  const normalizedRaw = normalizeSentenceImprovementArray(fromRaw);
+  if (normalizedRaw.length) {
+    return normalizedRaw;
+  }
+
+  return normalizeStringArray(legacyValue).map((item) => ({
+    original: item,
+    improved: "",
+    explanation: "",
+  }));
+}
+
+function normalizeSentenceImprovementArray(
+  value: unknown,
+): WritingSentenceImprovement[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .map((item): WritingSentenceImprovement | null => {
+      if (typeof item === "string") {
+        return {
+          original: item,
+          improved: "",
+          explanation: "",
+        };
+      }
+
+      if (!item || typeof item !== "object") {
+        return null;
+      }
+
+      const candidate = item as Record<string, unknown>;
+      const original = candidate.original;
+      const improved = candidate.improved;
+      const explanation = candidate.explanation;
+
+      if (
+        typeof original !== "string" ||
+        typeof improved !== "string" ||
+        typeof explanation !== "string"
+      ) {
+        return null;
+      }
+
+      return {
+        original,
+        improved,
+        explanation,
+      };
+    })
+    .filter((item): item is WritingSentenceImprovement => Boolean(item));
+}
+
+function normalizeTaskSpecificFeedback(
+  rawAiOutput: unknown,
+): WritingTaskSpecificFeedback | null {
+  if (!rawAiOutput || typeof rawAiOutput !== "object") {
+    return null;
+  }
+
+  const value = (rawAiOutput as { task_specific_feedback?: unknown })
+    .task_specific_feedback;
+
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  const candidate = value as Record<string, unknown>;
+  const taskType = candidate.task_type;
+  const items = candidate.items;
+
+  if (
+    (taskType !== "task1" && taskType !== "task2") ||
+    !Array.isArray(items)
+  ) {
+    return null;
+  }
+
+  const normalizedItems = items
+    .map((item): WritingTaskSpecificFeedbackItem | null => {
+      if (!item || typeof item !== "object") {
+        return null;
+      }
+
+      const itemCandidate = item as Record<string, unknown>;
+      const label = itemCandidate.label;
+      const status = itemCandidate.status;
+      const feedback = itemCandidate.feedback;
+
+      if (
+        typeof label !== "string" ||
+        typeof feedback !== "string" ||
+        (status !== "strong" &&
+          status !== "needs_work" &&
+          status !== "missing")
+      ) {
+        return null;
+      }
+
+      return {
+        label,
+        status,
+        feedback,
+      };
+    })
+    .filter((item): item is WritingTaskSpecificFeedbackItem => Boolean(item));
+
+  if (!normalizedItems.length) {
+    return null;
+  }
+
+  return {
+    taskType,
+    items: normalizedItems,
+  };
 }
 
 function normalizeScoreSummary(rawAiOutput: unknown) {
