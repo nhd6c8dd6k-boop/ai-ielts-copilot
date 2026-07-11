@@ -88,12 +88,33 @@ const task1NoOverviewFeedback = {
   ],
 };
 
-const task1LimitedComparisonFeedback = {
+const task1SevereComparisonFeedback = {
   task_type: "task1",
   items: [
     { label: "Overview", status: "strong" },
     { label: "Key features", status: "strong" },
-    { label: "Data comparison", status: "needs_work" },
+    {
+      label: "Data comparison",
+      status: "needs_work",
+      feedback:
+        "There is little comparison and the response mostly describes without comparing.",
+    },
+    { label: "Accuracy", status: "strong" },
+    { label: "Objective reporting", status: "strong" },
+  ],
+};
+
+const task1MildComparisonFeedback = {
+  task_type: "task1",
+  items: [
+    { label: "Overview", status: "strong" },
+    { label: "Key features", status: "strong" },
+    {
+      label: "Data comparison",
+      status: "needs_work",
+      feedback:
+        "The comparisons could be stronger with one more direct contrast between categories.",
+    },
     { label: "Accuracy", status: "strong" },
     { label: "Objective reporting", status: "strong" },
   ],
@@ -183,7 +204,7 @@ const cases = [
     },
   },
   {
-    name: "Task 1 overview with weak comparison is limited",
+    name: "Task 1 severe weak comparison is limited",
     input: {
       taskType: 1,
       wordCount: 180,
@@ -193,11 +214,29 @@ const cases = [
         lexicalResource: 7,
         grammaticalRangeAccuracy: 7,
       },
-      taskSpecificFeedback: task1LimitedComparisonFeedback,
+      taskSpecificFeedback: task1SevereComparisonFeedback,
     },
     assert: (result) => {
       assert.equal(result.taskResponse <= 6.5, true);
       assert.equal(result.overallBand <= 6.5, true);
+    },
+  },
+  {
+    name: "Task 1 mature 7.0 is not capped for mild comparison needs-work",
+    input: {
+      taskType: 1,
+      wordCount: 190,
+      criteria: {
+        taskResponse: 7,
+        coherenceCohesion: 7,
+        lexicalResource: 7,
+        grammaticalRangeAccuracy: 7,
+      },
+      taskSpecificFeedback: task1MildComparisonFeedback,
+    },
+    assert: (result) => {
+      assert.equal(result.taskResponse, 7);
+      assert.equal(result.overallBand, 7);
     },
   },
   {
@@ -232,7 +271,12 @@ const cases = [
         task_type: "task2",
         items: [
           { label: "Position", status: "strong" },
-          { label: "Idea development", status: "needs_work" },
+          {
+            label: "Idea development",
+            status: "needs_work",
+            feedback:
+              "The explanation is underdeveloped and too general, with no specific example.",
+          },
           { label: "Examples", status: "strong" },
           { label: "Paragraphing", status: "strong" },
           { label: "Task response", status: "strong" },
@@ -244,6 +288,40 @@ const cases = [
       assert.equal(result.coherenceCohesion <= 7, true);
       assert.equal(result.lexicalResource <= 7, true);
       assert.equal(result.overallBand <= 6.5, true);
+    },
+  },
+  {
+    name: "Task 2 mature 7.0 is not capped for mild idea-development needs-work",
+    input: {
+      taskType: 2,
+      wordCount: 310,
+      criteria: {
+        taskResponse: 7,
+        coherenceCohesion: 7,
+        lexicalResource: 7,
+        grammaticalRangeAccuracy: 7,
+      },
+      taskSpecificFeedback: {
+        task_type: "task2",
+        items: [
+          { label: "Position", status: "strong" },
+          {
+            label: "Idea development",
+            status: "needs_work",
+            feedback:
+              "The ideas are relevant and developed, but examples could be more specific.",
+          },
+          { label: "Examples", status: "strong" },
+          { label: "Paragraphing", status: "strong" },
+          { label: "Task response", status: "strong" },
+        ],
+      },
+    },
+    assert: (result) => {
+      assert.equal(result.taskResponse, 7);
+      assert.equal(result.coherenceCohesion, 7);
+      assert.equal(result.lexicalResource, 7);
+      assert.equal(result.overallBand, 7);
     },
   },
   {

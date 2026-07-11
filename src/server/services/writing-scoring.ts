@@ -233,8 +233,10 @@ function getTaskSpecificCaps(
     normalizedFeedback: normalizeFeedbackLabel(item.feedback ?? ""),
   }));
   const missingCount = items.filter((item) => item.status === "missing").length;
-  const needsWorkCount = items.filter(
-    (item) => item.status === "needs_work",
+  const severeNeedsWorkCount = items.filter(
+    (item) =>
+      item.status === "needs_work" &&
+      isSevereTaskSpecificIssue(item, taskType),
   ).length;
 
   if (missingCount >= 2) {
@@ -244,7 +246,7 @@ function getTaskSpecificCaps(
         ? "Task Achievement capped because multiple Task 1 requirements are missing."
         : "Task Response capped because multiple Task 2 requirements are missing.",
     );
-  } else if (missingCount >= 1 && needsWorkCount >= 2) {
+  } else if (missingCount >= 1 && severeNeedsWorkCount >= 2) {
     result.taskResponseCap = minCap(result.taskResponseCap, 6);
     result.reasons.push(
       taskType === 1
@@ -290,7 +292,7 @@ function applyTask1Caps(
     result.reasons.push(
       "Task Achievement capped because the Task 1 overview is missing.",
     );
-  } else if (overview?.status === "needs_work") {
+  } else if (isSevereTaskSpecificIssue(overview, 1)) {
     result.taskResponseCap = minCap(result.taskResponseCap, 6.5);
     result.reasons.push(
       "Task Achievement capped because the Task 1 overview is incomplete.",
@@ -309,7 +311,7 @@ function applyTask1Caps(
     result.reasons.push(
       "Task Achievement capped because data comparisons are missing.",
     );
-  } else if (dataComparison?.status === "needs_work") {
+  } else if (isSevereTaskSpecificIssue(dataComparison, 1)) {
     result.taskResponseCap = minCap(result.taskResponseCap, 6.5);
     result.overallCap = minCap(result.overallCap, 6.5);
     result.reasons.push(
@@ -325,7 +327,7 @@ function applyTask1Caps(
     result.reasons.push(
       "Task Achievement capped because data accuracy is not reliable.",
     );
-  } else if (accuracy?.status === "needs_work") {
+  } else if (isSevereTaskSpecificIssue(accuracy, 1)) {
     result.taskResponseCap = minCap(result.taskResponseCap, 6.5);
     result.reasons.push(
       "Task Achievement capped because some data descriptions are inaccurate or unclear.",
@@ -366,7 +368,7 @@ function applyTask2Caps(
     result.reasons.push(
       "Task Response capped because the Task 2 position is unclear or missing.",
     );
-  } else if (position?.status === "needs_work") {
+  } else if (isSevereTaskSpecificIssue(position, 2)) {
     result.taskResponseCap = minCap(result.taskResponseCap, 6.5);
     result.reasons.push(
       "Task Response capped because the Task 2 position is not clear enough for a higher band.",
@@ -382,7 +384,7 @@ function applyTask2Caps(
     result.overallReasons.push(
       "Overall band capped because Task 2 idea development is not sufficient for a higher score.",
     );
-  } else if (ideaDevelopment?.status === "needs_work") {
+  } else if (isSevereTaskSpecificIssue(ideaDevelopment, 2)) {
     result.taskResponseCap = minCap(result.taskResponseCap, 6.5);
     result.coherenceCap = minCap(result.coherenceCap, 7);
     result.lexicalCap = minCap(result.lexicalCap, 7);
@@ -404,7 +406,7 @@ function applyTask2Caps(
     result.overallReasons.push(
       "Overall band capped because Task 2 support or examples are missing.",
     );
-  } else if (examples?.status === "needs_work") {
+  } else if (isSevereTaskSpecificIssue(examples, 2)) {
     result.taskResponseCap = minCap(result.taskResponseCap, 6.5);
     result.coherenceCap = minCap(result.coherenceCap, 7);
     result.lexicalCap = minCap(result.lexicalCap, 7);
@@ -419,7 +421,7 @@ function applyTask2Caps(
 
   if (paragraphing?.status === "missing") {
     result.coherenceCap = minCap(result.coherenceCap, 5.5);
-  } else if (paragraphing?.status === "needs_work") {
+  } else if (isSevereTaskSpecificIssue(paragraphing, 2)) {
     result.coherenceCap = minCap(result.coherenceCap, 6.5);
   }
 
@@ -427,6 +429,15 @@ function applyTask2Caps(
     result.taskResponseCap = minCap(result.taskResponseCap, 5.5);
     result.reasons.push(
       "Task Response capped because the answer does not adequately answer the prompt.",
+    );
+  } else if (isSevereTaskSpecificIssue(taskResponse, 2)) {
+    result.taskResponseCap = minCap(result.taskResponseCap, 6.5);
+    result.overallCap = minCap(result.overallCap, 6.5);
+    result.reasons.push(
+      "Task Response capped because the answer does not fully address the prompt.",
+    );
+    result.overallReasons.push(
+      "Overall band capped because Task 2 response to the prompt is still limited.",
     );
   }
 }
@@ -479,6 +490,71 @@ function findFeedbackItem<
 
 function normalizeFeedbackLabel(value: string) {
   return value.toLowerCase().replace(/\s+/g, " ").trim();
+}
+
+function isSevereTaskSpecificIssue(
+  item:
+    | (WritingTaskSpecificItem & {
+        normalizedFeedback: string;
+      })
+    | undefined,
+  taskType: WritingTaskType,
+) {
+  if (!item) {
+    return false;
+  }
+
+  if (item.status === "missing") {
+    return true;
+  }
+
+  if (item.status !== "needs_work") {
+    return false;
+  }
+
+  return getSevereTaskSpecificPattern(taskType).test(item.normalizedFeedback);
+}
+
+function getSevereTaskSpecificPattern(taskType: WritingTaskType) {
+  const sharedChinese =
+    "缺失|不足|不够|有限|泛泛|缺少|没有明确|没有具体例子|没有比较|主要问题";
+
+  if (taskType === 1) {
+    return new RegExp(
+      [
+        "missing",
+        "limited",
+        "not enough",
+        "insufficient",
+        "little comparison",
+        "no clear comparison",
+        "mostly describes without comparing",
+        "does not compare",
+        "major issue",
+        "lacks",
+        sharedChinese,
+      ].join("|"),
+      "i",
+    );
+  }
+
+  return new RegExp(
+    [
+      "missing",
+      "limited",
+      "not enough",
+      "insufficient",
+      "underdeveloped",
+      "too general",
+      "lacks support",
+      "no specific example",
+      "does not fully address",
+      "major issue",
+      "unclear position",
+      sharedChinese,
+    ].join("|"),
+    "i",
+  );
 }
 
 function minCap(current: number | null, next: number) {
