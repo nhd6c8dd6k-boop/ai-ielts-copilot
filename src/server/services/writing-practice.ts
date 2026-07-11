@@ -10,6 +10,10 @@ import {
   normalizeWritingVisualData,
   type StructuredWritingVisualData,
 } from "@/lib/writing-visual-data";
+import {
+  calibrateWritingScores,
+  getMinimumWordsForWritingTask,
+} from "@/server/services/writing-scoring";
 
 export type PublishedWritingTaskSummary = {
   id: string;
@@ -105,7 +109,6 @@ const taskSpecificFeedbackOutputSchema = z.object({
 });
 
 const writingFeedbackOutputSchema = z.object({
-  overall_band: z.number().min(0).max(9),
   task_response: z.number().min(0).max(9),
   coherence_cohesion: z.number().min(0).max(9),
   lexical_resource: z.number().min(0).max(9),
@@ -125,6 +128,10 @@ const writingFeedbackOutputSchema = z.object({
 });
 
 type WritingFeedbackOutput = z.infer<typeof writingFeedbackOutputSchema>;
+type CalibratedWritingFeedbackOutput = WritingFeedbackOutput & {
+  overall_band: number;
+  calibration_notes: string[];
+};
 
 export const submitWritingPracticeSchema = z.object({
   writingTaskId: z.string().uuid(),
@@ -482,7 +489,7 @@ export function getSuggestedTimeMinutes(taskType: number) {
 }
 
 export function getMinimumWords(taskType: number) {
-  return normalizeTaskType(taskType) === 1 ? 150 : 250;
+  return getMinimumWordsForWritingTask(normalizeTaskType(taskType));
 }
 
 async function gradeWritingWithOpenAI({
@@ -510,13 +517,20 @@ async function gradeWritingWithOpenAI({
         content: [
           "You are a strict IELTS Writing examiner. Estimate a non-official IELTS Writing band using IELTS public band descriptor principles.",
           "Be conservative. Do not reward fluent-looking but generic writing too highly. Penalize limited development, inaccurate grammar, repetitive vocabulary, weak cohesion, memorized-sounding phrases, unclear task response, and vague examples.",
-          "Score exactly four criteria: Task Achievement / Task Response, Coherence and Cohesion, Lexical Resource, and Grammatical Range and Accuracy.",
+          "Score exactly four criteria independently: Task Achievement for Task 1 or Task Response for Task 2, Coherence and Cohesion, Lexical Resource, and Grammatical Range and Accuracy. Do not let an overall impression pull all criteria upward together.",
+          "Do not decide the final overall band. The server calculates overall_band from the four criteria. Return only the four criterion scores and feedback fields.",
+          "Before assigning each criterion score, identify concrete evidence from the essay and decide why the criterion is not the next higher band. If evidence for a higher band is insufficient, choose the lower band.",
+          "Use only 0.5 band increments for each criterion score.",
           "Band 8 is rare. Only assign 8.0 or above when the response fully addresses the task, has clear and well-developed ideas, strong cohesion, wide and precise vocabulary, mostly error-free grammar, flexible sentence structures, and few noticeable errors.",
           "Band 7 requires a clear position or overview, logical development, some less common vocabulary, good grammatical control, and errors that do not reduce clarity.",
+          "Band 6.5 or 7.0 requires solid evidence in the relevant criterion. Do not give 6.5+ for Task Achievement / Task Response when ideas are only stated briefly, examples are generic, data comparison is weak, or the answer only partially addresses the task.",
           "Band 6 is appropriate when the task is addressed but development is uneven, ideas are relevant but general, cohesion is mechanical or sometimes unclear, vocabulary is adequate but repetitive, and grammar has noticeable errors despite attempted complex sentences.",
           "If the response sounds polished but lacks specific development, examples, data comparison, or clear analysis, do not assign a high band.",
-          "For Task 1, require a clear overview, accurate main trends/features, and key data comparisons. If there is no overview, Task Achievement is usually no higher than 6.0. Do not reward simple listing of data as a high band.",
-          "For Task 2, require a clear answer to the question, a clear position, sufficiently developed arguments, specific examples, and no major drift from the prompt.",
+          "For Task 1, use Task Achievement. Require a clear overview, selected key features, accurate data description, meaningful comparisons, and objective reporting. If there is no overview, Task Achievement is usually no higher than 5.5. If the answer simply lists data, has weak comparison, inaccurate figures, subjective opinions, or invented information, cap Task Achievement conservatively.",
+          "For Task 2, use Task Response. Require a clear answer to the exact question, a clear position where required, sufficiently developed arguments, specific examples, balanced coverage for discuss-both-views questions, and no major drift from the prompt. If an agree/disagree essay does not clearly answer the question, or a discuss-both-views essay discusses only one side, Task Response must be clearly limited.",
+          "Lexical Resource must be judged by accuracy, collocation, repetition, spelling, word form, and precision. A few advanced words do not justify Band 7 if they are misused or surrounded by repetitive basic vocabulary.",
+          "Grammatical Range and Accuracy must consider simple sentence control, complex sentence control, error density, subject-verb agreement, articles, tense, singular/plural forms, fragments, and comma splices. Do not reward complex sentence attempts if they frequently break accuracy.",
+          "Coherence and Cohesion must consider paragraph logic, sequencing, referencing, linking, and repetition. Mechanical use of Firstly, Secondly, or Moreover does not justify a high score if progression is weak.",
           "If the essay is under the minimum word count, explicitly mention it and cap the score conservatively. Task Achievement / Task Response must be affected.",
           "Feedback should explain why the essay is not the next higher band and include one or two specific examples from the essay when possible.",
           "Return score_summary as 3 to 5 concise strings. Each item must be specific, score-limiting, and aligned with the criteria scores. Include one clear next focus. If the response is underlength, mention underlength in score_summary. If Task 1 lacks an overview, mention that. If Task 2 has vague opinions or generic examples, mention that. Do not use praise such as excellent unless the score genuinely supports it.",
@@ -540,7 +554,8 @@ async function gradeWritingWithOpenAI({
           essay,
           requirements: [
             "Do not claim this is an official IELTS score.",
-            "Use 0.5 band increments for all scores.",
+            "Use 0.5 band increments for the four criterion scores.",
+            "Do not return or infer an overall band; the server computes it from the four criterion scores.",
             "Be stricter than a general writing coach. Do not inflate scores to encourage the learner.",
             "Identify practical grammar and vocabulary improvements.",
             "Explain the main score-limiting issues clearly.",
@@ -604,48 +619,22 @@ function applyConservativeWritingScore(
     taskType: 1 | 2;
     wordCount: number;
   },
-): WritingFeedbackOutput {
+): CalibratedWritingFeedbackOutput {
   const minimumWords = getMinimumWords(taskType);
-  const underlengthCap = getUnderlengthCap(wordCount, minimumWords);
-  const taskResponse = normalizeCriterionBand(
-    underlengthCap == null
-      ? feedback.task_response
-      : Math.min(feedback.task_response, underlengthCap),
-  );
-  const coherenceCohesion = normalizeCriterionBand(feedback.coherence_cohesion);
-  const lexicalResource = normalizeCriterionBand(feedback.lexical_resource);
-  const grammaticalRangeAccuracy = normalizeCriterionBand(
-    feedback.grammatical_range_accuracy,
-  );
-  const criteria = [
-    taskResponse,
-    coherenceCohesion,
-    lexicalResource,
-    grammaticalRangeAccuracy,
-  ];
-  const rawAverage =
-    criteria.reduce((total, criterion) => total + criterion, 0) /
-    criteria.length;
-  const minimumCriterion = Math.min(...criteria);
-  let overallBand = roundToNearestHalf(rawAverage);
-
-  overallBand = Math.min(overallBand, minimumCriterion + 1);
-
-  if (
-    overallBand >= 8 &&
-    (criteria.some((criterion) => criterion < 7.5) ||
-      criteria.filter((criterion) => criterion >= 8).length < 3)
-  ) {
-    overallBand = 7.5;
-  }
-
-  if (underlengthCap != null) {
-    overallBand = Math.min(overallBand, underlengthCap);
-  }
-
-  overallBand = normalizeCriterionBand(overallBand);
+  const isUnderlength = wordCount < minimumWords;
+  const calibratedScores = calibrateWritingScores({
+    criteria: {
+      taskResponse: feedback.task_response,
+      coherenceCohesion: feedback.coherence_cohesion,
+      lexicalResource: feedback.lexical_resource,
+      grammaticalRangeAccuracy: feedback.grammatical_range_accuracy,
+    },
+    taskSpecificFeedback: feedback.task_specific_feedback,
+    taskType,
+    wordCount,
+  });
   const scoreSummary =
-    underlengthCap == null
+    !isUnderlength
       ? feedback.score_summary
       : ensureUnderlengthScoreSummary(feedback.score_summary, {
           language,
@@ -658,7 +647,7 @@ function applyConservativeWritingScore(
       score_summary: scoreSummary,
     },
     {
-      isUnderlength: underlengthCap != null,
+      isUnderlength,
       essay,
       language,
     },
@@ -666,13 +655,14 @@ function applyConservativeWritingScore(
 
   return {
     ...sanitizedFeedback,
-    overall_band: overallBand,
-    task_response: taskResponse,
-    coherence_cohesion: coherenceCohesion,
-    lexical_resource: lexicalResource,
-    grammatical_range_accuracy: grammaticalRangeAccuracy,
+    overall_band: calibratedScores.overallBand,
+    task_response: calibratedScores.taskResponse,
+    coherence_cohesion: calibratedScores.coherenceCohesion,
+    lexical_resource: calibratedScores.lexicalResource,
+    grammatical_range_accuracy: calibratedScores.grammaticalRangeAccuracy,
+    calibration_notes: calibratedScores.appliedCaps,
     feedback:
-      underlengthCap == null
+      !isUnderlength
         ? sanitizedFeedback.feedback
         : appendUnderlengthNote(
             sanitizedFeedback.feedback,
@@ -681,24 +671,6 @@ function applyConservativeWritingScore(
               : `The response is under the Task ${taskType} minimum of ${minimumWords} words, so Task Achievement / Task Response and the overall band have been capped conservatively.`,
           ),
   };
-}
-
-function getUnderlengthCap(wordCount: number, minimumWords: number) {
-  if (wordCount >= minimumWords) {
-    return null;
-  }
-
-  const ratio = wordCount / minimumWords;
-
-  if (ratio < 0.7) {
-    return 5;
-  }
-
-  if (ratio < 0.9) {
-    return 5.5;
-  }
-
-  return 6;
 }
 
 function appendUnderlengthNote(feedback: string, note: string) {
@@ -1145,14 +1117,6 @@ function looksMostlyEnglish(value: string) {
   return letters > 20 && letters > chinese * 2;
 }
 
-function normalizeCriterionBand(score: number) {
-  return Math.min(9, Math.max(0, roundToNearestHalf(score)));
-}
-
-function roundToNearestHalf(score: number) {
-  return Math.round(score * 2) / 2;
-}
-
 function buildWritingTaskTitle(taskType: number, topic: string) {
   return `Task ${normalizeTaskType(taskType)}: ${topic}`;
 }
@@ -1165,7 +1129,7 @@ function normalizeTaskType(taskType: number): 1 | 2 {
   return taskType === 1 ? 1 : 2;
 }
 
-function buildWeakAreas(feedback: z.infer<typeof writingFeedbackOutputSchema>) {
+function buildWeakAreas(feedback: CalibratedWritingFeedbackOutput) {
   const criteria = [
     ["Task Response", feedback.task_response],
     ["Coherence and Cohesion", feedback.coherence_cohesion],
