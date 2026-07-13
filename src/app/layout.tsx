@@ -11,7 +11,7 @@ import type { Language } from "@/lib/i18n/messages";
 import { Providers } from "./providers";
 import "./globals.css";
 
-const publicSiteUrl = "https://aiieltscopilot.com";
+const publicSiteUrl = "https://www.aiieltscopilot.com";
 const siteDescription =
   "Computer IELTS-style Reading, Listening, and Writing practice with automatic scoring, AI writing feedback, and dashboard progress tracking.";
 
