@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { cookies, headers } from "next/headers";
+import { Analytics } from "@vercel/analytics/next";
 
+import { ClickAnalytics } from "@/components/analytics/click-analytics";
 import {
   getHtmlLang,
   languageCookieName,
@@ -60,6 +62,8 @@ export default async function RootLayout({
     <html lang={getHtmlLang(initialLanguage)} className="h-full antialiased">
       <body className="flex min-h-full flex-col bg-background text-foreground">
         <Providers initialLanguage={initialLanguage}>{children}</Providers>
+        <Analytics />
+        <ClickAnalytics />
       </body>
     </html>
   );
