@@ -470,6 +470,85 @@ export default function Home() {
       icon: ShieldCheck,
     },
   ];
+  const trustPoints = [
+    msg("home.trust.point.study", "AI scores are for study guidance"),
+    msg(
+      "home.trust.point.demo",
+      "Public demos do not use real user essays",
+    ),
+    msg(
+      "home.trust.point.pro",
+      "Pro is manually activated after verification",
+    ),
+  ];
+  const faqItems = [
+    {
+      question: msg(
+        "home.faq.officialScore.question",
+        "Is the AI Writing score an official IELTS score?",
+      ),
+      answer: msg(
+        "home.faq.officialScore.answer",
+        "No. AI scores are provided for practice and study guidance only. They do not replace an official IELTS result or assessment from a qualified examiner. The report combines criterion scores, task-specific feedback, and practical revisions to help identify key issues.",
+      ),
+    },
+    {
+      question: msg(
+        "home.faq.free.question",
+        "What is included in the Free plan?",
+      ),
+      answer: msg(
+        "home.faq.free.answer",
+        "Free users can complete any 5 different Reading sets, any 5 different Listening sets, and receive 1 AI Writing feedback each day. Completed Reading and Listening sets can be repeated without using another slot.",
+      ),
+    },
+    {
+      question: msg("home.faq.pro.question", "What is included in Pro?"),
+      answer: msg(
+        "home.faq.pro.answer",
+        "Pro includes unlimited Reading and Listening practice, plus up to 10 AI Writing feedbacks each day. Pro currently costs CA$9.99 per month, approximately ¥52 per month. The RMB amount may vary with the exchange rate at the time of payment.",
+      ),
+    },
+    {
+      question: msg("home.faq.upgrade.question", "How do I upgrade to Pro?"),
+      answer: msg(
+        "home.faq.upgrade.answer",
+        "We currently support WeChat Pay, Alipay, and e-Transfer. After payment, send your payment confirmation and registered email. Pro will be manually activated after verification. Full instructions are available on the Support page.",
+      ),
+      href: "/support",
+      linkLabel: msg("home.faq.upgrade.link", "View upgrade instructions"),
+    },
+    {
+      question: msg(
+        "home.faq.creditCard.question",
+        "Do I need a credit card to upgrade?",
+      ),
+      answer: msg(
+        "home.faq.creditCard.answer",
+        "No. You can currently pay using WeChat Pay, Alipay, or e-Transfer. Online card payments may be added in the future, but there is currently no automatic renewal.",
+      ),
+    },
+    {
+      question: msg(
+        "home.faq.essayPrivacy.question",
+        "Will my essay be made public?",
+      ),
+      answer: msg(
+        "home.faq.essayPrivacy.answer",
+        "No. Your essay is used to generate feedback and save your personal practice history. The public Demo page uses original sample content created for the product, not a real user's essay.",
+      ),
+    },
+    {
+      question: msg(
+        "home.faq.language.question",
+        "Can I receive feedback in English or Chinese?",
+      ),
+      answer: msg(
+        "home.faq.language.answer",
+        "Yes. The site supports Chinese and English. New Writing feedback follows the interface language used when the essay is submitted, without displaying two full versions of the same report.",
+      ),
+    },
+  ];
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-background">
@@ -700,6 +779,102 @@ export default function Home() {
                 </p>
               </div>
             ))}
+          </div>
+        </section>
+
+        <section className="border-y border-slate-200 bg-white">
+          <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+            <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
+              <div className="min-w-0">
+                <Badge className="bg-slate-950 text-white">
+                  {msg("home.trust.eyebrow", "Before you start")}
+                </Badge>
+                <h2 className="mt-5 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
+                  {msg(
+                    "home.trust.title",
+                    "Clear answers about scoring, privacy, and Pro access.",
+                  )}
+                </h2>
+                <p className="mt-4 text-sm leading-6 text-slate-600 sm:text-base sm:leading-7">
+                  {msg(
+                    "home.trust.description",
+                    "AI IELTS Copilot provides IELTS-style practice and AI feedback for study purposes. Here are answers to common questions before you begin.",
+                  )}
+                </p>
+
+                <div className="mt-6 grid gap-3">
+                  {trustPoints.map((point) => (
+                    <div
+                      key={point}
+                      className="flex min-w-0 gap-3 rounded-md border border-slate-200 bg-[#f8faf8] p-3 text-sm leading-6 text-slate-700"
+                    >
+                      <CheckCircle2
+                        className="mt-0.5 h-4 w-4 shrink-0 text-teal-700"
+                        aria-hidden="true"
+                      />
+                      <span>{point}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+                  <Button asChild>
+                    <Link href="/practice/writing">
+                      {msg(
+                        "home.trust.primaryCta",
+                        "Start Writing practice free",
+                      )}
+                      <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline">
+                    <Link href="/demo/writing-feedback">
+                      {msg("home.trust.secondaryCta", "View sample feedback")}
+                    </Link>
+                  </Button>
+                </div>
+                <Link
+                  href="/pricing"
+                  className="mt-4 inline-flex text-sm font-medium text-teal-800 underline-offset-4 hover:underline"
+                >
+                  {msg(
+                    "home.trust.pricingLink",
+                    "View Pro and payment options",
+                  )}
+                </Link>
+              </div>
+
+              <div className="min-w-0 divide-y divide-slate-200 rounded-lg border border-slate-200 bg-white">
+                {faqItems.map((item, index) => (
+                  <details
+                    key={item.question}
+                    className="group p-5"
+                    open={index === 0}
+                  >
+                    <summary className="flex cursor-pointer list-none items-start justify-between gap-4 text-left text-base font-semibold leading-6 text-slate-950">
+                      <span>{item.question}</span>
+                      <span
+                        className="mt-0.5 text-xl leading-none text-slate-400 transition group-open:rotate-45"
+                        aria-hidden="true"
+                      >
+                        +
+                      </span>
+                    </summary>
+                    <div className="mt-3 text-sm leading-6 text-slate-600">
+                      <p>{item.answer}</p>
+                      {item.href ? (
+                        <Link
+                          href={item.href}
+                          className="mt-3 inline-flex font-medium text-teal-800 underline-offset-4 hover:underline"
+                        >
+                          {item.linkLabel}
+                        </Link>
+                      ) : null}
+                    </div>
+                  </details>
+                ))}
+              </div>
+            </div>
           </div>
         </section>
 

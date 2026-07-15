@@ -4,6 +4,10 @@ export const productionSiteUrl = "https://www.aiieltscopilot.com";
 export const siteDescription =
   "Practice IELTS Reading, Listening, Writing and Speaking with AI-powered feedback and computer-based test preparation.";
 
+export function getBingWebmasterVerification() {
+  return process.env.BING_WEBMASTER_VERIFICATION?.trim() || undefined;
+}
+
 export function getPublicSiteUrl() {
   const rawUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
 
@@ -30,4 +34,3 @@ export function absoluteUrl(path = "/") {
 
   return `${getPublicSiteUrl()}${normalizedPath}`;
 }
-

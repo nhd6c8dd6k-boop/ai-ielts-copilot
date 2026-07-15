@@ -11,6 +11,7 @@ import {
 import type { Language } from "@/lib/i18n/messages";
 import {
   absoluteUrl,
+  getBingWebmasterVerification,
   getPublicSiteUrl,
   siteDescription,
   siteName,
@@ -20,6 +21,7 @@ import { Providers } from "./providers";
 import "./globals.css";
 
 const publicSiteUrl = getPublicSiteUrl();
+const bingWebmasterVerification = getBingWebmasterVerification();
 
 export const metadata: Metadata = {
   metadataBase: new URL(publicSiteUrl),
@@ -57,6 +59,15 @@ export const metadata: Metadata = {
     description: siteDescription,
     images: ["/icon.png"],
   },
+  ...(bingWebmasterVerification
+    ? {
+        verification: {
+          other: {
+            "msvalidate.01": bingWebmasterVerification,
+          },
+        },
+      }
+    : {}),
 };
 
 const structuredData = [

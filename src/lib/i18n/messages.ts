@@ -95,6 +95,40 @@ export const messages: Record<Language, Record<string, string>> = {
       "You can also practise Reading and Listening in a computer-based IELTS-style interface.",
     "home.why.primaryCta": "Try Writing feedback free",
     "home.why.secondaryCta": "View full sample feedback",
+    "home.trust.eyebrow": "Before you start",
+    "home.trust.title": "Clear answers about scoring, privacy, and Pro access.",
+    "home.trust.description":
+      "AI IELTS Copilot provides IELTS-style practice and AI feedback for study purposes. Here are answers to common questions before you begin.",
+    "home.trust.point.study": "AI scores are for study guidance",
+    "home.trust.point.demo": "Public demos do not use real user essays",
+    "home.trust.point.pro": "Pro is manually activated after verification",
+    "home.trust.primaryCta": "Start Writing practice free",
+    "home.trust.secondaryCta": "View sample feedback",
+    "home.trust.pricingLink": "View Pro and payment options",
+    "home.faq.officialScore.question":
+      "Is the AI Writing score an official IELTS score?",
+    "home.faq.officialScore.answer":
+      "No. AI scores are provided for practice and study guidance only. They do not replace an official IELTS result or assessment from a qualified examiner. The report combines criterion scores, task-specific feedback, and practical revisions to help identify key issues.",
+    "home.faq.free.question": "What is included in the Free plan?",
+    "home.faq.free.answer":
+      "Free users can complete any 5 different Reading sets, any 5 different Listening sets, and receive 1 AI Writing feedback each day. Completed Reading and Listening sets can be repeated without using another slot.",
+    "home.faq.pro.question": "What is included in Pro?",
+    "home.faq.pro.answer":
+      "Pro includes unlimited Reading and Listening practice, plus up to 10 AI Writing feedbacks each day. Pro currently costs CA$9.99 per month, approximately ¥52 per month. The RMB amount may vary with the exchange rate at the time of payment.",
+    "home.faq.upgrade.question": "How do I upgrade to Pro?",
+    "home.faq.upgrade.answer":
+      "We currently support WeChat Pay, Alipay, and e-Transfer. After payment, send your payment confirmation and registered email. Pro will be manually activated after verification. Full instructions are available on the Support page.",
+    "home.faq.upgrade.link": "View upgrade instructions",
+    "home.faq.creditCard.question": "Do I need a credit card to upgrade?",
+    "home.faq.creditCard.answer":
+      "No. You can currently pay using WeChat Pay, Alipay, or e-Transfer. Online card payments may be added in the future, but there is currently no automatic renewal.",
+    "home.faq.essayPrivacy.question": "Will my essay be made public?",
+    "home.faq.essayPrivacy.answer":
+      "No. Your essay is used to generate feedback and save your personal practice history. The public Demo page uses original sample content created for the product, not a real user's essay.",
+    "home.faq.language.question":
+      "Can I receive feedback in English or Chinese?",
+    "home.faq.language.answer":
+      "Yes. The site supports Chinese and English. New Writing feedback follows the interface language used when the essay is submitted, without displaying two full versions of the same report.",
     "demo.badge": "Sample report",
     "demo.title": "See a complete IELTS Writing AI feedback example",
     "demo.subtitle":
@@ -670,6 +704,38 @@ export const messages: Record<Language, Record<string, string>> = {
       "还可以练习 Reading 和 Listening，熟悉电脑化 IELTS 作答流程。",
     "home.why.primaryCta": "免费试一次 Writing 批改",
     "home.why.secondaryCta": "查看完整反馈示例",
+    "home.trust.eyebrow": "使用前你可能想知道",
+    "home.trust.title": "清楚了解评分、隐私和 Pro 开通方式",
+    "home.trust.description":
+      "AI IELTS Copilot 提供学习用途的 IELTS-style 练习与 AI feedback。下面是开始练习前最常见的问题。",
+    "home.trust.point.study": "AI 评分仅供学习参考",
+    "home.trust.point.demo": "不使用真实用户作文作为公开 Demo",
+    "home.trust.point.pro": "Pro 由管理员确认后人工开通",
+    "home.trust.primaryCta": "免费开始 Writing 练习",
+    "home.trust.secondaryCta": "查看完整反馈示例",
+    "home.trust.pricingLink": "查看 Pro 与付款方式",
+    "home.faq.officialScore.question": "AI Writing 分数是官方 IELTS 成绩吗？",
+    "home.faq.officialScore.answer":
+      "不是。AI 评分仅用于练习和学习参考，不能替代正式 IELTS 考试成绩或真人考官评分。报告会结合四项评分、专项反馈和具体修改建议，帮助你发现主要问题。",
+    "home.faq.free.question": "免费版可以使用多少次？",
+    "home.faq.free.answer":
+      "Free 用户可以任意完成 5 套不同 Reading、5 套不同 Listening，并且每天获得 1 次 AI Writing feedback。已经完成过的 Reading 和 Listening 可以重复练习，不会再次占用额度。",
+    "home.faq.pro.question": "Pro 包含哪些权益？",
+    "home.faq.pro.answer":
+      "Pro 用户可以无限练习 Reading 和 Listening，并且每天最多获得 10 次 AI Writing feedback。Pro 当前价格为 CA$9.99/月，约 ¥52/月。人民币金额会随付款时汇率变化。",
+    "home.faq.upgrade.question": "如何开通 Pro？",
+    "home.faq.upgrade.answer":
+      "目前支持 WeChat Pay、Alipay 和 e-Transfer。付款后请发送付款确认和注册邮箱，管理员确认后会人工开通 Pro。完整步骤可在 Support 页面查看。",
+    "home.faq.upgrade.link": "查看开通步骤",
+    "home.faq.creditCard.question": "开通 Pro 需要信用卡吗？",
+    "home.faq.creditCard.answer":
+      "目前不需要信用卡。你可以使用 WeChat Pay、Alipay 或 e-Transfer。未来可能增加在线信用卡付款，但目前没有自动续费。",
+    "home.faq.essayPrivacy.question": "我提交的作文会被公开吗？",
+    "home.faq.essayPrivacy.answer":
+      "不会作为公开内容展示。作文用于生成你的反馈和保存个人练习记录。公开 Demo 页面使用的是项目原创示例内容，不是真实用户作文。",
+    "home.faq.language.question": "可以选择中文或英文反馈吗？",
+    "home.faq.language.answer":
+      "可以。网站支持中文和 EN 切换。新提交的 Writing feedback 会根据提交时的界面语言生成中文或英文，不会同时堆叠两套完整反馈。",
     "demo.badge": "示例报告",
     "demo.title": "查看一份完整的 IELTS Writing AI 反馈示例",
     "demo.subtitle":
