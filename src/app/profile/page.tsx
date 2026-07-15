@@ -27,9 +27,18 @@ type ApiProfile = {
   timezone?: string | null;
 };
 
+type ApiSubscription = {
+  plan?: string | null;
+  status?: string | null;
+  started_at?: string | null;
+  expires_at?: string | null;
+  is_pro?: boolean;
+};
+
 type ProfileApiResponse = {
   mode?: "demo" | "anonymous" | "supabase";
   profile?: ApiProfile | null;
+  subscription?: ApiSubscription | null;
   error?: string;
 };
 
@@ -60,6 +69,7 @@ export default function ProfilePage() {
   const [saved, setSaved] = useState(false);
   const [syncMode, setSyncMode] = useState<ProfileSyncMode>("loading");
   const [isSaving, setIsSaving] = useState(false);
+  const [subscription, setSubscription] = useState<ApiSubscription | null>(null);
 
   useEffect(() => {
     let isActive = true;
@@ -79,6 +89,7 @@ export default function ProfilePage() {
         }
 
         if (payload.mode === "supabase") {
+          setSubscription(payload.subscription ?? null);
           setProfile((currentProfile) => {
             const nextProfile = mergeApiProfile(
               currentProfile,
@@ -145,6 +156,7 @@ export default function ProfilePage() {
       "Computer IELTS-style practice first",
     ),
   ];
+  const subscriptionSummary = getSubscriptionSummary(subscription, t);
 
   const submitProfile = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -275,27 +287,28 @@ export default function ProfilePage() {
                 />
               </div>
               <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="plan">
-                  {t("profile.subscription", "Subscription")}
-                </Label>
-                <select
-                  id="plan"
-                  value={profile.plan}
-                  onChange={(event) =>
-                    updateProfile("plan", event.target.value as StudyProfile["plan"])
-                  }
-                  className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-950 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
-                >
-                  <option value="Free">
-                    {t("profile.plan.free", "Free during beta")}
-                  </option>
-                  <option value="Pro Monthly">
-                    {t("profile.plan.proMonthly", "Pro Monthly")}
-                  </option>
-                  <option value="Pro Yearly">
-                    {t("profile.plan.proYearly", "Pro Yearly")}
-                  </option>
-                </select>
+                <Label>{t("profile.currentPlan", "Current Plan")}</Label>
+                <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge
+                      className={
+                        subscriptionSummary.isPro
+                          ? "bg-teal-50 text-teal-800"
+                          : "bg-slate-100 text-slate-600"
+                      }
+                    >
+                      {subscriptionSummary.planLabel}
+                    </Badge>
+                    {subscriptionSummary.statusLabel ? (
+                      <span className="text-sm text-slate-600">
+                        {subscriptionSummary.statusLabel}
+                      </span>
+                    ) : null}
+                  </div>
+                  <p className="mt-2 text-sm text-slate-500">
+                    {subscriptionSummary.detail}
+                  </p>
+                </div>
               </div>
               <div className="sm:col-span-2">
                 <Button type="submit" disabled={isSaving}>
@@ -349,12 +362,9 @@ export default function ProfilePage() {
             icon={CalendarDays}
           />
           <ProfileStat
-            title={t("profile.subscription", "Subscription")}
-            value={profile.plan}
-            detail={t(
-              "profile.subscriptionDetail",
-              "Beta access is free. Paid plans may be added after beta testing.",
-            )}
+            title={t("profile.currentPlan", "Current Plan")}
+            value={subscriptionSummary.planLabel}
+            detail={subscriptionSummary.detail}
             icon={Crown}
           />
         </div>
@@ -381,6 +391,68 @@ export default function ProfilePage() {
       </Card>
     </AppShell>
   );
+}
+
+function getSubscriptionSummary(
+  subscription: ApiSubscription | null,
+  t: (key: string, fallback: string) => string,
+) {
+  const expiresAt = subscription?.expires_at
+    ? new Date(subscription.expires_at)
+    : null;
+  const hasValidExpiry = Boolean(expiresAt && !Number.isNaN(expiresAt.getTime()));
+  const isExpired = Boolean(
+    hasValidExpiry && expiresAt && expiresAt.getTime() <= Date.now(),
+  );
+  const isPro = Boolean(subscription?.is_pro && !isExpired);
+
+  if (isPro) {
+    const formattedExpiry =
+      hasValidExpiry && expiresAt
+        ? expiresAt.toLocaleDateString(undefined, {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          })
+        : null;
+
+    return {
+      isPro: true,
+      planLabel: t("profile.plan.pro", "Pro"),
+      statusLabel: formattedExpiry
+        ? t("profile.activeUntil", "Active until {date}").replace(
+            "{date}",
+            formattedExpiry,
+          )
+        : t("profile.active", "Active"),
+      detail: t(
+        "profile.subscriptionDetailPro",
+        "Your Pro access is active. Practice features remain available during beta.",
+      ),
+    };
+  }
+
+  if (isExpired) {
+    return {
+      isPro: false,
+      planLabel: t("profile.plan.expired", "Expired"),
+      statusLabel: t("profile.expired", "Expired"),
+      detail: t(
+        "profile.subscriptionDetailExpired",
+        "Your Pro access has expired. You can keep using free beta access.",
+      ),
+    };
+  }
+
+  return {
+    isPro: false,
+    planLabel: t("profile.plan.free", "Free"),
+    statusLabel: null,
+    detail: t(
+      "profile.subscriptionDetail",
+      "Beta access is free. Paid plans may be added after beta testing.",
+    ),
+  };
 }
 
 function ProfileStat({

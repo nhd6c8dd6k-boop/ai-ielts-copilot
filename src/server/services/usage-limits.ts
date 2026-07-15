@@ -1,5 +1,10 @@
 import { isSupabaseConfigured } from "@/lib/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import {
+  isProSubscription,
+  parseMembershipPlan,
+  type MembershipPlan,
+} from "@/server/services/memberships";
 
 export type AiUsageFeature =
   | "reading_generate"
@@ -14,14 +19,14 @@ export type UsageLimitResult =
       allowed: true;
       mode: "demo" | "supabase";
       userId: string | null;
-      plan: "free" | "pro_monthly" | "pro_yearly";
+      plan: MembershipPlan;
       remaining: number | null;
     }
   | {
       allowed: false;
       status: 401 | 402 | 429;
       message: string;
-      plan: "free" | "pro_monthly" | "pro_yearly";
+      plan: MembershipPlan;
       limit: number;
       used: number;
     };
@@ -76,13 +81,11 @@ export async function checkAiUsageLimit(
 
   const { data: subscription } = await supabase
     .from("subscriptions")
-    .select("plan,status")
+    .select("plan,status,expires_at,current_period_end")
     .eq("user_id", user.id)
     .maybeSingle();
-  const plan = parsePlan(subscription?.plan);
-  const isPro =
-    (plan === "pro_monthly" || plan === "pro_yearly") &&
-    ["active", "trialing"].includes(String(subscription?.status ?? ""));
+  const plan = parseMembershipPlan(subscription?.plan);
+  const isPro = isProSubscription(subscription);
   const limit = isPro ? proDailyLimit : freeDailyLimits[feature];
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -156,12 +159,4 @@ export async function recordAiUsage({
     status,
     error_message: errorMessage ?? null,
   });
-}
-
-function parsePlan(plan: unknown): "free" | "pro_monthly" | "pro_yearly" {
-  if (plan === "pro_monthly" || plan === "pro_yearly") {
-    return plan;
-  }
-
-  return "free";
 }

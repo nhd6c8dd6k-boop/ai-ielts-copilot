@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 import {
   Activity,
+  Crown,
   Eye,
   FileCheck2,
   Headphones,
@@ -23,12 +24,15 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { WritingTaskVisual } from "@/components/writing/writing-task-visual";
 import type {
   AdminContentItem,
   AdminContentStatus,
   AdminContentType,
   AdminDashboardData,
+  AdminMembershipItem,
   AdminUserActivityItem,
 } from "@/server/services/admin-dashboard";
 import { readingBands, readingQuestionTypes, readingTopics } from "@/features/ai-reading/constants";
@@ -47,9 +51,15 @@ type AdminTab =
   | "content"
   | "users"
   | "userActivity"
+  | "memberships"
   | "prompts"
   | "logs";
 type GenerateMode = "reading" | "listening" | "writing";
+type MembershipAction = "grant" | "extend" | "revoke";
+type MembershipModalState = {
+  action: MembershipAction;
+  user: AdminMembershipItem;
+};
 
 const contentTypeTabs: Array<{
   type: AdminContentType;
@@ -285,6 +295,24 @@ const demoUserActivity: AdminUserActivityItem[] = [
   },
 ];
 
+const demoMemberships: AdminMembershipItem[] = [
+  {
+    userId: "demo-student",
+    email: "student.demo@example.com",
+    signedUpAt: new Date().toISOString(),
+    lastLoginAt: new Date().toISOString(),
+    plan: "pro",
+    status: "active",
+    startedAt: new Date().toISOString(),
+    expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+    updatedAt: new Date().toISOString(),
+    grantedBy: null,
+    notes: "Demo manual grant",
+    isPro: true,
+    isExpired: false,
+  },
+];
+
 const prompts = [
   ["reading-generator", "v1", "English questions, Chinese explanations"],
   ["writing-grader", "v1", "IELTS criteria estimate with bilingual feedback"],
@@ -295,6 +323,7 @@ const demoData: AdminDashboardData = {
   content: demoContent,
   users,
   userActivity: demoUserActivity,
+  memberships: demoMemberships,
   prompts,
   promptTemplates: [],
   logs: ["Admin console opened", "Demo prompt templates loaded"],
@@ -311,6 +340,11 @@ export function AdminConsole({
 }) {
   const [activeTab, setActiveTab] = useState<AdminTab>("generate");
   const [content, setContent] = useState(data.content);
+  const [memberships, setMemberships] = useState(data.memberships);
+  const [membershipSearch, setMembershipSearch] = useState("");
+  const [membershipModal, setMembershipModal] =
+    useState<MembershipModalState | null>(null);
+  const [isMembershipSaving, setIsMembershipSaving] = useState(false);
   const [activeContentType, setActiveContentType] =
     useState<AdminContentType>("reading");
   const [logs, setLogs] = useState<string[]>(data.logs);
@@ -374,6 +408,17 @@ export function AdminConsole({
     () => content.filter((item) => item.type === activeContentType),
     [activeContentType, content],
   );
+  const filteredMemberships = useMemo(() => {
+    const normalizedSearch = membershipSearch.trim().toLowerCase();
+
+    if (!normalizedSearch) {
+      return memberships;
+    }
+
+    return memberships.filter((membership) =>
+      membership.email.toLowerCase().includes(normalizedSearch),
+    );
+  }, [membershipSearch, memberships]);
 
   const updateContentStatus = async (
     item: AdminContentItem,
@@ -706,6 +751,90 @@ export function AdminConsole({
     }
   };
 
+  const saveMembershipAction = async ({
+    action,
+    user,
+    durationDays,
+    customExpiryDate,
+    notes,
+  }: {
+    action: MembershipAction;
+    user: AdminMembershipItem;
+    durationDays: number;
+    customExpiryDate?: string;
+    notes?: string;
+  }) => {
+    setError(null);
+    setToastMessage(null);
+
+    if (mode !== "admin") {
+      setToastMessage("Membership management is available after admin login.");
+      setMembershipModal(null);
+      return;
+    }
+
+    setIsMembershipSaving(true);
+
+    try {
+      const body: Record<string, unknown> = {
+        action,
+        targetUserId: user.userId,
+        notes,
+      };
+
+      if (action === "grant") {
+        if (customExpiryDate) {
+          body.customExpiry = new Date(
+            `${customExpiryDate}T23:59:59`,
+          ).toISOString();
+        } else {
+          body.durationDays = durationDays;
+        }
+      }
+
+      if (action === "extend") {
+        body.durationDays = durationDays;
+      }
+
+      const response = await fetch("/api/admin/memberships", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
+      const payload = (await response.json()) as
+        | { ok: true; memberships: AdminMembershipItem[] }
+        | { error?: string };
+
+      if (!response.ok || !("ok" in payload)) {
+        throw new Error(
+          "error" in payload && payload.error
+            ? payload.error
+            : "Membership update failed.",
+        );
+      }
+
+      setMemberships(payload.memberships);
+      setLogs((current) => [
+        `${user.email} · ${formatMembershipAction(action)}`,
+        ...current,
+      ]);
+      setToastMessage(`${user.email} membership updated.`);
+      setMembershipModal(null);
+    } catch (membershipError) {
+      const message =
+        membershipError instanceof Error
+          ? membershipError.message
+          : "Membership update failed.";
+
+      setError(message);
+      setToastMessage(message);
+    } finally {
+      setIsMembershipSaving(false);
+    }
+  };
+
   return (
     <AppShell>
       <PageHeader
@@ -772,6 +901,7 @@ export function AdminConsole({
           ["content", "Content"],
           ["users", "Users"],
           ["userActivity", "User Activity"],
+          ["memberships", "Memberships"],
           ["prompts", "Prompts"],
           ["logs", "Logs"],
         ].map(([value, label]) => (
@@ -1081,6 +1211,15 @@ export function AdminConsole({
           <UserActivityTable rows={data.userActivity} />
         ) : null}
 
+        {activeTab === "memberships" ? (
+          <MembershipsTable
+            rows={filteredMemberships}
+            search={membershipSearch}
+            onSearchChange={setMembershipSearch}
+            onOpenAction={(action, user) => setMembershipModal({ action, user })}
+          />
+        ) : null}
+
         {activeTab === "prompts" ? (
           <DataTable
             title="Prompt templates"
@@ -1152,6 +1291,15 @@ export function AdminConsole({
             setDetailError(null);
           }}
           isMutating={isMutatingId === selectedDetailItem.id}
+        />
+      ) : null}
+
+      {membershipModal ? (
+        <MembershipActionModal
+          state={membershipModal}
+          isSaving={isMembershipSaving}
+          onClose={() => setMembershipModal(null)}
+          onSave={saveMembershipAction}
         />
       ) : null}
     </AppShell>
@@ -2666,6 +2814,280 @@ function DataTable({
   );
 }
 
+function MembershipsTable({
+  rows,
+  search,
+  onSearchChange,
+  onOpenAction,
+}: {
+  rows: AdminMembershipItem[];
+  search: string;
+  onSearchChange: (value: string) => void;
+  onOpenAction: (action: MembershipAction, user: AdminMembershipItem) => void;
+}) {
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <CardTitle>Memberships</CardTitle>
+            <p className="mt-2 text-sm leading-6 text-slate-500">
+              Manually grant, extend, or revoke Pro access after offline
+              payment. Stripe can reuse the same subscription fields later.
+            </p>
+          </div>
+          <div className="w-full max-w-sm space-y-2">
+            <Label htmlFor="membership-search">Search email</Label>
+            <Input
+              id="membership-search"
+              value={search}
+              onChange={(event) => onSearchChange(event.target.value)}
+              placeholder="student@example.com"
+            />
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="overflow-x-auto rounded-md border border-slate-200">
+          <table className="min-w-[1120px] w-full text-left text-sm">
+            <thead className="bg-slate-50 text-slate-500">
+              <tr>
+                {[
+                  "Email",
+                  "Plan",
+                  "Status",
+                  "Started",
+                  "Expires",
+                  "Last login",
+                  "Notes",
+                  "Actions",
+                ].map((header) => (
+                  <th key={header} className="px-4 py-3 font-medium">
+                    {header}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200 bg-white">
+              {rows.length ? (
+                rows.map((row) => (
+                  <tr key={row.userId}>
+                    <td className="max-w-[260px] px-4 py-3 font-medium text-slate-950">
+                      <span className="block truncate" title={row.email}>
+                        {row.email}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <Badge
+                        className={
+                          row.isPro
+                            ? "bg-teal-50 text-teal-800"
+                            : "bg-slate-100 text-slate-600"
+                        }
+                      >
+                        {formatMembershipPlan(row.plan)}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-3 text-slate-700">
+                      {row.isExpired ? "expired" : row.status}
+                    </td>
+                    <td className="px-4 py-3 text-slate-700">
+                      {formatAdminDate(row.startedAt)}
+                    </td>
+                    <td className="px-4 py-3 text-slate-700">
+                      {formatAdminDate(row.expiresAt)}
+                    </td>
+                    <td className="px-4 py-3 text-slate-700">
+                      {formatAdminDate(row.lastLoginAt)}
+                    </td>
+                    <td className="max-w-[220px] px-4 py-3 text-slate-700">
+                      <span className="block truncate" title={row.notes ?? ""}>
+                        {row.notes ?? "-"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-wrap gap-2">
+                        {row.isPro ? (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => onOpenAction("extend", row)}
+                            >
+                              Extend
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => onOpenAction("revoke", row)}
+                            >
+                              Revoke Pro
+                            </Button>
+                          </>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => onOpenAction("grant", row)}
+                          >
+                            <Crown className="h-4 w-4" aria-hidden="true" />
+                            Grant Pro
+                          </Button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan={8}
+                    className="px-4 py-8 text-center text-sm text-slate-500"
+                  >
+                    No users found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function MembershipActionModal({
+  state,
+  isSaving,
+  onClose,
+  onSave,
+}: {
+  state: MembershipModalState;
+  isSaving: boolean;
+  onClose: () => void;
+  onSave: (input: {
+    action: MembershipAction;
+    user: AdminMembershipItem;
+    durationDays: number;
+    customExpiryDate?: string;
+    notes?: string;
+  }) => Promise<void>;
+}) {
+  const [duration, setDuration] = useState("30");
+  const [customExpiryDate, setCustomExpiryDate] = useState("");
+  const [notes, setNotes] = useState("");
+  const isGrant = state.action === "grant";
+  const isExtend = state.action === "extend";
+  const isRevoke = state.action === "revoke";
+  const requiresCustomExpiry = isGrant && duration === "custom";
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4">
+      <div className="w-full max-w-lg rounded-md bg-white shadow-xl">
+        <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-5 py-4">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-950">
+              {formatMembershipAction(state.action)}
+            </h2>
+            <p className="mt-1 text-sm text-slate-500">{state.user.email}</p>
+          </div>
+          <button
+            type="button"
+            className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+            aria-label="Close membership modal"
+            onClick={onClose}
+          >
+            <X className="h-5 w-5" aria-hidden="true" />
+          </button>
+        </div>
+
+        <div className="space-y-4 px-5 py-4">
+          {!isRevoke ? (
+            <div className="space-y-2">
+              <Label htmlFor="membership-duration">Duration</Label>
+              <select
+                id="membership-duration"
+                value={duration}
+                onChange={(event) => setDuration(event.target.value)}
+                className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-950 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+              >
+                <option value="30">30 days</option>
+                <option value="90">90 days</option>
+                {isGrant ? <option value="180">180 days</option> : null}
+                <option value="365">365 days</option>
+                {isGrant ? (
+                  <option value="custom">Custom expiry</option>
+                ) : null}
+              </select>
+            </div>
+          ) : (
+            <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+              This will move the user back to Free and mark the subscription as
+              cancelled. Existing logs and attempts are preserved.
+            </div>
+          )}
+
+          {requiresCustomExpiry ? (
+            <div className="space-y-2">
+              <Label htmlFor="membership-custom-expiry">Custom expiry</Label>
+              <Input
+                id="membership-custom-expiry"
+                type="date"
+                value={customExpiryDate}
+                onChange={(event) => setCustomExpiryDate(event.target.value)}
+              />
+            </div>
+          ) : null}
+
+          <div className="space-y-2">
+            <Label htmlFor="membership-notes">Notes</Label>
+            <Input
+              id="membership-notes"
+              value={notes}
+              onChange={(event) => setNotes(event.target.value)}
+              placeholder={
+                isRevoke
+                  ? "Cancelled by admin"
+                  : "Paid via WeChat / Alipay / e-Transfer"
+              }
+            />
+          </div>
+        </div>
+
+        <div className="flex flex-col-reverse gap-2 border-t border-slate-200 px-5 py-4 sm:flex-row sm:justify-end">
+          <Button type="button" variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            disabled={isSaving || (requiresCustomExpiry && !customExpiryDate)}
+            onClick={() =>
+              onSave({
+                action: state.action,
+                user: state.user,
+                durationDays: duration === "custom" ? 30 : Number(duration),
+                customExpiryDate: requiresCustomExpiry
+                  ? customExpiryDate
+                  : undefined,
+                notes,
+              })
+            }
+          >
+            {isSaving ? (
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+            ) : null}
+            {isExtend
+              ? "Extend Pro"
+              : isRevoke
+                ? "Revoke Pro"
+                : "Grant Pro"}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function UserActivityTable({ rows }: { rows: AdminUserActivityItem[] }) {
   return (
     <Card>
@@ -2790,4 +3212,25 @@ function formatAdminDate(value: string | null) {
   }
 
   return date.toLocaleString();
+}
+
+function formatMembershipPlan(plan: string) {
+  const labels: Record<string, string> = {
+    free: "Free",
+    pro: "Pro",
+    pro_monthly: "Pro Monthly",
+    pro_yearly: "Pro Yearly",
+  };
+
+  return labels[plan] ?? plan;
+}
+
+function formatMembershipAction(action: MembershipAction) {
+  const labels: Record<MembershipAction, string> = {
+    grant: "Grant Pro",
+    extend: "Extend Pro",
+    revoke: "Revoke Pro",
+  };
+
+  return labels[action];
 }

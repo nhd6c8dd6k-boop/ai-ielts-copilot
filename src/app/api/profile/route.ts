@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { isSupabaseConfigured } from "@/lib/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { isProSubscription } from "@/server/services/memberships";
 import { apiErrorResponse } from "@/server/utils/api-error";
 
 const profileInputSchema = z.object({
@@ -27,21 +28,43 @@ export async function GET() {
     return NextResponse.json({ mode: "anonymous", profile: null });
   }
 
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("display_name,target_band,exam_date,country,timezone")
-    .eq("id", user.id)
-    .single();
+  const [profileResult, subscriptionResult] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("display_name,target_band,exam_date,country,timezone")
+      .eq("id", user.id)
+      .single(),
+    supabase
+      .from("subscriptions")
+      .select("plan,status,started_at,expires_at,current_period_end")
+      .eq("user_id", user.id)
+      .maybeSingle(),
+  ]);
 
-  if (error) {
-    return apiErrorResponse(error, {
+  if (profileResult.error) {
+    return apiErrorResponse(profileResult.error, {
       fallback: "Failed to load profile.",
       status: 400,
       context: "profile_load_failed",
     });
   }
 
-  return NextResponse.json({ mode: "supabase", profile: data });
+  const subscription = subscriptionResult.data;
+
+  return NextResponse.json({
+    mode: "supabase",
+    profile: profileResult.data,
+    subscription: subscription
+      ? {
+          plan: subscription.plan,
+          status: subscription.status,
+          started_at: subscription.started_at,
+          expires_at:
+            subscription.expires_at ?? subscription.current_period_end ?? null,
+          is_pro: isProSubscription(subscription),
+        }
+      : null,
+  });
 }
 
 export async function PUT(request: Request) {

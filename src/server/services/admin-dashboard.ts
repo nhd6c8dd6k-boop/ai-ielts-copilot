@@ -1,4 +1,10 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import {
+  getMemberships,
+  type AdminMembershipItem,
+} from "@/server/services/memberships";
+
+export type { AdminMembershipItem } from "@/server/services/memberships";
 
 export type AdminContentType = "reading" | "listening" | "writing";
 export type AdminContentStatus = "draft" | "review" | "published" | "archived";
@@ -32,6 +38,7 @@ export type AdminDashboardData = {
   content: AdminContentItem[];
   users: string[][];
   userActivity: AdminUserActivityItem[];
+  memberships: AdminMembershipItem[];
   prompts: string[][];
   promptTemplates: Array<{
     id: string;
@@ -62,6 +69,7 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
     prompts,
     logs,
     userActivity,
+    memberships,
   ] = await Promise.all([
     admin
       .from("reading_sets")
@@ -96,6 +104,7 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
       .order("created_at", { ascending: false })
       .limit(30),
     getUserActivity(admin),
+    getMemberships(admin),
   ]);
 
   const subscriptionByUserId = new Map(
@@ -141,6 +150,7 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
       ];
     }),
     userActivity,
+    memberships,
     prompts: (prompts.data ?? []).map((prompt) => [
       prompt.name,
       `v${prompt.version}`,
@@ -348,6 +358,7 @@ function formatPlan(plan: string) {
     free: "Free",
     pro_monthly: "Pro Monthly",
     pro_yearly: "Pro Yearly",
+    pro: "Pro",
   };
 
   return labels[plan] ?? plan;
