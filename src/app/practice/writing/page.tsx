@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { CheckCircle2, Clock3, FileText, PenLine } from "lucide-react";
 
 import { LocalizedText } from "@/components/i18n/localized-text";
@@ -10,9 +11,19 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { buildLoginRedirectHref } from "@/lib/auth/redirect";
+import { absoluteUrl } from "@/lib/seo";
 import { getCurrentUserId } from "@/server/services/auth-session";
 import { getPublishedWritingTaskSummaries } from "@/server/services/writing-practice";
 import { getUserPracticeUsage } from "@/server/services/usage-limits";
+
+export const metadata: Metadata = {
+  title: "IELTS Writing Practice with AI Feedback",
+  description:
+    "Practice IELTS Writing Task 1 and Task 2, then get AI-powered band feedback, criterion scores, sentence rewrites, and next steps.",
+  alternates: {
+    canonical: absoluteUrl("/practice/writing"),
+  },
+};
 
 export const dynamic = "force-dynamic";
 

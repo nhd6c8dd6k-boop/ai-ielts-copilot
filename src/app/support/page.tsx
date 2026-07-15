@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Mail, MessageCircle, WalletCards } from "lucide-react";
 
 import { LocalizedText } from "@/components/i18n/localized-text";
@@ -6,7 +7,17 @@ import { SupportFooter } from "@/components/layout/support-footer";
 import { ManualPaymentMethods } from "@/components/payments/manual-payment-methods";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { absoluteUrl } from "@/lib/seo";
 import { supportEmail, xiaohongshuAccount } from "@/lib/support";
+
+export const metadata: Metadata = {
+  title: "Support and Pro Upgrade",
+  description:
+    "Contact AI IELTS Copilot support for product help, bug reports, and manual Pro upgrade instructions.",
+  alternates: {
+    canonical: absoluteUrl("/support"),
+  },
+};
 
 const upgradeSteps = [
   [

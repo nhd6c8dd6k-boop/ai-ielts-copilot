@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import {
   CheckCircle2,
   Clock3,
@@ -16,9 +17,19 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { buildLoginRedirectHref } from "@/lib/auth/redirect";
+import { absoluteUrl } from "@/lib/seo";
 import { getCurrentUserId } from "@/server/services/auth-session";
 import { getPublishedListeningSummaries } from "@/server/services/listening-practice";
 import { getUserPracticeUsage } from "@/server/services/usage-limits";
+
+export const metadata: Metadata = {
+  title: "IELTS Listening Practice",
+  description:
+    "Practice IELTS-style Listening with audio, question navigation, automatic scoring, and answer explanations.",
+  alternates: {
+    canonical: absoluteUrl("/practice/listening"),
+  },
+};
 
 export const dynamic = "force-dynamic";
 

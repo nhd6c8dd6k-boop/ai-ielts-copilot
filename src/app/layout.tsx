@@ -9,18 +9,22 @@ import {
   normalizeLanguage,
 } from "@/lib/i18n/language";
 import type { Language } from "@/lib/i18n/messages";
+import {
+  absoluteUrl,
+  getPublicSiteUrl,
+  siteDescription,
+  siteName,
+} from "@/lib/seo";
 
 import { Providers } from "./providers";
 import "./globals.css";
 
-const publicSiteUrl = "https://www.aiieltscopilot.com";
-const siteDescription =
-  "Computer IELTS-style Reading, Listening, and Writing practice with automatic scoring, AI writing feedback, and dashboard progress tracking.";
+const publicSiteUrl = getPublicSiteUrl();
 
 export const metadata: Metadata = {
   metadataBase: new URL(publicSiteUrl),
   title: {
-    default: "AI IELTS Copilot",
+    default: "AI IELTS Copilot | IELTS Practice with AI Feedback",
     template: "%s | AI IELTS Copilot",
   },
   description: siteDescription,
@@ -35,16 +39,56 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     url: publicSiteUrl,
-    siteName: "AI IELTS Copilot",
-    title: "AI IELTS Copilot",
+    siteName,
+    title: "AI IELTS Copilot | IELTS Practice with AI Feedback",
     description: siteDescription,
+    images: [
+      {
+        url: "/icon.png",
+        width: 512,
+        height: 512,
+        alt: "AI IELTS Copilot icon",
+      },
+    ],
   },
   twitter: {
     card: "summary",
-    title: "AI IELTS Copilot",
+    title: "AI IELTS Copilot | IELTS Practice with AI Feedback",
     description: siteDescription,
+    images: ["/icon.png"],
   },
 };
+
+const structuredData = [
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: siteName,
+    url: publicSiteUrl,
+    description: siteDescription,
+    inLanguage: ["en", "zh-CN"],
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: siteName,
+    applicationCategory: "EducationalApplication",
+    operatingSystem: "Web",
+    url: publicSiteUrl,
+    description: siteDescription,
+    offers: {
+      "@type": "Offer",
+      category: "Free and Pro membership",
+    },
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: siteName,
+    url: publicSiteUrl,
+    logo: absoluteUrl("/icon.png"),
+  },
+];
 
 export default async function RootLayout({
   children,
@@ -61,6 +105,10 @@ export default async function RootLayout({
   return (
     <html lang={getHtmlLang(initialLanguage)} className="h-full antialiased">
       <body className="flex min-h-full flex-col bg-background text-foreground">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        />
         <Providers initialLanguage={initialLanguage}>{children}</Providers>
         <Analytics />
         <ClickAnalytics />

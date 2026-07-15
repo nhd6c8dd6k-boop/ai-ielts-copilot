@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { Check, Crown, ShieldCheck } from "lucide-react";
 
 import { LocalizedText } from "@/components/i18n/localized-text";
@@ -6,6 +7,16 @@ import { MarketingHeader } from "@/components/layout/marketing-header";
 import { ManualPaymentMethods } from "@/components/payments/manual-payment-methods";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { absoluteUrl } from "@/lib/seo";
+
+export const metadata: Metadata = {
+  title: "Free and Pro IELTS Practice Plans",
+  description:
+    "Compare AI IELTS Copilot Free and Pro plans for IELTS Reading, Listening, Writing AI feedback, and computer-based practice.",
+  alternates: {
+    canonical: absoluteUrl("/pricing"),
+  },
+};
 
 const freeFeatures = [
   ["pricing.feature.reading", "Complete any 5 different Reading practice sets"],

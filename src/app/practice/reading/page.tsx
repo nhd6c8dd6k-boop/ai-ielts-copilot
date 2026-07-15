@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { BookOpen, CheckCircle2, Clock3, FileText } from "lucide-react";
 
 import { LocalizedText } from "@/components/i18n/localized-text";
@@ -10,9 +11,19 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { buildLoginRedirectHref } from "@/lib/auth/redirect";
+import { absoluteUrl } from "@/lib/seo";
 import { getCurrentUserId } from "@/server/services/auth-session";
 import { getPublishedReadingSummaries } from "@/server/services/reading-practice";
 import { getUserPracticeUsage } from "@/server/services/usage-limits";
+
+export const metadata: Metadata = {
+  title: "IELTS Reading Practice",
+  description:
+    "Practice IELTS-style Reading questions with computer-based test preparation, automatic scoring, and answer explanations.",
+  alternates: {
+    canonical: absoluteUrl("/practice/reading"),
+  },
+};
 
 export const dynamic = "force-dynamic";
 

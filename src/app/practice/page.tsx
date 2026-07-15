@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { BookOpen, Headphones, PenLine, Timer } from "lucide-react";
 
 import { LocalizedText } from "@/components/i18n/localized-text";
@@ -8,8 +9,17 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { buildLoginRedirectHref } from "@/lib/auth/redirect";
+import { absoluteUrl, siteDescription } from "@/lib/seo";
 import { isUserSignedIn } from "@/server/services/auth-session";
 import { getPracticeLibraryStats } from "@/server/services/practice-library";
+
+export const metadata: Metadata = {
+  title: "IELTS Practice",
+  description: siteDescription,
+  alternates: {
+    canonical: absoluteUrl("/practice"),
+  },
+};
 
 export const dynamic = "force-dynamic";
 

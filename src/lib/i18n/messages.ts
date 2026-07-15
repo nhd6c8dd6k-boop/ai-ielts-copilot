@@ -249,6 +249,15 @@ export const messages: Record<Language, Record<string, string>> = {
     "practice.filter.charts": "Charts",
     "practice.filter.tables": "Tables",
     "practice.filter.process": "Process",
+    "speaking.eyebrow": "Speaking Practice",
+    "speaking.title": "IELTS Speaking practice is coming later",
+    "speaking.description":
+      "Speaking practice is planned for a future version. For now, you can use AI IELTS Copilot to practise Reading, Listening, and Writing.",
+    "speaking.cardTitle": "Speaking is planned",
+    "speaking.cardDescription":
+      "We are keeping this page public so you can find future Speaking practice updates. It does not affect your current Reading, Listening, or Writing practice access.",
+    "speaking.primaryCta": "Try Writing feedback",
+    "speaking.secondaryCta": "Back to practice",
 
     "reading.eyebrow": "Reading Practice",
     "reading.title": "IELTS Reading practice sets",
@@ -801,6 +810,15 @@ export const messages: Record<Language, Record<string, string>> = {
     "practice.filter.charts": "图表题",
     "practice.filter.tables": "表格题",
     "practice.filter.process": "流程图",
+    "speaking.eyebrow": "Speaking Practice",
+    "speaking.title": "Speaking 练习稍后开放",
+    "speaking.description":
+      "Speaking 练习计划在后续版本加入。现在你可以先使用 AI IELTS Copilot 练习 Reading、Listening 和 Writing。",
+    "speaking.cardTitle": "Speaking 练习正在准备中",
+    "speaking.cardDescription":
+      "这个页面会保留为公开入口，方便之后查看 Speaking 练习更新。它不会影响你现在使用 Reading、Listening 或 Writing 练习。",
+    "speaking.primaryCta": "先试 Writing feedback",
+    "speaking.secondaryCta": "返回练习中心",
 
     "reading.eyebrow": "Reading 练习",
     "reading.title": "IELTS Reading 练习套题",

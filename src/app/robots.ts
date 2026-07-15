@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const siteUrl = "https://www.aiieltscopilot.com";
+import { absoluteUrl } from "@/lib/seo";
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -10,11 +10,16 @@ export default function robots(): MetadataRoute.Robots {
       disallow: [
         "/admin",
         "/api",
+        "/auth",
         "/dashboard",
+        "/forgot-password",
+        "/login",
         "/profile",
+        "/register",
         "/result",
+        "/reset-password",
       ],
     },
-    sitemap: `${siteUrl}/sitemap.xml`,
+    sitemap: absoluteUrl("/sitemap.xml"),
   };
 }
