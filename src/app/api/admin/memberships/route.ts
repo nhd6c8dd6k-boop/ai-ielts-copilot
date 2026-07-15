@@ -5,8 +5,10 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { requireAdminUser } from "@/server/services/admin-auth";
 import {
   extendManualPro,
+  getSupabaseErrorField,
   getMemberships,
   grantManualPro,
+  MembershipServiceError,
   revokeManualPro,
 } from "@/server/services/memberships";
 import { apiErrorResponse } from "@/server/utils/api-error";
@@ -109,11 +111,17 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ok: true, memberships });
   } catch (error) {
-    return apiErrorResponse(error, {
-      fallback: "Failed to update membership.",
-      status: 500,
-      context: "admin_membership_update_failed",
-    });
+    logMembershipApiError(error);
+
+    return NextResponse.json(
+      {
+        error:
+          error instanceof MembershipServiceError
+            ? error.category
+            : "membership_write_failed",
+      },
+      { status: 500 },
+    );
   }
 }
 
@@ -126,4 +134,19 @@ function resolveGrantExpiry(durationDays?: number, customExpiry?: string) {
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + days);
   return expiresAt.toISOString();
+}
+
+function logMembershipApiError(error: unknown) {
+  const category =
+    error instanceof MembershipServiceError
+      ? error.category
+      : "membership_write_failed";
+
+  console.error("admin_membership_update_failed", {
+    category,
+    code: getSupabaseErrorField(error, "code"),
+    message: getSupabaseErrorField(error, "message"),
+    details: getSupabaseErrorField(error, "details"),
+    hint: getSupabaseErrorField(error, "hint"),
+  });
 }

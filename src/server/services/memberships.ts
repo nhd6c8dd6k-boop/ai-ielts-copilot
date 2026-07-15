@@ -1,4 +1,9 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import {
+  isExpiredAt,
+  isProSubscriptionRule,
+  resolveExtendedExpiry,
+} from "@/server/services/membership-rules";
 
 export type MembershipPlan = "free" | "pro" | "pro_monthly" | "pro_yearly";
 
@@ -37,8 +42,23 @@ export type AdminMembershipItem = {
 
 type SupabaseAdminClient = ReturnType<typeof createSupabaseAdminClient>;
 
-const proPlans = new Set(["pro", "pro_monthly", "pro_yearly"]);
-const activeStatuses = new Set(["active", "manual", "trialing"]);
+export type MembershipErrorCategory =
+  | "membership_write_failed"
+  | "invalid_membership_value"
+  | "membership_schema_mismatch"
+  | "membership_log_failed";
+
+export class MembershipServiceError extends Error {
+  category: MembershipErrorCategory;
+  cause: unknown;
+
+  constructor(category: MembershipErrorCategory, message: string, cause: unknown) {
+    super(message);
+    this.name = "MembershipServiceError";
+    this.category = category;
+    this.cause = cause;
+  }
+}
 
 export async function getMemberships(
   admin: SupabaseAdminClient = createSupabaseAdminClient(),
@@ -119,13 +139,22 @@ export async function grantManualPro({
   notes?: string | null;
 }) {
   const now = new Date().toISOString();
+  const { data: existingSubscription, error: loadError } = await admin
+    .from("subscriptions")
+    .select("plan,status,expires_at,current_period_end,started_at")
+    .eq("user_id", targetUserId)
+    .maybeSingle();
+
+  if (loadError) {
+    throwMembershipError("grant_load", loadError);
+  }
 
   const { error } = await admin.from("subscriptions").upsert(
     {
       user_id: targetUserId,
       plan: "pro",
       status: "active",
-      started_at: now,
+      started_at: existingSubscription?.started_at ?? now,
       expires_at: expiresAt,
       current_period_end: expiresAt,
       cancel_at_period_end: false,
@@ -137,7 +166,7 @@ export async function grantManualPro({
   );
 
   if (error) {
-    throw error;
+    throwMembershipError("grant", error);
   }
 
   await logMembershipAction(admin, {
@@ -145,7 +174,10 @@ export async function grantManualPro({
     action: "manual_pro_granted",
     targetUserId,
     expiresAt,
+    durationDays: calculateDurationDays(now, expiresAt),
     notes,
+    previousPlan: existingSubscription?.plan ?? null,
+    previousStatus: existingSubscription?.status ?? null,
   });
 }
 
@@ -164,20 +196,21 @@ export async function extendManualPro({
 }) {
   const { data: subscription, error: loadError } = await admin
     .from("subscriptions")
-    .select("expires_at,current_period_end,started_at")
+    .select("plan,status,expires_at,current_period_end,started_at")
     .eq("user_id", targetUserId)
     .maybeSingle();
 
   if (loadError) {
-    throw loadError;
+    throwMembershipError("extend_load", loadError);
   }
 
   const now = new Date();
-  const currentExpiry = parseDate(
-    subscription?.expires_at ?? subscription?.current_period_end ?? null,
-  );
-  const base = currentExpiry && currentExpiry > now ? currentExpiry : now;
-  const expiresAt = addDays(base, durationDays).toISOString();
+  const expiresAt = resolveExtendedExpiry({
+    now,
+    currentExpiry:
+      subscription?.expires_at ?? subscription?.current_period_end ?? null,
+    durationDays,
+  });
   const updatedAt = now.toISOString();
 
   const { error } = await admin.from("subscriptions").upsert(
@@ -197,7 +230,7 @@ export async function extendManualPro({
   );
 
   if (error) {
-    throw error;
+    throwMembershipError("extend", error);
   }
 
   await logMembershipAction(admin, {
@@ -207,6 +240,8 @@ export async function extendManualPro({
     expiresAt,
     durationDays,
     notes,
+    previousPlan: subscription?.plan ?? null,
+    previousStatus: subscription?.status ?? null,
   });
 }
 
@@ -222,6 +257,15 @@ export async function revokeManualPro({
   notes?: string | null;
 }) {
   const now = new Date().toISOString();
+  const { data: existingSubscription, error: loadError } = await admin
+    .from("subscriptions")
+    .select("plan,status,expires_at,current_period_end")
+    .eq("user_id", targetUserId)
+    .maybeSingle();
+
+  if (loadError) {
+    throwMembershipError("revoke_load", loadError);
+  }
 
   const { error } = await admin.from("subscriptions").upsert(
     {
@@ -239,30 +283,24 @@ export async function revokeManualPro({
   );
 
   if (error) {
-    throw error;
+    throwMembershipError("revoke", error);
   }
 
   await logMembershipAction(admin, {
     adminUserId,
     action: "manual_pro_revoked",
     targetUserId,
-    expiresAt: now,
+    expiresAt: existingSubscription?.expires_at ?? now,
     notes,
+    previousPlan: existingSubscription?.plan ?? null,
+    previousStatus: existingSubscription?.status ?? null,
   });
 }
 
 export function isProSubscription(
   subscription: MembershipSubscription | null | undefined,
 ) {
-  const plan = String(subscription?.plan ?? "free");
-  const status = String(subscription?.status ?? "incomplete");
-  const expiresAt = subscription?.expires_at ?? subscription?.current_period_end;
-
-  if (!proPlans.has(plan) || !activeStatuses.has(status)) {
-    return false;
-  }
-
-  return !isExpiredAt(expiresAt ?? null);
+  return isProSubscriptionRule(subscription);
 }
 
 export function parseMembershipPlan(plan: unknown): MembershipPlan {
@@ -290,29 +328,66 @@ export function parseMembershipStatus(status: unknown): MembershipStatus {
   return "incomplete";
 }
 
-function addDays(date: Date, days: number) {
-  const nextDate = new Date(date);
-  nextDate.setDate(nextDate.getDate() + days);
-  return nextDate;
-}
-
-function parseDate(value: string | null) {
-  if (!value) {
-    return null;
-  }
-
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date;
-}
-
-function isExpiredAt(value: string | null) {
-  const date = parseDate(value);
-  return Boolean(date && date.getTime() <= Date.now());
-}
-
 function normalizeNotes(notes?: string | null) {
   const normalized = notes?.trim();
   return normalized ? normalized : null;
+}
+
+function calculateDurationDays(startIso: string, endIso: string) {
+  const start = Date.parse(startIso);
+  const end = Date.parse(endIso);
+
+  if (!Number.isFinite(start) || !Number.isFinite(end)) {
+    return null;
+  }
+
+  return Math.max(0, Math.round((end - start) / (1000 * 60 * 60 * 24)));
+}
+
+function throwMembershipError(operation: string, error: unknown): never {
+  throw new MembershipServiceError(
+    classifyMembershipError(error),
+    `Membership ${operation} failed.`,
+    error,
+  );
+}
+
+export function classifyMembershipError(error: unknown): MembershipErrorCategory {
+  const message = getSupabaseErrorField(error, "message").toLowerCase();
+  const details = getSupabaseErrorField(error, "details").toLowerCase();
+  const hint = getSupabaseErrorField(error, "hint").toLowerCase();
+  const combined = `${message} ${details} ${hint}`;
+
+  if (
+    combined.includes("invalid input value for enum") ||
+    combined.includes("violates check constraint")
+  ) {
+    return "invalid_membership_value";
+  }
+
+  if (
+    combined.includes("could not find") ||
+    combined.includes("schema cache") ||
+    combined.includes("column") ||
+    combined.includes("constraint")
+  ) {
+    return "membership_schema_mismatch";
+  }
+
+  return "membership_write_failed";
+}
+
+export function getSupabaseErrorField(error: unknown, field: string) {
+  if (error instanceof MembershipServiceError) {
+    return getSupabaseErrorField(error.cause, field);
+  }
+
+  if (typeof error !== "object" || error === null || !(field in error)) {
+    return "";
+  }
+
+  const value = (error as Record<string, unknown>)[field];
+  return typeof value === "string" ? value : "";
 }
 
 async function logMembershipAction(
@@ -324,6 +399,8 @@ async function logMembershipAction(
     expiresAt,
     durationDays,
     notes,
+    previousPlan,
+    previousStatus,
   }: {
     adminUserId: string;
     action:
@@ -332,11 +409,13 @@ async function logMembershipAction(
       | "manual_pro_revoked";
     targetUserId: string;
     expiresAt: string;
-    durationDays?: number;
+    durationDays?: number | null;
     notes?: string | null;
+    previousPlan?: string | null;
+    previousStatus?: string | null;
   },
 ) {
-  await admin.from("admin_logs").insert({
+  const { error } = await admin.from("admin_logs").insert({
     admin_user_id: adminUserId,
     action,
     target_type: "subscription",
@@ -347,6 +426,16 @@ async function logMembershipAction(
       expiry: expiresAt,
       duration_days: durationDays ?? null,
       note: normalizeNotes(notes),
+      previous_plan: previousPlan ?? null,
+      previous_status: previousStatus ?? null,
     },
   });
+
+  if (error) {
+    throw new MembershipServiceError(
+      "membership_log_failed",
+      "Membership log insert failed.",
+      error,
+    );
+  }
 }
