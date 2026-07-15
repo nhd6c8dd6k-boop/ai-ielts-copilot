@@ -1,22 +1,33 @@
 import Link from "next/link";
-import { Check, Clock, ShieldCheck } from "lucide-react";
+import { Check, Crown, ShieldCheck } from "lucide-react";
 
 import { LocalizedText } from "@/components/i18n/localized-text";
 import { MarketingHeader } from "@/components/layout/marketing-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
-const betaFeatures = [
+const freeFeatures = [
   ["pricing.feature.reading", "Reading practice with automatic scoring"],
   ["pricing.feature.listening", "Listening audio practice with automatic scoring"],
   ["pricing.feature.writing", "Writing Task 1 / Task 2 with AI feedback"],
-  ["pricing.feature.dashboard", "Dashboard progress tracking"],
+  ["pricing.feature.dashboard", "Basic practice history"],
+  ["pricing.feature.account", "Free account access"],
 ];
 
-const plannedFeatures = [
-  ["pricing.planned.moreSets", "More published practice sets"],
-  ["pricing.planned.proPlans", "Pro plans and usage limits"],
-  ["pricing.planned.paidLater", "Paid plans may be added after beta testing"],
+const proFeatures = [
+  ["pricing.pro.feature.membership", "Pro membership access"],
+  [
+    "pricing.pro.feature.support",
+    "Support the project and receive Pro membership",
+  ],
+  [
+    "pricing.pro.feature.future",
+    "Priority access to future advanced features",
+  ],
+  [
+    "pricing.pro.feature.manual",
+    "Manually activated using your registered email",
+  ],
 ];
 
 export default function PricingPage() {
@@ -26,20 +37,20 @@ export default function PricingPage() {
       <main className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
         <div className="max-w-3xl">
           <Badge>
-            <LocalizedText k="pricing.betaAccess" fallback="Beta Access" />
+            <LocalizedText k="pricing.eyebrow" fallback="Free / Pro" />
           </Badge>
           <h1 className="mt-5 text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-            <LocalizedText k="pricing.free" fallback="Free during beta" />
+            <LocalizedText k="pricing.title" fallback="Free and Pro plans" />
           </h1>
           <p className="mt-5 text-lg leading-8 text-slate-600">
             <LocalizedText
               k="pricing.description"
-              fallback="AI IELTS Copilot is free during beta while we improve the practice experience with early users."
+              fallback="Start IELTS practice for free. Pro membership is manually activated using your registered email."
             />
           </p>
         </div>
 
-        <div className="mt-12 grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="mt-12 grid gap-5 lg:grid-cols-2">
           <section className="rounded-lg border border-slate-200 bg-white p-6">
             <div className="flex items-start justify-between gap-4">
               <div>
@@ -50,21 +61,12 @@ export default function PricingPage() {
                   />
                 </Badge>
                 <h2 className="mt-5 text-2xl font-semibold text-slate-950">
-                  <LocalizedText
-                    k="pricing.betaAccess"
-                    fallback="Beta Access"
-                  />
+                  <LocalizedText k="pricing.freePlan" fallback="Free" />
                 </h2>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
                   <LocalizedText
-                    k="pricing.betaBody"
-                    fallback="Use the current beta product while the practice experience is being tested and improved."
-                  />
-                </p>
-                <p className="mt-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
-                  <LocalizedText
-                    k="pricing.betaReward"
-                    fallback="Beta tester reward: The first 10 users who sign up and complete one practice session will receive 1 month of Pro access when paid plans launch."
+                    k="pricing.freeBody"
+                    fallback="Create a free account and start practising Reading, Listening, and Writing."
                   />
                 </p>
               </div>
@@ -73,13 +75,13 @@ export default function PricingPage() {
                   ¥0
                 </div>
                 <div className="mt-1 text-sm text-slate-500">
-                  <LocalizedText k="pricing.duringBeta" fallback="during beta" />
+                  <LocalizedText k="pricing.freePrice" fallback="free access" />
                 </div>
               </div>
             </div>
 
             <ul className="mt-8 grid gap-3 sm:grid-cols-2">
-              {betaFeatures.map(([key, fallback]) => (
+              {freeFeatures.map(([key, fallback]) => (
                 <li key={key} className="flex gap-3 text-sm text-slate-600">
                   <Check
                     className="mt-0.5 h-4 w-4 text-teal-700"
@@ -91,42 +93,53 @@ export default function PricingPage() {
             </ul>
 
             <Button asChild className="mt-8">
-              <Link href="/practice">
+              <Link href="/practice/writing">
                 <LocalizedText
                   k="pricing.startPracticing"
-                  fallback="Start practicing"
+                  fallback="Start practising for free"
                 />
               </Link>
             </Button>
           </section>
 
-          <section className="rounded-lg border border-slate-200 bg-[#fbfbf8] p-6">
-            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-white text-slate-700">
-              <Clock className="h-5 w-5" aria-hidden="true" />
+          <section className="rounded-lg border border-teal-200 bg-[#fbfbf8] p-6">
+            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-white text-teal-800">
+              <Crown className="h-5 w-5" aria-hidden="true" />
             </div>
-            <h2 className="mt-5 text-xl font-semibold text-slate-950">
-              <LocalizedText
-                k="pricing.proInactive"
-                fallback="Pro plans are not active during beta"
-              />
+            <h2 className="mt-5 text-2xl font-semibold text-slate-950">
+              <LocalizedText k="pricing.proPlan" fallback="Pro" />
             </h2>
             <p className="mt-3 text-sm leading-6 text-slate-600">
               <LocalizedText
-                k="pricing.proInactiveBody"
-                fallback="Paid plans may be added after beta testing. Payment options are intentionally disabled for now, so there are no checkout buttons."
+                k="pricing.proBody"
+                fallback="Support the project and receive Pro membership with access to future Pro features. Pro is manually activated after payment confirmation."
               />
             </p>
             <ul className="mt-6 space-y-3">
-              {plannedFeatures.map(([key, fallback]) => (
+              {proFeatures.map(([key, fallback]) => (
                 <li key={key} className="flex gap-3 text-sm text-slate-600">
                   <ShieldCheck
-                    className="mt-0.5 h-4 w-4 text-slate-400"
+                    className="mt-0.5 h-4 w-4 text-teal-700"
                     aria-hidden="true"
                   />
                   <LocalizedText k={key} fallback={fallback} />
                 </li>
               ))}
             </ul>
+            <p className="mt-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
+              <LocalizedText
+                k="pricing.betaReward"
+                fallback="The first 10 users who register and complete a practice will receive one month of Pro access. Eligible users will be activated manually."
+              />
+            </p>
+            <Button asChild variant="outline" className="mt-6">
+              <Link href="/support">
+                <LocalizedText
+                  k="pricing.contactUpgrade"
+                  fallback="Contact to upgrade"
+                />
+              </Link>
+            </Button>
           </section>
         </div>
       </main>

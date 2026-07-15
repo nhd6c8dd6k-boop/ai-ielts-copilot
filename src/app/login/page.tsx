@@ -75,7 +75,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                 text={
                   <LocalizedText
                     k="auth.practiceRedirectHint"
-                    fallback="Free during beta. You will return to the selected practice after signing in."
+                    fallback="Sign in to start free practice. You will return to the selected practice after signing in."
                   />
                 }
               />

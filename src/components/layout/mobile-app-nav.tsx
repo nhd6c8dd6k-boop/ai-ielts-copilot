@@ -241,7 +241,7 @@ export function MobileAppNav() {
                   : t("nav.signOut", "Sign out")}
               </Button>
               <p className="text-xs leading-5 text-slate-500">
-                AI IELTS Copilot Beta
+                AI IELTS Copilot
               </p>
             </div>
           </div>

@@ -54,7 +54,7 @@ export default async function WritingPracticePage({ searchParams }: PageProps) {
       <div className="mb-5 rounded-md border border-teal-200 bg-teal-50 px-4 py-3 text-sm leading-6 text-teal-800">
         <LocalizedText
           k="practice.betaHint"
-          fallback="Free during beta. Sign in to start practice and save your progress."
+          fallback="Sign in to start practice for free and save your progress."
         />
       </div>
 

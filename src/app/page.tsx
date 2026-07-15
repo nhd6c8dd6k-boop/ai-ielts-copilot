@@ -18,7 +18,6 @@ import {
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { useI18n } from "@/components/i18n/language-provider";
 import { MarketingHeader } from "@/components/layout/marketing-header";
-import { BetaRewardModal } from "@/components/marketing/beta-reward-modal";
 import { SupportFooter } from "@/components/layout/support-footer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -82,19 +81,19 @@ type HomeCopy = {
 
 const copy = {
   zh: {
-    beta: "Beta",
+    beta: "Free",
     brand: "AI IELTS Copilot",
-    badge: "面向中国雅思学生",
-    title: "电脑雅思练习，从这里开始",
+    badge: "IELTS 机考练习平台",
+    title: "免费开始 IELTS 练习",
     subtitle:
-      "第一次准备雅思机考，不知道考试页面长什么样？AI IELTS Copilot 帮你提前熟悉 Reading、Listening 和 Writing 的练习流程。Beta 阶段免费使用，欢迎第一批同学体验。",
+      "AI IELTS Copilot 帮你用电脑端页面练习 Reading、Listening 和 Writing，熟悉机考流程，并获得 Writing AI 评分与反馈。",
     availability: [
       "Reading / Listening 自动判分",
       "Writing AI 评分与反馈",
-      "Beta 免费测试中",
+      "Free / Pro 会员支持",
     ],
     betaNotice:
-      "当前是 Beta 测试版，欢迎反馈问题和建议。",
+      "AI feedback 仅供学习参考，不代表官方 IELTS 成绩。",
     primary: "开始练习",
     secondary: "查看练习项目",
     languageLabel: "首页语言",
@@ -152,11 +151,11 @@ const copy = {
       ["完成练习", "在接近机考的页面中完成题目或写作任务。"],
       ["查看结果", "查看分数、答案解析，以及 Writing AI 反馈。"],
     ],
-    betaFreeTitle: "Beta 免费测试中",
+    betaFreeTitle: "免费开始，Pro 可联系开通",
     betaFreeText:
-      "AI IELTS Copilot 目前还在 Beta 测试阶段。你可以免费体验 Reading、Listening 和 Writing 练习功能。如果遇到问题、页面不好用，或者有建议，欢迎通过邮箱或小红书反馈。",
+      "你可以先使用免费账户开始练习 Reading、Listening 和 Writing。需要开通 Pro 会员时，请通过邮箱或小红书联系，我们会根据注册邮箱人工开通。",
     betaRewardText:
-      "Beta 测试福利：前 10 名注册并完成一次练习的用户，正式付费版上线后可获得 1 个月 Pro 体验。",
+      "前 10 名注册并完成一次练习的用户可获得 1 个月 Pro 体验。符合条件的用户将由管理员人工开通。",
     emailLabel: "邮箱",
     xiaohongshuLabel: "小红书",
     pillars: [
@@ -198,19 +197,19 @@ const copy = {
     complianceItems: ["原创练习内容", "管理员审核发布", "不提供盗版真题"],
   },
   en: {
-    beta: "Beta",
+    beta: "Free",
     brand: "AI IELTS Copilot",
-    badge: "Built for Chinese IELTS candidates",
-    title: "Computer IELTS practice starts here",
+    badge: "IELTS practice platform",
+    title: "Start IELTS practice for free",
     subtitle:
-      "New to the computer test and not sure what the practice flow looks like? AI IELTS Copilot helps you practise Reading, Listening, and Writing with original English tasks. Free during beta for early testers.",
+      "AI IELTS Copilot helps you practise Reading, Listening, and Writing in a computer-based IELTS-style workspace, with AI-powered Writing scores and feedback.",
     availability: [
       "Reading / Listening auto scoring",
       "Writing AI scoring and feedback",
-      "Free beta testing",
+      "Free and Pro membership",
     ],
     betaNotice:
-      "This is a beta version. Your feedback helps us improve the practice experience.",
+      "AI feedback is for study support and is not an official IELTS score.",
     primary: "Start Practicing",
     secondary: "View Practice Options",
     languageLabel: "Homepage language",
@@ -277,11 +276,11 @@ const copy = {
         "Check your score, answers, explanations, and AI writing feedback where available.",
       ],
     ],
-    betaFreeTitle: "Free beta testing",
+    betaFreeTitle: "Start free, upgrade to Pro when ready",
     betaFreeText:
-      "AI IELTS Copilot is currently in beta. You can try Reading, Listening, and Writing practice for free. If something feels unclear or inconvenient, please send feedback by email or Xiaohongshu.",
+      "You can start with a free account and practise Reading, Listening, and Writing. If you want Pro membership, contact us by email or Xiaohongshu and we will activate it manually using your registered email.",
     betaRewardText:
-      "Beta tester reward: The first 10 users who sign up and complete one practice session will receive 1 month of Pro access when paid plans launch.",
+      "The first 10 users who register and complete a practice will receive one month of Pro access. Eligible users will be activated manually.",
     emailLabel: "Email",
     xiaohongshuLabel: "Xiaohongshu",
     pillars: [
@@ -336,7 +335,6 @@ export default function Home() {
   return (
     <div className="min-h-screen overflow-x-hidden bg-background">
       <MarketingHeader />
-      <BetaRewardModal />
       <main>
         <section className="relative overflow-hidden border-b border-slate-200 bg-[#f8faf8]">
           <div className="absolute inset-0 bg-[linear-gradient(to_right,#e5e7eb_1px,transparent_1px),linear-gradient(to_bottom,#e5e7eb_1px,transparent_1px)] bg-[size:72px_72px] opacity-40" />

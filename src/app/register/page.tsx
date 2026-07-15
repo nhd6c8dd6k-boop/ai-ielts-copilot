@@ -54,7 +54,7 @@ export default async function RegisterPage({
               <div className="rounded-md border border-teal-200 bg-teal-50 px-3 py-2 text-sm text-teal-800">
                 <LocalizedText
                   k="auth.practiceRedirectHint"
-                  fallback="Free during beta. You will return to the selected practice after signing in."
+                  fallback="Sign in to start free practice. You will return to the selected practice after signing in."
                 />
               </div>
             ) : null}

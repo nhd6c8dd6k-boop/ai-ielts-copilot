@@ -93,18 +93,18 @@ export function BetaRewardModal() {
         </div>
 
         <h2 className="mt-5 pr-8 text-2xl font-semibold tracking-tight text-slate-950">
-          {t("betaRewardModal.title", "Beta tester reward 🎁")}
+          {t("betaRewardModal.title", "Early user reward 🎁")}
         </h2>
         <p className="mt-3 text-sm leading-6 text-slate-700">
           {t(
             "betaRewardModal.body",
-            "The first 10 users who sign up and complete one practice session will receive 1 month of Pro access when paid plans launch.",
+            "The first 10 users who register and complete a practice will receive one month of Pro access. Eligible users will be activated manually.",
           )}
         </p>
         <p className="mt-3 text-xs leading-5 text-slate-500">
           {t(
             "betaRewardModal.smallText",
-            "AI IELTS Copilot is free during beta. Your feedback helps us improve the practice experience.",
+            "Start with free IELTS practice. Your feedback helps us improve the practice experience.",
           )}
         </p>
 

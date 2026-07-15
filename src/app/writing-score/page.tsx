@@ -65,7 +65,7 @@ export default function WritingScoreLandingPage() {
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-3">
                 <Badge className="border-slate-950 bg-slate-950 text-white">
-                  Beta 免费
+                  免费练习
                 </Badge>
                 <Badge className="bg-white">
                   面向中国雅思考生
@@ -77,8 +77,7 @@ export default function WritingScoreLandingPage() {
               </h1>
               <p className="mt-6 max-w-3xl text-lg leading-8 text-slate-600">
                 上传前先练一篇 Task 1 或 Task 2。AI IELTS Copilot 会给出预估
-                band、四项评分反馈、语法问题和下一步提分建议。当前 Beta
-                阶段免费开放。
+                band、四项评分反馈、语法问题和下一步提分建议。注册后即可开始练习。
               </p>
 
               <div className="mt-7 grid gap-3 sm:grid-cols-3">
@@ -140,11 +139,11 @@ export default function WritingScoreLandingPage() {
                   />
                   <div className="mt-5 rounded-md border border-teal-200 bg-teal-50 p-4">
                     <p className="text-sm font-semibold text-teal-900">
-                      Beta 早鸟福利
+                      早期用户福利
                     </p>
                     <p className="mt-2 text-sm leading-6 text-teal-800">
-                      前 10 名注册并完成一次练习的用户，正式付费版上线后可获得
-                      1 个月 Pro 体验。
+                      前 10 名注册并完成一次练习的用户可获得 1 个月 Pro
+                      体验。符合条件的用户将由管理员人工开通。
                     </p>
                   </div>
                 </div>
@@ -223,7 +222,7 @@ export default function WritingScoreLandingPage() {
 
             <div className="rounded-lg border border-slate-200 bg-white p-5">
               <p className="text-sm font-semibold text-slate-950">
-                想咨询 Beta 名额或合作推广
+                想咨询 Pro 开通或合作推广
               </p>
               <div className="mt-4 space-y-3 text-sm leading-6 text-slate-700">
                 <a

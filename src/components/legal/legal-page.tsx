@@ -26,10 +26,10 @@ type LegalContent = {
 
 const privacyContent: Record<"en" | "zh", LegalContent> = {
   en: {
-    badge: "Beta legal information",
+    badge: "Legal information",
     title: "Privacy Policy",
     description:
-      "This lightweight Privacy Policy explains how AI IELTS Copilot handles user information during beta testing.",
+      "This lightweight Privacy Policy explains how AI IELTS Copilot handles user information.",
     lastUpdated: "Last updated: July 7, 2026",
     sections: [
       {
@@ -39,7 +39,7 @@ const privacyContent: Record<"en" | "zh", LegalContent> = {
           "Practice activity such as Reading, Listening, and Writing attempts, scores, answers, timing, and dashboard history.",
           "Writing submissions, AI writing feedback, estimated bands, grammar notes, vocabulary suggestions, and related result data.",
           "Basic technical logs used to debug errors, improve reliability, prevent abuse, and understand product issues.",
-          "AI usage information such as token usage, generation type, and estimated cost, so we can monitor beta usage and operating costs.",
+          "AI usage information such as token usage, generation type, and estimated cost, so we can monitor usage and operating costs.",
         ],
       },
       {
@@ -55,7 +55,7 @@ const privacyContent: Record<"en" | "zh", LegalContent> = {
           "To generate and display AI Writing feedback when you submit a Writing practice response.",
           "To save your practice history and help you review scores, answers, explanations, and progress.",
           "To improve product quality, investigate bugs, protect the service from abuse, and manage AI usage costs.",
-          "To verify beta reward eligibility, such as whether a registered user has completed one practice session.",
+          "To verify early user reward eligibility, such as whether a registered user has completed one practice session.",
         ],
       },
       {
@@ -68,7 +68,7 @@ const privacyContent: Record<"en" | "zh", LegalContent> = {
       {
         title: "Third-party services",
         paragraphs: [
-          "AI IELTS Copilot uses third-party services to operate the beta product, including Supabase for authentication, database, and storage; Vercel for hosting; and OpenAI technology for AI feedback and generation features.",
+          "AI IELTS Copilot uses third-party services to operate the product, including Supabase for authentication, database, and storage; Vercel for hosting; and OpenAI technology for AI feedback and generation features.",
         ],
       },
       {
@@ -80,13 +80,13 @@ const privacyContent: Record<"en" | "zh", LegalContent> = {
       {
         title: "Retention and deletion",
         paragraphs: [
-          "We keep account and practice data while your account is active or while it is needed to operate the beta product. You can contact us to request account or data deletion.",
+          "We keep account and practice data while your account is active or while it is needed to operate the product. You can contact us to request account or data deletion.",
         ],
       },
       {
-        title: "Beta product changes",
+        title: "Service changes",
         paragraphs: [
-          "AI IELTS Copilot is currently in beta. Features, data fields, retention practices, and service providers may change as the product improves.",
+          "AI IELTS Copilot may be updated, changed, and expanded over time. Features, data fields, retention practices, and service providers may change as the product improves.",
         ],
       },
       {
@@ -98,10 +98,10 @@ const privacyContent: Record<"en" | "zh", LegalContent> = {
     ],
   },
   zh: {
-    badge: "Beta 法务说明",
+    badge: "法务说明",
     title: "隐私政策",
     description:
-      "这是一份 Beta 阶段的简版隐私政策，用来说明 AI IELTS Copilot 如何处理用户信息。",
+      "这是一份简版隐私政策，用来说明 AI IELTS Copilot 如何处理用户信息。",
     lastUpdated: "最后更新：2026 年 7 月 7 日",
     sections: [
       {
@@ -111,7 +111,7 @@ const privacyContent: Record<"en" | "zh", LegalContent> = {
           "练习记录，例如 Reading、Listening、Writing 的练习次数、分数、答案、用时和 Dashboard 历史记录。",
           "Writing 提交内容、AI 写作反馈、预估 Band、语法建议、词汇建议和相关结果数据。",
           "基础技术日志，用于排查错误、提升稳定性、防止滥用和理解产品问题。",
-          "AI 使用信息，例如 token 使用量、调用类型和预估成本，用于管理 Beta 阶段的使用量和运营成本。",
+          "AI 使用信息，例如 token 使用量、调用类型和预估成本，用于管理使用量和运营成本。",
         ],
       },
       {
@@ -127,7 +127,7 @@ const privacyContent: Record<"en" | "zh", LegalContent> = {
           "当你提交 Writing 练习时，生成并展示 AI 写作反馈。",
           "保存练习历史，帮助你查看分数、答案、解析和学习进度。",
           "改进产品质量、排查 bug、保护服务不被滥用，并管理 AI 使用成本。",
-          "核实 Beta 测试福利资格，例如注册用户是否完成过一次练习。",
+          "核实早期用户福利资格，例如注册用户是否完成过一次练习。",
         ],
       },
       {
@@ -140,7 +140,7 @@ const privacyContent: Record<"en" | "zh", LegalContent> = {
       {
         title: "第三方服务",
         paragraphs: [
-          "AI IELTS Copilot 会使用第三方服务来运行 Beta 产品，包括用于登录、数据库和存储的 Supabase，用于部署托管的 Vercel，以及用于 AI feedback 和生成能力的 OpenAI 技术。",
+          "AI IELTS Copilot 会使用第三方服务来运行产品，包括用于登录、数据库和存储的 Supabase，用于部署托管的 Vercel，以及用于 AI feedback 和生成能力的 OpenAI 技术。",
         ],
       },
       {
@@ -156,9 +156,9 @@ const privacyContent: Record<"en" | "zh", LegalContent> = {
         ],
       },
       {
-        title: "Beta 产品变更",
+        title: "服务变更",
         paragraphs: [
-          "AI IELTS Copilot 目前处于 Beta 阶段。随着产品改进，功能、数据字段、数据保留方式和服务提供方可能会调整。",
+          "AI IELTS Copilot 可能会随着时间更新、调整和扩展。随着产品改进，功能、数据字段、数据保留方式和服务提供方可能会调整。",
         ],
       },
       {
@@ -173,16 +173,16 @@ const privacyContent: Record<"en" | "zh", LegalContent> = {
 
 const termsContent: Record<"en" | "zh", LegalContent> = {
   en: {
-    badge: "Beta legal information",
+    badge: "Legal information",
     title: "Terms of Use",
     description:
-      "These lightweight Terms explain the basic rules for using AI IELTS Copilot during beta testing.",
+      "These lightweight Terms explain the basic rules for using AI IELTS Copilot.",
     lastUpdated: "Last updated: July 7, 2026",
     sections: [
       {
-        title: "Beta service",
+        title: "Service changes",
         paragraphs: [
-          "AI IELTS Copilot is currently a beta product. Features may change, be interrupted, contain errors, or be removed as we improve the service.",
+          "AI IELTS Copilot may be updated, changed, expanded, interrupted, or contain errors as we improve the service.",
         ],
       },
       {
@@ -194,7 +194,7 @@ const termsContent: Record<"en" | "zh", LegalContent> = {
       {
         title: "Practice content",
         paragraphs: [
-          "The practice content on AI IELTS Copilot is original IELTS-style material created for study and beta testing. We do not provide official IELTS questions, Cambridge materials, exam recalls, or leaked exam content.",
+          "The practice content on AI IELTS Copilot is original IELTS-style material created for study. We do not provide official IELTS questions, Cambridge materials, exam recalls, or leaked exam content.",
         ],
       },
       {
@@ -215,9 +215,9 @@ const termsContent: Record<"en" | "zh", LegalContent> = {
         ],
       },
       {
-        title: "Beta tester reward",
+        title: "Early user reward",
         paragraphs: [
-          "The first 10 registered users who complete one practice session may receive 1 month of Pro access when paid plans launch. This is a promotional beta reward, may require manual verification, and does not mean paid Pro access is available now.",
+          "The first 10 registered users who complete one practice session may receive one month of Pro access. Eligible users are verified and activated manually.",
         ],
       },
       {
@@ -237,16 +237,16 @@ const termsContent: Record<"en" | "zh", LegalContent> = {
     ],
   },
   zh: {
-    badge: "Beta 法务说明",
+    badge: "法务说明",
     title: "使用条款",
     description:
-      "这是一份 Beta 阶段的简版使用条款，用来说明使用 AI IELTS Copilot 的基本规则。",
+      "这是一份简版使用条款，用来说明使用 AI IELTS Copilot 的基本规则。",
     lastUpdated: "最后更新：2026 年 7 月 7 日",
     sections: [
       {
-        title: "Beta 服务",
+        title: "服务变更",
         paragraphs: [
-          "AI IELTS Copilot 目前是 Beta 产品。随着我们继续改进，功能可能会调整、中断、出现错误或被移除。",
+          "AI IELTS Copilot 可能会随着服务改进而更新、调整、扩展、中断或出现错误。",
         ],
       },
       {
@@ -258,7 +258,7 @@ const termsContent: Record<"en" | "zh", LegalContent> = {
       {
         title: "练习内容",
         paragraphs: [
-          "AI IELTS Copilot 上的练习内容是用于学习和 Beta 测试的原创 IELTS-style 材料。我们不提供官方 IELTS 题目、Cambridge 材料、考试回忆或泄露考试内容。",
+          "AI IELTS Copilot 上的练习内容是用于学习的原创 IELTS-style 材料。我们不提供官方 IELTS 题目、Cambridge 材料、考试回忆或泄露考试内容。",
         ],
       },
       {
@@ -279,9 +279,9 @@ const termsContent: Record<"en" | "zh", LegalContent> = {
         ],
       },
       {
-        title: "Beta 测试福利",
+        title: "早期用户福利",
         paragraphs: [
-          "前 10 名注册并完成一次练习的用户，在正式付费版上线后可获得 1 个月 Pro 体验。这是 Beta 阶段的推广福利，可能需要人工核实，也不代表当前已经开放付费 Pro。",
+          "前 10 名注册并完成一次练习的用户可获得 1 个月 Pro 体验。符合条件的用户将由管理员人工核实并开通。",
         ],
       },
       {
@@ -366,7 +366,7 @@ export function LegalPage({ kind }: { kind: LegalPageKind }) {
             href="/support"
             className="font-semibold text-teal-900 underline-offset-4 hover:underline"
           >
-            {t("footer.support", "Support & Beta Feedback")}
+            {t("footer.support", "Support")}
           </Link>
         </div>
       </main>

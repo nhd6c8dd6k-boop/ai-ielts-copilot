@@ -35,7 +35,7 @@ export function SupportFooter() {
             <p className="max-w-md text-slate-500 md:text-right">
               {t(
                 "footer.beta",
-                "This is a beta version. Your feedback helps us improve the practice experience.",
+                "Original IELTS-style practice. AI feedback is for study support and is not an official IELTS score.",
               )}
             </p>
             <Link
@@ -43,7 +43,7 @@ export function SupportFooter() {
               className="inline-flex items-center gap-2 font-medium text-slate-700 underline-offset-4 hover:text-slate-950 hover:underline"
             >
               <Mail className="h-4 w-4" aria-hidden="true" />
-              {t("footer.support", "Support & Beta Feedback")}
+              {t("footer.support", "Support")}
             </Link>
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
               <Link

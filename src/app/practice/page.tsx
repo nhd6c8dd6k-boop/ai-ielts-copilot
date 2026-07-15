@@ -71,7 +71,7 @@ export default async function PracticePage() {
       title: "Full Exam",
       titleKey: "practice.fullExam.title",
       description:
-        "A longer Computer IELTS-style exam workspace for combining sections. Beta preview is available while full scoring is being refined.",
+        "A longer Computer IELTS-style exam workspace for combining sections.",
       descriptionKey: "practice.fullExam.description",
       count: null,
       countLabelKey: "practice.setsAvailable",
@@ -80,7 +80,7 @@ export default async function PracticePage() {
       cta: "Open Full Exam",
       ctaKey: "practice.fullExam.cta",
       icon: Timer,
-      badge: "Beta preview",
+      badge: "Preview",
       badgeKey: "practice.betaPreview",
     },
   ];
@@ -90,7 +90,7 @@ export default async function PracticePage() {
       <PageHeader
         eyebrow="Practice"
         eyebrowKey="practice.eyebrow"
-        title="Choose a beta practice mode"
+        title="Choose a practice mode"
         titleKey="practice.title"
         description="Choose Reading, Listening, or Writing practice and build familiarity with the computer-based IELTS workflow."
         descriptionKey="practice.description"
@@ -99,7 +99,7 @@ export default async function PracticePage() {
       <div className="mb-5 rounded-md border border-teal-200 bg-teal-50 px-4 py-3 text-sm leading-6 text-teal-800">
         <LocalizedText
           k="practice.betaHint"
-          fallback="Free during beta. Sign in to start practice and save your progress."
+          fallback="Sign in to start practice for free and save your progress."
         />
       </div>
 

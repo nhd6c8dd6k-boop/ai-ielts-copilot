@@ -25,7 +25,7 @@ export function SignInToPractice({ returnTo }: SignInToPracticeProps) {
               <LockKeyhole className="h-6 w-6" aria-hidden="true" />
             </div>
             <Badge className="mt-5 bg-teal-50 text-teal-800">
-              <LocalizedText k="pricing.free" fallback="Free during beta" />
+              <LocalizedText k="pricing.free" fallback="Free" />
             </Badge>
             <h1 className="mt-5 text-2xl font-semibold tracking-tight text-slate-950">
               <LocalizedText
@@ -36,7 +36,7 @@ export function SignInToPractice({ returnTo }: SignInToPracticeProps) {
             <p className="mt-4 text-sm leading-6 text-slate-600">
               <LocalizedText
                 k="auth.signInPracticeDescription"
-                fallback="Free during beta. Sign in to save your practice record, view results, and use Writing AI feedback."
+                fallback="Sign in to save your practice record, view results, and use Writing AI feedback."
               />
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:justify-center">

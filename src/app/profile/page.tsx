@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { CalendarDays, CheckCircle2, Crown, Save, Target } from "lucide-react";
 
@@ -205,7 +206,7 @@ export default function ProfilePage() {
         title={t("profile.title", "Profile")}
         description={t(
           "profile.description",
-          "Manage your target band, exam date, region, and beta access. When signed in, your profile syncs to your account.",
+          "Manage your target band, exam date, region, and membership. When signed in, your profile syncs to your account.",
         )}
       />
 
@@ -308,6 +309,13 @@ export default function ProfilePage() {
                   <p className="mt-2 text-sm text-slate-500">
                     {subscriptionSummary.detail}
                   </p>
+                  {!subscriptionSummary.isPro ? (
+                    <Button asChild variant="outline" size="sm" className="mt-4">
+                      <Link href="/pricing">
+                        {t("profile.viewPro", "View Pro")}
+                      </Link>
+                    </Button>
+                  ) : null}
                 </div>
               </div>
               <div className="sm:col-span-2">
@@ -431,8 +439,8 @@ function getSubscriptionSummary(
           )
         : t("profile.active", "Active"),
       detail: t(
-        "profile.subscriptionDetailPro",
-        "Your Pro access is active. Practice features remain available during beta.",
+          "profile.subscriptionDetailPro",
+        "Your Pro access is active.",
       ),
     };
   }
@@ -444,7 +452,7 @@ function getSubscriptionSummary(
       statusLabel: t("profile.expired", "Expired"),
       detail: t(
         "profile.subscriptionDetailExpired",
-        "Your Pro access has expired. You can keep using free beta access.",
+        "Your Pro access has expired. You can keep using the free plan.",
       ),
     };
   }
@@ -455,7 +463,7 @@ function getSubscriptionSummary(
     statusLabel: null,
     detail: t(
       "profile.subscriptionDetail",
-      "Beta access is free. Paid plans may be added after beta testing.",
+      "You are using the free plan. You can upgrade to Pro manually from the pricing page.",
     ),
   };
 }
