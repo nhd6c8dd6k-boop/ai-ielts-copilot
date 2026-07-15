@@ -6,16 +6,19 @@ import { CheckCircle2, Clock3, Loader2, PenLine, Save } from "lucide-react";
 
 import { useI18n } from "@/components/i18n/language-provider";
 import { AppShell } from "@/components/layout/app-shell";
+import { UsageStatus } from "@/components/practice/usage-status";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { WritingTaskVisual } from "@/components/writing/writing-task-visual";
 import { countWords } from "@/lib/word-count";
+import type { WritingFeedbackUsageDecision } from "@/server/services/usage-limits";
 import type { PublishedWritingTask } from "@/server/services/writing-practice";
 
 type WritingPracticeClientProps = {
   task: PublishedWritingTask;
   isAiFeedbackAvailable: boolean;
+  usageDecision: WritingFeedbackUsageDecision;
 };
 
 type SubmitResponse =
@@ -25,11 +28,13 @@ type SubmitResponse =
     }
   | {
       error?: string;
+      message?: string;
     };
 
 export function WritingPracticeClient({
   task,
   isAiFeedbackAvailable,
+  usageDecision,
 }: WritingPracticeClientProps) {
   const { language, t } = useI18n();
   const router = useRouter();
@@ -65,8 +70,26 @@ export function WritingPracticeClient({
 
   const wordCount = useMemo(() => countWords(essay), [essay]);
   const isBelowMinimum = wordCount > 0 && wordCount < task.minimumWords;
+  const isUsageLimited = !usageDecision.allowed;
+  const isSubmitDisabled =
+    isSubmitting || !isAiFeedbackAvailable || isUsageLimited;
 
   const submitEssay = async () => {
+    if (isUsageLimited) {
+      setError(
+        usageDecision.isPro
+          ? t(
+              "usage.writingProLimitDescription",
+              "Your allowance resets daily.",
+            )
+          : t(
+              "usage.writingLimitDescription",
+              "Upgrade to Pro for up to 10 AI Writing feedbacks per day.",
+            ),
+      );
+      return;
+    }
+
     if (!isAiFeedbackAvailable) {
       setError(null);
       setNotice(
@@ -103,8 +126,10 @@ export function WritingPracticeClient({
 
       if (!response.ok || !("attemptId" in payload)) {
         throw new Error(
-          "error" in payload && payload.error
-            ? payload.error
+          "message" in payload && payload.message
+            ? payload.message
+            : "error" in payload && payload.error
+              ? payload.error
             : "Writing feedback failed.",
         );
       }
@@ -154,7 +179,7 @@ export function WritingPracticeClient({
           <Button
             type="button"
             onClick={submitEssay}
-            disabled={isSubmitting || !isAiFeedbackAvailable}
+            disabled={isSubmitDisabled}
           >
             {isSubmitting ? (
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
@@ -165,6 +190,16 @@ export function WritingPracticeClient({
           </Button>
         </div>
       </div>
+
+      <UsageStatus
+        resource="writing"
+        isSignedIn
+        usedToday={usageDecision.usedToday}
+        limitToday={usageDecision.limitToday}
+        unlimited={usageDecision.unlimited}
+        detail="practice"
+        locked={isUsageLimited}
+      />
 
       {error ? (
         <div className="mb-4 rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
@@ -255,7 +290,7 @@ export function WritingPracticeClient({
               <Button
                 type="button"
                 onClick={submitEssay}
-                disabled={isSubmitting || !isAiFeedbackAvailable}
+                disabled={isSubmitDisabled}
               >
                 {isSubmitting ? (
                   <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />

@@ -5,12 +5,14 @@ import { LocalizedText } from "@/components/i18n/localized-text";
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/layout/page-header";
 import { PracticeCategoryTabs } from "@/components/practice/practice-category-tabs";
+import { UsageStatus } from "@/components/practice/usage-status";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { buildLoginRedirectHref } from "@/lib/auth/redirect";
 import { getCurrentUserId } from "@/server/services/auth-session";
 import { getPublishedWritingTaskSummaries } from "@/server/services/writing-practice";
+import { getUserPracticeUsage } from "@/server/services/usage-limits";
 
 export const dynamic = "force-dynamic";
 
@@ -34,7 +36,10 @@ export default async function WritingPracticePage({ searchParams }: PageProps) {
     getCategoryParam(await searchParams),
   );
   const userId = await getCurrentUserId();
-  const tasks = await getPublishedWritingTaskSummaries(userId);
+  const [tasks, usage] = await Promise.all([
+    getPublishedWritingTaskSummaries(userId),
+    userId ? getUserPracticeUsage(userId) : Promise.resolve(null),
+  ]);
   const visibleTasks = tasks.filter((task) =>
     matchesWritingCategory(task, activeCategory),
   );
@@ -51,12 +56,13 @@ export default async function WritingPracticePage({ searchParams }: PageProps) {
         descriptionKey="writing.description"
       />
 
-      <div className="mb-5 rounded-md border border-teal-200 bg-teal-50 px-4 py-3 text-sm leading-6 text-teal-800">
-        <LocalizedText
-          k="practice.betaHint"
-          fallback="Sign in to start practice for free and save your progress."
-        />
-      </div>
+      <UsageStatus
+        resource="writing"
+        isSignedIn={isSignedIn}
+        usedToday={usage?.writing.usedToday}
+        limitToday={usage?.writing.limitToday}
+        unlimited={usage?.writing.unlimited}
+      />
 
       <PracticeCategoryTabs
         activeCategory={activeCategory}

@@ -4,6 +4,7 @@ import { z } from "zod";
 import { isSupabaseConfigured } from "@/lib/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isProSubscription } from "@/server/services/memberships";
+import { getUserPracticeUsage } from "@/server/services/usage-limits";
 import { apiErrorResponse } from "@/server/utils/api-error";
 
 const profileInputSchema = z.object({
@@ -28,7 +29,7 @@ export async function GET() {
     return NextResponse.json({ mode: "anonymous", profile: null });
   }
 
-  const [profileResult, subscriptionResult] = await Promise.all([
+  const [profileResult, subscriptionResult, usage] = await Promise.all([
     supabase
       .from("profiles")
       .select("display_name,target_band,exam_date,country,timezone")
@@ -39,6 +40,7 @@ export async function GET() {
       .select("plan,status,started_at,expires_at,current_period_end")
       .eq("user_id", user.id)
       .maybeSingle(),
+    getUserPracticeUsage(user.id),
   ]);
 
   if (profileResult.error) {
@@ -64,6 +66,7 @@ export async function GET() {
           is_pro: isProSubscription(subscription),
         }
       : null,
+    usage,
   });
 }
 

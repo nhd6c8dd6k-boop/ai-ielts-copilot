@@ -7,18 +7,22 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 const freeFeatures = [
-  ["pricing.feature.reading", "Reading practice with automatic scoring"],
-  ["pricing.feature.listening", "Listening audio practice with automatic scoring"],
-  ["pricing.feature.writing", "Writing Task 1 / Task 2 with AI feedback"],
+  ["pricing.feature.reading", "Complete any 5 different Reading practice sets"],
+  ["pricing.feature.listening", "Complete any 5 different Listening practice sets"],
+  ["pricing.feature.writing", "1 AI Writing feedback per day"],
+  ["pricing.feature.repeat", "Repeat completed sets without using another slot"],
   ["pricing.feature.dashboard", "Basic practice history"],
-  ["pricing.feature.account", "Free account access"],
 ];
 
 const proFeatures = [
-  ["pricing.pro.feature.membership", "Pro membership access"],
+  ["pricing.pro.feature.membership", "Unlimited Reading practice"],
   [
     "pricing.pro.feature.support",
-    "Support the project and receive Pro membership",
+    "Unlimited Listening practice",
+  ],
+  [
+    "pricing.pro.feature.writing",
+    "Up to 10 AI Writing feedbacks per day",
   ],
   [
     "pricing.pro.feature.future",

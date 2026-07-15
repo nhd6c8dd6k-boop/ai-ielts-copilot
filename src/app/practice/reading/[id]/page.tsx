@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
 
 import { SignInToPractice } from "@/components/practice/sign-in-to-practice";
-import { isUserSignedIn } from "@/server/services/auth-session";
+import { UsageLimitNotice } from "@/components/practice/usage-limit-notice";
+import { getCurrentUserId } from "@/server/services/auth-session";
 import { getPublishedReadingPracticeSet } from "@/server/services/reading-practice";
+import { canStartReadingSet } from "@/server/services/usage-limits";
 import { ReadingPracticeClient } from "./reading-practice-client";
 
 type ReadingPracticeDetailPageProps = {
@@ -21,9 +23,22 @@ export default async function ReadingPracticeDetailPage({
     notFound();
   }
 
-  if (!(await isUserSignedIn())) {
+  const userId = await getCurrentUserId();
+
+  if (!userId) {
     return <SignInToPractice returnTo={`/practice/reading/${id}`} />;
   }
 
-  return <ReadingPracticeClient readingSet={readingSet} />;
+  const usageDecision = await canStartReadingSet(userId, id);
+
+  if (!usageDecision.allowed) {
+    return <UsageLimitNotice resource="reading" />;
+  }
+
+  return (
+    <ReadingPracticeClient
+      readingSet={readingSet}
+      usageDecision={usageDecision}
+    />
+  );
 }

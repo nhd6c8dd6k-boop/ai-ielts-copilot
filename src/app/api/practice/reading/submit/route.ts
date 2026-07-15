@@ -9,6 +9,10 @@ import {
   isPracticeAnswerCorrect,
   normalizePracticeAnswer,
 } from "@/server/services/reading-practice";
+import {
+  buildUsageLimitResponse,
+  canSubmitReadingSet,
+} from "@/server/services/usage-limits";
 import { apiErrorResponse } from "@/server/utils/api-error";
 
 const submitReadingPracticeSchema = z.object({
@@ -66,6 +70,14 @@ export async function POST(request: Request) {
       { error: "Reading set not found or not published." },
       { status: 404 },
     );
+  }
+
+  const usageDecision = await canSubmitReadingSet(user.id, readingSet.id);
+
+  if (!usageDecision.allowed) {
+    return NextResponse.json(buildUsageLimitResponse(usageDecision), {
+      status: 403,
+    });
   }
 
   const { data: questions, error: questionError } = await admin

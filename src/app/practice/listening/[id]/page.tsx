@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
 
 import { SignInToPractice } from "@/components/practice/sign-in-to-practice";
-import { isUserSignedIn } from "@/server/services/auth-session";
+import { UsageLimitNotice } from "@/components/practice/usage-limit-notice";
+import { getCurrentUserId } from "@/server/services/auth-session";
 import { getPublishedListeningPracticeSet } from "@/server/services/listening-practice";
+import { canStartListeningSet } from "@/server/services/usage-limits";
 import { ListeningPracticeClient } from "./listening-practice-client";
 
 type ListeningPracticeDetailPageProps = {
@@ -21,9 +23,22 @@ export default async function ListeningPracticeDetailPage({
     notFound();
   }
 
-  if (!(await isUserSignedIn())) {
+  const userId = await getCurrentUserId();
+
+  if (!userId) {
     return <SignInToPractice returnTo={`/practice/listening/${id}`} />;
   }
 
-  return <ListeningPracticeClient listeningSet={listeningSet} />;
+  const usageDecision = await canStartListeningSet(userId, id);
+
+  if (!usageDecision.allowed) {
+    return <UsageLimitNotice resource="listening" />;
+  }
+
+  return (
+    <ListeningPracticeClient
+      listeningSet={listeningSet}
+      usageDecision={usageDecision}
+    />
+  );
 }

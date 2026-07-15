@@ -2,7 +2,8 @@ import { notFound } from "next/navigation";
 
 import { SignInToPractice } from "@/components/practice/sign-in-to-practice";
 import { env } from "@/lib/env";
-import { isUserSignedIn } from "@/server/services/auth-session";
+import { getCurrentUserId } from "@/server/services/auth-session";
+import { canSubmitWritingFeedback } from "@/server/services/usage-limits";
 import { getPublishedWritingTask } from "@/server/services/writing-practice";
 import { WritingPracticeClient } from "./writing-practice-client";
 
@@ -22,14 +23,19 @@ export default async function WritingPracticeDetailPage({
     notFound();
   }
 
-  if (!(await isUserSignedIn())) {
+  const userId = await getCurrentUserId();
+
+  if (!userId) {
     return <SignInToPractice returnTo={`/practice/writing/${id}`} />;
   }
+
+  const usageDecision = await canSubmitWritingFeedback(userId);
 
   return (
     <WritingPracticeClient
       task={task}
       isAiFeedbackAvailable={Boolean(env.openaiApiKey)}
+      usageDecision={usageDecision}
     />
   );
 }

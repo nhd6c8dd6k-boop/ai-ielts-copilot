@@ -57,6 +57,12 @@ export default function SupportPage() {
               fallback="Pro membership is manually activated for now. No Stripe checkout is available yet."
             />
           </p>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            <LocalizedText
+              k="support.proBenefits"
+              fallback="Pro includes unlimited Reading and Listening practice, plus up to 10 AI Writing feedbacks per day."
+            />
+          </p>
           <ol className="mt-5 grid gap-3">
             {upgradeSteps.map(([key, fallback], index) => (
               <li key={key} className="flex gap-3 text-sm leading-6 text-slate-700">

@@ -13,15 +13,18 @@ import {
 
 import { useI18n } from "@/components/i18n/language-provider";
 import { AppShell } from "@/components/layout/app-shell";
+import { UsageStatus } from "@/components/practice/usage-status";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { joinAnswerParts } from "@/lib/listening-answer-parts";
 import { cn } from "@/lib/utils";
 import type { ListeningPracticeSet } from "@/server/services/listening-practice";
+import type { PracticeSetUsageDecision } from "@/server/services/usage-limits";
 
 type ListeningPracticeClientProps = {
   listeningSet: ListeningPracticeSet;
+  usageDecision: PracticeSetUsageDecision;
 };
 
 type SubmitResponse =
@@ -35,10 +38,12 @@ type SubmitResponse =
     }
   | {
       error?: string;
+      message?: string;
     };
 
 export function ListeningPracticeClient({
   listeningSet,
+  usageDecision,
 }: ListeningPracticeClientProps) {
   const { t } = useI18n();
   const router = useRouter();
@@ -137,8 +142,10 @@ export function ListeningPracticeClient({
 
       if (!response.ok || !("attemptId" in payload)) {
         throw new Error(
-          "error" in payload && payload.error
-            ? payload.error
+          "message" in payload && payload.message
+            ? payload.message
+            : "error" in payload && payload.error
+              ? payload.error
             : "Submit failed.",
         );
       }
@@ -186,6 +193,16 @@ export function ListeningPracticeClient({
           </Button>
         </div>
       </div>
+
+      <UsageStatus
+        resource="listening"
+        isSignedIn
+        used={usageDecision.used}
+        limit={usageDecision.limit}
+        unlimited={usageDecision.unlimited}
+        detail="practice"
+        isRepeatSet={usageDecision.isRepeat}
+      />
 
       {error ? (
         <div className="mb-4 rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">

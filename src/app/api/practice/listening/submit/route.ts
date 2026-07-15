@@ -9,6 +9,10 @@ import {
   isListeningAnswerCorrect,
   normalizePracticeAnswer,
 } from "@/server/services/listening-practice";
+import {
+  buildUsageLimitResponse,
+  canSubmitListeningSet,
+} from "@/server/services/usage-limits";
 import { apiErrorResponse } from "@/server/utils/api-error";
 
 const submitListeningPracticeSchema = z.object({
@@ -66,6 +70,14 @@ export async function POST(request: Request) {
       { error: "Listening set not found or not published." },
       { status: 404 },
     );
+  }
+
+  const usageDecision = await canSubmitListeningSet(user.id, listeningSet.id);
+
+  if (!usageDecision.allowed) {
+    return NextResponse.json(buildUsageLimitResponse(usageDecision), {
+      status: 403,
+    });
   }
 
   const { data: questions, error: questionError } = await admin

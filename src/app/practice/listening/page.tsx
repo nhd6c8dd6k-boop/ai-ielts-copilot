@@ -11,12 +11,14 @@ import { LocalizedText } from "@/components/i18n/localized-text";
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/layout/page-header";
 import { PracticeCategoryTabs } from "@/components/practice/practice-category-tabs";
+import { UsageStatus } from "@/components/practice/usage-status";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { buildLoginRedirectHref } from "@/lib/auth/redirect";
 import { getCurrentUserId } from "@/server/services/auth-session";
 import { getPublishedListeningSummaries } from "@/server/services/listening-practice";
+import { getUserPracticeUsage } from "@/server/services/usage-limits";
 
 export const dynamic = "force-dynamic";
 
@@ -55,7 +57,10 @@ export default async function ListeningPracticePage({ searchParams }: PageProps)
     getCategoryParam(await searchParams),
   );
   const userId = await getCurrentUserId();
-  const listeningSets = await getPublishedListeningSummaries(userId);
+  const [listeningSets, usage] = await Promise.all([
+    getPublishedListeningSummaries(userId),
+    userId ? getUserPracticeUsage(userId) : Promise.resolve(null),
+  ]);
   const visibleListeningSets = listeningSets.filter((set) =>
     matchesListeningCategory(set.section, activeCategory),
   );
@@ -72,12 +77,13 @@ export default async function ListeningPracticePage({ searchParams }: PageProps)
         descriptionKey="listening.description"
       />
 
-      <div className="mb-5 rounded-md border border-teal-200 bg-teal-50 px-4 py-3 text-sm leading-6 text-teal-800">
-        <LocalizedText
-          k="practice.betaHint"
-          fallback="Sign in to start practice for free and save your progress."
-        />
-      </div>
+      <UsageStatus
+        resource="listening"
+        isSignedIn={isSignedIn}
+        used={usage?.listening.used}
+        limit={usage?.listening.limit}
+        unlimited={usage?.listening.unlimited}
+      />
 
       <PracticeCategoryTabs
         activeCategory={activeCategory}
@@ -86,8 +92,17 @@ export default async function ListeningPracticePage({ searchParams }: PageProps)
 
       {visibleListeningSets.length ? (
         <div className="grid gap-4 xl:grid-cols-2">
-          {visibleListeningSets.map((set) => (
-            <Card key={set.id}>
+          {visibleListeningSets.map((set) => {
+            const isLocked = Boolean(
+              isSignedIn &&
+                usage &&
+                !usage.listening.unlimited &&
+                usage.listening.used >= (usage.listening.limit ?? 5) &&
+                !set.completion,
+            );
+
+            return (
+            <Card key={set.id} className={isLocked ? "border-amber-200" : undefined}>
               <CardHeader>
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
@@ -150,17 +165,28 @@ export default async function ListeningPracticePage({ searchParams }: PageProps)
                     <LocalizedText k="practice.added" fallback="Added" />{" "}
                     {new Date(set.createdAt).toLocaleDateString()}
                   </p>
-                  <Button asChild className="w-full sm:w-auto">
+                  <Button
+                    asChild
+                    className="w-full sm:w-auto"
+                    variant={isLocked ? "outline" : "default"}
+                  >
                     <Link
                       href={
-                        isSignedIn
-                          ? `/practice/listening/${set.id}`
-                          : buildLoginRedirectHref(
-                              `/practice/listening/${set.id}`,
-                            )
+                        isLocked
+                          ? "/pricing"
+                          : isSignedIn
+                            ? `/practice/listening/${set.id}`
+                            : buildLoginRedirectHref(
+                                `/practice/listening/${set.id}`,
+                              )
                       }
                     >
-                      {set.completion ? (
+                      {isLocked ? (
+                        <LocalizedText
+                          k="usage.proForNewSets"
+                          fallback="Pro for new sets"
+                        />
+                      ) : set.completion ? (
                         <LocalizedText
                           k="practice.practiceAgain"
                           fallback="Practice again"
@@ -176,7 +202,8 @@ export default async function ListeningPracticePage({ searchParams }: PageProps)
                 </div>
               </CardContent>
             </Card>
-          ))}
+            );
+          })}
         </div>
       ) : (
         <Card>

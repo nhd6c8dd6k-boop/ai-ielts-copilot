@@ -5,12 +5,14 @@ import { LocalizedText } from "@/components/i18n/localized-text";
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/layout/page-header";
 import { PracticeCategoryTabs } from "@/components/practice/practice-category-tabs";
+import { UsageStatus } from "@/components/practice/usage-status";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { buildLoginRedirectHref } from "@/lib/auth/redirect";
 import { getCurrentUserId } from "@/server/services/auth-session";
 import { getPublishedReadingSummaries } from "@/server/services/reading-practice";
+import { getUserPracticeUsage } from "@/server/services/usage-limits";
 
 export const dynamic = "force-dynamic";
 
@@ -35,7 +37,10 @@ export default async function ReadingPracticePage({ searchParams }: PageProps) {
     getCategoryParam(await searchParams),
   );
   const userId = await getCurrentUserId();
-  const readingSets = await getPublishedReadingSummaries(userId);
+  const [readingSets, usage] = await Promise.all([
+    getPublishedReadingSummaries(userId),
+    userId ? getUserPracticeUsage(userId) : Promise.resolve(null),
+  ]);
   const visibleReadingSets = readingSets.filter((set) =>
     matchesReadingCategory(set.topic, activeCategory),
   );
@@ -52,12 +57,13 @@ export default async function ReadingPracticePage({ searchParams }: PageProps) {
         descriptionKey="reading.description"
       />
 
-      <div className="mb-5 rounded-md border border-teal-200 bg-teal-50 px-4 py-3 text-sm leading-6 text-teal-800">
-        <LocalizedText
-          k="practice.betaHint"
-          fallback="Sign in to start practice for free and save your progress."
-        />
-      </div>
+      <UsageStatus
+        resource="reading"
+        isSignedIn={isSignedIn}
+        used={usage?.reading.used}
+        limit={usage?.reading.limit}
+        unlimited={usage?.reading.unlimited}
+      />
 
       <PracticeCategoryTabs
         activeCategory={activeCategory}
@@ -66,8 +72,17 @@ export default async function ReadingPracticePage({ searchParams }: PageProps) {
 
       {visibleReadingSets.length ? (
         <div className="grid gap-4 xl:grid-cols-2">
-          {visibleReadingSets.map((set) => (
-            <Card key={set.id}>
+          {visibleReadingSets.map((set) => {
+            const isLocked = Boolean(
+              isSignedIn &&
+                usage &&
+                !usage.reading.unlimited &&
+                usage.reading.used >= (usage.reading.limit ?? 5) &&
+                !set.completion,
+            );
+
+            return (
+            <Card key={set.id} className={isLocked ? "border-amber-200" : undefined}>
               <CardHeader>
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
@@ -118,15 +133,26 @@ export default async function ReadingPracticePage({ searchParams }: PageProps) {
                   />
                 ) : null}
 
-                <Button asChild className="mt-5 w-full sm:w-auto">
+                <Button
+                  asChild
+                  className="mt-5 w-full sm:w-auto"
+                  variant={isLocked ? "outline" : "default"}
+                >
                   <Link
                     href={
-                      isSignedIn
-                        ? `/practice/reading/${set.id}`
-                        : buildLoginRedirectHref(`/practice/reading/${set.id}`)
+                      isLocked
+                        ? "/pricing"
+                        : isSignedIn
+                          ? `/practice/reading/${set.id}`
+                          : buildLoginRedirectHref(`/practice/reading/${set.id}`)
                     }
                   >
-                    {set.completion ? (
+                    {isLocked ? (
+                      <LocalizedText
+                        k="usage.proForNewSets"
+                        fallback="Pro for new sets"
+                      />
+                    ) : set.completion ? (
                       <LocalizedText
                         k="practice.practiceAgain"
                         fallback="Practice again"
@@ -141,7 +167,8 @@ export default async function ReadingPracticePage({ searchParams }: PageProps) {
                 </Button>
               </CardContent>
             </Card>
-          ))}
+            );
+          })}
         </div>
       ) : (
         <Card>

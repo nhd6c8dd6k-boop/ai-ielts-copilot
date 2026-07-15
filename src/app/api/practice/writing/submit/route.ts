@@ -7,8 +7,11 @@ import {
   submitWritingPracticeSchema,
 } from "@/server/services/writing-practice";
 import {
-  checkAiUsageLimit,
+  buildUsageLimitResponse,
+  canSubmitWritingFeedback,
   recordAiUsage,
+  runWithWritingUsageGate,
+  type WritingFeedbackUsageDecision,
 } from "@/server/services/usage-limits";
 import { apiErrorResponse } from "@/server/utils/api-error";
 
@@ -39,28 +42,22 @@ export async function POST(request: Request) {
     );
   }
 
-  const usage = await checkAiUsageLimit("writing_grade");
-
-  if (!usage.allowed) {
-    return NextResponse.json(
-      {
-        error: usage.message,
-        limit: usage.limit,
-        used: usage.used,
-        plan: usage.plan,
-      },
-      { status: usage.status },
-    );
-  }
-
   try {
     const input = submitWritingPracticeSchema.parse(await request.json());
-    const result = await submitWritingPractice({
-      userId: user.id,
-      writingTaskId: input.writingTaskId,
-      essay: input.essay,
-      language: input.language,
-      timeSpentSeconds: input.timeSpentSeconds,
+    const result = await runWithWritingUsageGate(user.id, async () => {
+      const usageDecision = await canSubmitWritingFeedback(user.id);
+
+      if (!usageDecision.allowed) {
+        throw new WritingUsageLimitReachedError(usageDecision);
+      }
+
+      return submitWritingPractice({
+        userId: user.id,
+        writingTaskId: input.writingTaskId,
+        essay: input.essay,
+        language: input.language,
+        timeSpentSeconds: input.timeSpentSeconds,
+      });
     });
 
     await recordAiUsage({
@@ -75,6 +72,12 @@ export async function POST(request: Request) {
       overallBand: result.overallBand,
     });
   } catch (error) {
+    if (error instanceof WritingUsageLimitReachedError) {
+      return NextResponse.json(buildUsageLimitResponse(error.decision), {
+        status: 429,
+      });
+    }
+
     await recordAiUsage({
       feature: "writing_grade",
       userId: user.id,
@@ -93,6 +96,16 @@ export async function POST(request: Request) {
       status: 400,
       context: "writing_submit_failed",
     });
+  }
+}
+
+class WritingUsageLimitReachedError extends Error {
+  decision: WritingFeedbackUsageDecision;
+
+  constructor(decision: WritingFeedbackUsageDecision) {
+    super("usage_limit_reached");
+    this.name = "WritingUsageLimitReachedError";
+    this.decision = decision;
   }
 }
 

@@ -36,10 +36,30 @@ type ApiSubscription = {
   is_pro?: boolean;
 };
 
+type ApiUsage = {
+  reading: {
+    used: number;
+    limit: number | null;
+    unlimited: boolean;
+  };
+  listening: {
+    used: number;
+    limit: number | null;
+    unlimited: boolean;
+  };
+  writing: {
+    usedToday: number;
+    limitToday: number | null;
+    unlimited: boolean;
+    resetsAt: string;
+  };
+};
+
 type ProfileApiResponse = {
   mode?: "demo" | "anonymous" | "supabase";
   profile?: ApiProfile | null;
   subscription?: ApiSubscription | null;
+  usage?: ApiUsage | null;
   error?: string;
 };
 
@@ -71,6 +91,7 @@ export default function ProfilePage() {
   const [syncMode, setSyncMode] = useState<ProfileSyncMode>("loading");
   const [isSaving, setIsSaving] = useState(false);
   const [subscription, setSubscription] = useState<ApiSubscription | null>(null);
+  const [usage, setUsage] = useState<ApiUsage | null>(null);
 
   useEffect(() => {
     let isActive = true;
@@ -91,6 +112,7 @@ export default function ProfilePage() {
 
         if (payload.mode === "supabase") {
           setSubscription(payload.subscription ?? null);
+          setUsage(payload.usage ?? null);
           setProfile((currentProfile) => {
             const nextProfile = mergeApiProfile(
               currentProfile,
@@ -380,6 +402,43 @@ export default function ProfilePage() {
 
       <Card className="mt-6">
         <CardHeader>
+          <CardTitle>{t("profile.usage", "Usage")}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 md:grid-cols-3">
+            <ProfileUsageItem
+              label="Reading"
+              value={formatPracticeUsage(
+                usage?.reading.used ?? 0,
+                usage?.reading.limit ?? 5,
+                Boolean(usage?.reading.unlimited),
+                t,
+              )}
+            />
+            <ProfileUsageItem
+              label="Listening"
+              value={formatPracticeUsage(
+                usage?.listening.used ?? 0,
+                usage?.listening.limit ?? 5,
+                Boolean(usage?.listening.unlimited),
+                t,
+              )}
+            />
+            <ProfileUsageItem
+              label="Writing"
+              value={formatWritingUsage(
+                usage?.writing.usedToday ?? 0,
+                usage?.writing.limitToday ?? 1,
+                Boolean(usage?.writing.unlimited),
+                t,
+              )}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="mt-6">
+        <CardHeader>
           <CardTitle>
             {t("profile.practiceProgress", "Practice progress")}
           </CardTitle>
@@ -399,6 +458,51 @@ export default function ProfilePage() {
       </Card>
     </AppShell>
   );
+}
+
+function ProfileUsageItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+      <p className="text-sm font-medium text-slate-950">{label}</p>
+      <p className="mt-2 text-sm text-slate-600">{value}</p>
+    </div>
+  );
+}
+
+function formatPracticeUsage(
+  used: number,
+  limit: number,
+  unlimited: boolean,
+  t: (key: string, fallback: string) => string,
+) {
+  if (unlimited) {
+    return t("usage.unlimited", "Unlimited");
+  }
+
+  if (used > limit) {
+    return t("usage.practiceOverLimit", "{used} completed · Free limit {limit}")
+      .replace("{used}", String(used))
+      .replace("{limit}", String(limit));
+  }
+
+  return t("usage.profilePractice", "{used} / {limit} different sets")
+    .replace("{used}", String(used))
+    .replace("{limit}", String(limit));
+}
+
+function formatWritingUsage(
+  used: number,
+  limit: number,
+  unlimited: boolean,
+  t: (key: string, fallback: string) => string,
+) {
+  if (unlimited) {
+    return t("usage.unlimited", "Unlimited");
+  }
+
+  return t("usage.profileWriting", "{used} / {limit} today")
+    .replace("{used}", String(used))
+    .replace("{limit}", String(limit));
 }
 
 function getSubscriptionSummary(

@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit -p tsconfig.typecheck.json",
+    "test:usage-limits": "node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-usage-limits.mjs",
     "test:writing-scoring": "node scripts/verify-writing-scoring.mjs",
     "test:memberships": "node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-memberships.mjs"
   },
