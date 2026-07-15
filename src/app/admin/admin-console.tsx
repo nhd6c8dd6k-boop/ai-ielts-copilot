@@ -2889,7 +2889,7 @@ function MembershipsTable({
                       </Badge>
                     </td>
                     <td className="px-4 py-3 text-slate-700">
-                      {row.isExpired ? "expired" : row.status}
+                      {formatMembershipStatus(row.status)}
                     </td>
                     <td className="px-4 py-3 text-slate-700">
                       {formatAdminDate(row.startedAt)}
@@ -3223,6 +3223,21 @@ function formatMembershipPlan(plan: string) {
   };
 
   return labels[plan] ?? plan;
+}
+
+function formatMembershipStatus(status: string) {
+  const labels: Record<string, string> = {
+    active: "Active",
+    trialing: "Trialing",
+    manual: "Manual",
+    expired: "Expired",
+    cancelled: "Cancelled",
+    canceled: "Cancelled",
+    past_due: "Past due",
+    incomplete: "Incomplete",
+  };
+
+  return labels[status] ?? status;
 }
 
 function formatMembershipAction(action: MembershipAction) {

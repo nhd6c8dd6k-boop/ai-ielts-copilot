@@ -1,6 +1,6 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import {
-  isExpiredAt,
+  getEffectiveMembershipStatus,
   isProSubscriptionRule,
   resolveExtendedExpiry,
 } from "@/server/services/membership-rules";
@@ -96,6 +96,7 @@ export async function getMemberships(
       const subscription = subscriptionByUserId.get(user.id);
       const expiresAt =
         subscription?.expires_at ?? subscription?.current_period_end ?? null;
+      const effectiveStatus = getEffectiveMembershipStatus(subscription);
 
       return {
         userId: user.id,
@@ -103,14 +104,14 @@ export async function getMemberships(
         signedUpAt: user.created_at ?? null,
         lastLoginAt: user.last_login_at ?? null,
         plan: parseMembershipPlan(subscription?.plan),
-        status: parseMembershipStatus(subscription?.status),
+        status: parseMembershipStatus(effectiveStatus),
         startedAt: subscription?.started_at ?? null,
         expiresAt,
         updatedAt: subscription?.updated_at ?? null,
         grantedBy: subscription?.granted_by ?? null,
         notes: subscription?.notes ?? null,
         isPro: isProSubscription(subscription),
-        isExpired: isExpiredAt(expiresAt),
+        isExpired: effectiveStatus === "expired",
       };
     })
     .sort((a, b) => {
@@ -272,8 +273,11 @@ export async function revokeManualPro({
       user_id: targetUserId,
       plan: "free",
       status: "cancelled",
-      expires_at: now,
-      current_period_end: now,
+      expires_at: existingSubscription?.expires_at ?? now,
+      current_period_end:
+        existingSubscription?.current_period_end ??
+        existingSubscription?.expires_at ??
+        now,
       cancel_at_period_end: true,
       granted_by: adminUserId,
       notes: normalizeNotes(notes),

@@ -402,7 +402,12 @@ function getSubscriptionSummary(
     : null;
   const hasValidExpiry = Boolean(expiresAt && !Number.isNaN(expiresAt.getTime()));
   const isExpired = Boolean(
-    hasValidExpiry && expiresAt && expiresAt.getTime() <= Date.now(),
+    subscription?.plan !== "free" &&
+      subscription?.status !== "cancelled" &&
+      subscription?.status !== "canceled" &&
+      hasValidExpiry &&
+      expiresAt &&
+      expiresAt.getTime() <= Date.now(),
   );
   const isPro = Boolean(subscription?.is_pro && !isExpired);
 

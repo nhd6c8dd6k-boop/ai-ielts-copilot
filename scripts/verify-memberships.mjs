@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 
 import {
+  getEffectiveMembershipStatus,
   isProSubscriptionRule,
   resolveExtendedExpiry,
 } from "../src/server/services/membership-rules.ts";
@@ -27,6 +28,7 @@ const existingFreeGrant = {
   expires_at: isoPlusDays(now, 30),
 };
 assert.equal(isProSubscriptionRule(existingFreeGrant), true);
+assert.equal(getEffectiveMembershipStatus(existingFreeGrant, now), "active");
 
 const activeProExpiry = new Date("2026-08-14T12:00:00.000Z");
 assert.equal(
@@ -56,6 +58,17 @@ assert.equal(
   }),
   false,
 );
+assert.equal(
+  getEffectiveMembershipStatus(
+    {
+      plan: "free",
+      status: "cancelled",
+      expires_at: expiredProExpiry.toISOString(),
+    },
+    now,
+  ),
+  "cancelled",
+);
 
 assert.equal(
   isProSubscriptionRule({
@@ -74,5 +87,33 @@ assert.equal(
   }),
   false,
 );
+assert.equal(
+  getEffectiveMembershipStatus(
+    {
+      plan: "pro",
+      status: "active",
+      expires_at: expiredProExpiry.toISOString(),
+    },
+    now,
+  ),
+  "expired",
+);
+
+const activeProRevoked = {
+  plan: "free",
+  status: "cancelled",
+  expires_at: activeProExpiry.toISOString(),
+};
+assert.equal(isProSubscriptionRule(activeProRevoked), false);
+assert.equal(getEffectiveMembershipStatus(activeProRevoked, now), "cancelled");
+
+const grantAfterRevoke = {
+  ...activeProRevoked,
+  plan: "pro",
+  status: "active",
+  expires_at: isoPlusDays(now, 30),
+};
+assert.equal(isProSubscriptionRule(grantAfterRevoke), true);
+assert.equal(getEffectiveMembershipStatus(grantAfterRevoke, now), "active");
 
 console.log("Membership rule checks passed.");

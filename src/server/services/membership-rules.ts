@@ -7,6 +7,7 @@ export type MembershipLike = {
 
 const proPlans = new Set(["pro", "pro_monthly", "pro_yearly"]);
 const activeStatuses = new Set(["active", "trialing"]);
+const cancelledStatuses = new Set(["cancelled", "canceled"]);
 
 export function isProSubscriptionRule(
   subscription: MembershipLike | null | undefined,
@@ -20,6 +21,25 @@ export function isProSubscriptionRule(
   }
 
   return !isExpiredAt(expiresAt ?? null);
+}
+
+export function getEffectiveMembershipStatus(
+  subscription: MembershipLike | null | undefined,
+  now: Date = new Date(),
+) {
+  const plan = String(subscription?.plan ?? "free");
+  const status = String(subscription?.status ?? "incomplete");
+  const expiresAt = subscription?.expires_at ?? subscription?.current_period_end;
+
+  if (cancelledStatuses.has(status)) {
+    return "cancelled";
+  }
+
+  if (proPlans.has(plan) && (status === "expired" || isExpiredAt(expiresAt ?? null, now))) {
+    return "expired";
+  }
+
+  return status;
 }
 
 export function resolveExtendedExpiry({
@@ -51,7 +71,7 @@ export function parseDate(value: string | null) {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-export function isExpiredAt(value: string | null) {
+export function isExpiredAt(value: string | null, now: Date = new Date()) {
   const date = parseDate(value);
-  return Boolean(date && date.getTime() <= Date.now());
+  return Boolean(date && date.getTime() <= now.getTime());
 }
