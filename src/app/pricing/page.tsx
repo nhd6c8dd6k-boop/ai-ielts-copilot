@@ -3,6 +3,7 @@ import { Check, Crown, ShieldCheck } from "lucide-react";
 
 import { LocalizedText } from "@/components/i18n/localized-text";
 import { MarketingHeader } from "@/components/layout/marketing-header";
+import { ManualPaymentMethods } from "@/components/payments/manual-payment-methods";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -26,7 +27,7 @@ const proFeatures = [
   ],
   [
     "pricing.pro.feature.future",
-    "Priority access to future advanced features",
+    "Priority access to future Pro features",
   ],
   [
     "pricing.pro.feature.manual",
@@ -119,6 +120,26 @@ export default function PricingPage() {
                 fallback="Support the project and receive Pro membership with access to future Pro features. Pro is manually activated after payment confirmation."
               />
             </p>
+            <div className="mt-5 rounded-md border border-teal-200 bg-white px-4 py-4">
+              <p className="text-3xl font-semibold tracking-tight text-slate-950">
+                <LocalizedText
+                  k="pricing.proPriceCad"
+                  fallback="CA$9.99 / month"
+                />
+              </p>
+              <p className="mt-1 text-base font-medium text-teal-800">
+                <LocalizedText
+                  k="pricing.proPriceRmb"
+                  fallback="Approx. ¥52 / month"
+                />
+              </p>
+              <p className="mt-2 text-xs leading-5 text-slate-500">
+                <LocalizedText
+                  k="pricing.exchangeDisclaimer"
+                  fallback="The RMB amount is an estimate. The actual amount may vary with the exchange rate at the time of payment."
+                />
+              </p>
+            </div>
             <ul className="mt-6 space-y-3">
               {proFeatures.map(([key, fallback]) => (
                 <li key={key} className="flex gap-3 text-sm text-slate-600">
@@ -130,6 +151,19 @@ export default function PricingPage() {
                 </li>
               ))}
             </ul>
+            <ManualPaymentMethods compact />
+            <p className="mt-5 text-sm leading-6 text-slate-600">
+              <LocalizedText
+                k="pricing.manualActivationNote"
+                fallback="After payment is confirmed, Pro will be manually activated using your registered email."
+              />
+            </p>
+            <p className="mt-1 text-sm leading-6 text-slate-500">
+              <LocalizedText
+                k="pricing.activationTiming"
+                fallback="Activation is usually completed within a few minutes after payment confirmation."
+              />
+            </p>
             <p className="mt-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
               <LocalizedText
                 k="pricing.betaReward"

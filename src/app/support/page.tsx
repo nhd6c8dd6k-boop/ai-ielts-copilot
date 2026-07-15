@@ -3,6 +3,7 @@ import { Mail, MessageCircle, WalletCards } from "lucide-react";
 import { LocalizedText } from "@/components/i18n/localized-text";
 import { MarketingHeader } from "@/components/layout/marketing-header";
 import { SupportFooter } from "@/components/layout/support-footer";
+import { ManualPaymentMethods } from "@/components/payments/manual-payment-methods";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supportEmail, xiaohongshuAccount } from "@/lib/support";
@@ -10,19 +11,52 @@ import { supportEmail, xiaohongshuAccount } from "@/lib/support";
 const upgradeSteps = [
   [
     "support.upgrade.step.account",
-    "Create an account using the email you want to use for Pro.",
+    "Register or sign in using the email you want to use for Pro.",
   ],
   [
     "support.upgrade.step.pay",
-    "Pay through WeChat Pay, Alipay, or e-Transfer.",
+    "Pay using WeChat Pay, Alipay, or e-Transfer.",
   ],
   [
     "support.upgrade.step.confirm",
-    "Send your payment confirmation and registered email.",
+    "Send us the payment screenshot or confirmation together with your registered email.",
   ],
   [
     "support.upgrade.step.activate",
-    "Pro will be activated manually after confirmation.",
+    "Pro will be manually activated after the payment is verified.",
+  ],
+];
+
+const faqs = [
+  [
+    "support.faq.price.q",
+    "How much is Pro?",
+    "support.faq.price.a",
+    "Pro is CA$9.99 per month, approximately ¥52 per month. The RMB amount is an estimate and may vary with the exchange rate.",
+  ],
+  [
+    "support.faq.methods.q",
+    "Which payment methods are supported?",
+    "support.faq.methods.a",
+    "We currently support WeChat Pay, Alipay, and e-Transfer with manual activation after payment confirmation.",
+  ],
+  [
+    "support.faq.confirm.q",
+    "What should I send after payment?",
+    "support.faq.confirm.a",
+    "Send the payment screenshot or confirmation together with the email used for your AI IELTS Copilot account.",
+  ],
+  [
+    "support.faq.timing.q",
+    "How long does activation take?",
+    "support.faq.timing.a",
+    "Pro is usually activated within a few minutes after payment confirmation, depending on administrator availability.",
+  ],
+  [
+    "support.faq.card.q",
+    "Will credit card payments be supported?",
+    "support.faq.card.a",
+    "Online card payments are planned for the future. For now, WeChat Pay, Alipay, and e-Transfer are handled through manual confirmation.",
   ],
 ];
 
@@ -79,6 +113,13 @@ export default function SupportPage() {
               fallback="The first 10 users who register and complete a practice will receive one month of Pro access. Eligible users will be activated manually."
             />
           </p>
+          <ManualPaymentMethods />
+          <p className="mt-5 text-sm leading-6 text-slate-600">
+            <LocalizedText
+              k="support.afterPaymentReminder"
+              fallback="After payment, send your registered email and payment confirmation."
+            />
+          </p>
         </section>
 
         <div className="mt-10 grid gap-4 md:grid-cols-2">
@@ -129,6 +170,33 @@ export default function SupportPage() {
             </CardContent>
           </Card>
         </div>
+
+        <section className="mt-10">
+          <h2 className="text-2xl font-semibold text-slate-950">
+            <LocalizedText k="support.faqTitle" fallback="FAQ" />
+          </h2>
+          <div className="mt-4 grid gap-4">
+            {faqs.map(
+              ([questionKey, questionFallback, answerKey, answerFallback]) => (
+                <Card key={questionKey}>
+                  <CardHeader>
+                    <CardTitle className="text-base">
+                      <LocalizedText
+                        k={questionKey}
+                        fallback={questionFallback}
+                      />
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm leading-6 text-slate-600">
+                      <LocalizedText k={answerKey} fallback={answerFallback} />
+                    </p>
+                  </CardContent>
+                </Card>
+              ),
+            )}
+          </div>
+        </section>
       </main>
       <SupportFooter />
     </div>

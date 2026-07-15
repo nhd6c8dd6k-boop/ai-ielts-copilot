@@ -414,7 +414,15 @@ export const messages: Record<Language, Record<string, string>> = {
     "pricing.proPlan": "Pro",
     "pricing.proBody":
       "Support the project and receive Pro membership with access to future Pro features. Pro is manually activated after payment confirmation.",
+    "pricing.proPriceCad": "CA$9.99 / month",
+    "pricing.proPriceRmb": "Approx. ¥52 / month",
+    "pricing.exchangeDisclaimer":
+      "The RMB amount is an estimate. The actual amount may vary with the exchange rate at the time of payment.",
     "pricing.contactUpgrade": "Contact to upgrade",
+    "pricing.manualActivationNote":
+      "After payment is confirmed, Pro will be manually activated using your registered email.",
+    "pricing.activationTiming":
+      "Activation is usually completed within a few minutes after payment confirmation.",
     "pricing.feature.reading": "Complete any 5 different Reading practice sets",
     "pricing.feature.listening": "Complete any 5 different Listening practice sets",
     "pricing.feature.writing": "1 AI Writing feedback per day",
@@ -424,7 +432,7 @@ export const messages: Record<Language, Record<string, string>> = {
     "pricing.pro.feature.membership": "Unlimited Reading practice",
     "pricing.pro.feature.support": "Unlimited Listening practice",
     "pricing.pro.feature.writing": "Up to 10 AI Writing feedbacks per day",
-    "pricing.pro.feature.future": "Priority access to future advanced features",
+    "pricing.pro.feature.future": "Priority access to future Pro features",
     "pricing.pro.feature.manual": "Manually activated using your registered email",
     "pricing.planned.moreSets": "More published practice sets",
     "pricing.planned.proPlans": "Pro membership and future advanced features",
@@ -447,12 +455,39 @@ export const messages: Record<Language, Record<string, string>> = {
     "support.proBenefits":
       "Pro includes unlimited Reading and Listening practice, plus up to 10 AI Writing feedbacks per day.",
     "support.upgrade.step.account":
-      "Create an account using the email you want to use for Pro.",
-    "support.upgrade.step.pay": "Pay through WeChat Pay, Alipay, or e-Transfer.",
+      "Register or sign in using the email you want to use for Pro.",
+    "support.upgrade.step.pay": "Pay using WeChat Pay, Alipay, or e-Transfer.",
     "support.upgrade.step.confirm":
-      "Send your payment confirmation and registered email.",
+      "Send us the payment screenshot or confirmation together with your registered email.",
     "support.upgrade.step.activate":
-      "Pro will be activated manually after confirmation.",
+      "Pro will be manually activated after the payment is verified.",
+    "support.afterPaymentReminder":
+      "After payment, send your registered email and payment confirmation.",
+    "support.faqTitle": "FAQ",
+    "support.faq.price.q": "How much is Pro?",
+    "support.faq.price.a":
+      "Pro is CA$9.99 per month, approximately ¥52 per month. The RMB amount is an estimate and may vary with the exchange rate.",
+    "support.faq.methods.q": "Which payment methods are supported?",
+    "support.faq.methods.a":
+      "We currently support WeChat Pay, Alipay, and e-Transfer with manual activation after payment confirmation.",
+    "support.faq.confirm.q": "What should I send after payment?",
+    "support.faq.confirm.a":
+      "Send the payment screenshot or confirmation together with the email used for your AI IELTS Copilot account.",
+    "support.faq.timing.q": "How long does activation take?",
+    "support.faq.timing.a":
+      "Pro is usually activated within a few minutes after payment confirmation, depending on administrator availability.",
+    "support.faq.card.q": "Will credit card payments be supported?",
+    "support.faq.card.a":
+      "Online card payments are planned for the future. For now, WeChat Pay, Alipay, and e-Transfer are handled through manual confirmation.",
+    "payment.methodsTitle": "Supported payment methods",
+    "payment.etransferDescription":
+      "Contact us first to receive the payment details.",
+    "payment.contactDetails": "Contact for payment details",
+    "payment.qrComingSoon": "QR code coming soon",
+    "payment.domainReminder":
+      "Before paying, make sure the page domain is aiieltscopilot.com. Keep your payment confirmation after payment.",
+    "payment.emailNoteReminder":
+      "Include your registered email in the payment note when the payment method supports it.",
   },
   zh: {
     "nav.practice": "练习",
@@ -825,7 +860,14 @@ export const messages: Record<Language, Record<string, string>> = {
     "pricing.freePrice": "免费使用",
     "pricing.proPlan": "Pro",
     "pricing.proBody": "支持项目并获得 Pro 会员身份与未来 Pro 功能。确认付款后会根据注册邮箱人工开通。",
+    "pricing.proPriceCad": "CA$9.99 / 月",
+    "pricing.proPriceRmb": "约 ¥52 / 月",
+    "pricing.exchangeDisclaimer":
+      "人民币金额仅供参考，实际金额以付款时汇率为准。",
     "pricing.contactUpgrade": "联系开通 Pro",
+    "pricing.manualActivationNote":
+      "付款确认后，管理员会使用你的注册邮箱手动开通 Pro。",
+    "pricing.activationTiming": "通常会在确认付款后的几分钟内完成。",
     "pricing.feature.reading": "任意完成 5 套不同 Reading 练习",
     "pricing.feature.listening": "任意完成 5 套不同 Listening 练习",
     "pricing.feature.writing": "每天 1 次 AI Writing feedback",
@@ -835,7 +877,7 @@ export const messages: Record<Language, Record<string, string>> = {
     "pricing.pro.feature.membership": "Reading 无限练习",
     "pricing.pro.feature.support": "Listening 无限练习",
     "pricing.pro.feature.writing": "每天最多 10 次 AI Writing feedback",
-    "pricing.pro.feature.future": "优先体验未来高级功能",
+    "pricing.pro.feature.future": "优先体验后续 Pro 功能",
     "pricing.pro.feature.manual": "使用注册邮箱人工开通",
     "pricing.planned.moreSets": "更多已发布练习内容",
     "pricing.planned.proPlans": "Pro 会员与未来高级功能",
@@ -854,10 +896,35 @@ export const messages: Record<Language, Record<string, string>> = {
     "support.upgradeDescription": "目前 Pro 会员通过人工方式开通，暂时没有 Stripe 在线付款入口。",
     "support.proBenefits":
       "Pro 包含 Reading 和 Listening 无限练习，以及每天最多 10 次 AI Writing feedback。",
-    "support.upgrade.step.account": "使用想开通 Pro 的邮箱注册账户。",
-    "support.upgrade.step.pay": "通过微信、支付宝或 e-Transfer 付款。",
-    "support.upgrade.step.confirm": "发送付款确认信息和注册邮箱。",
-    "support.upgrade.step.activate": "确认后会人工开通 Pro。",
+    "support.upgrade.step.account": "使用你准备开通 Pro 的邮箱注册或登录。",
+    "support.upgrade.step.pay": "通过 WeChat Pay、Alipay 或 e-Transfer 完成付款。",
+    "support.upgrade.step.confirm": "将付款截图或付款确认，以及注册邮箱发送给我们。",
+    "support.upgrade.step.activate": "管理员确认付款后，会人工开通 Pro。",
+    "support.afterPaymentReminder": "付款后请发送注册邮箱和付款截图。",
+    "support.faqTitle": "常见问题",
+    "support.faq.price.q": "Pro 价格是多少？",
+    "support.faq.price.a":
+      "Pro 为 CA$9.99/月，约 ¥52/月。人民币金额仅供参考，实际金额以付款时汇率为准。",
+    "support.faq.methods.q": "支持哪些付款方式？",
+    "support.faq.methods.a":
+      "目前支持 WeChat Pay、Alipay 和 e-Transfer，并由管理员人工确认开通。",
+    "support.faq.confirm.q": "付款后需要提供什么？",
+    "support.faq.confirm.a":
+      "请发送付款截图或付款确认，以及你注册 AI IELTS Copilot 时使用的邮箱。",
+    "support.faq.timing.q": "多久可以开通？",
+    "support.faq.timing.a":
+      "付款确认后通常会在几分钟内人工开通，具体时间取决于管理员是否在线。",
+    "support.faq.card.q": "以后会支持信用卡吗？",
+    "support.faq.card.a":
+      "未来计划增加在线信用卡支付。目前使用人工确认的 WeChat Pay、Alipay 和 e-Transfer 流程。",
+    "payment.methodsTitle": "支持付款方式",
+    "payment.etransferDescription": "请先联系我们获取付款信息。",
+    "payment.contactDetails": "联系获取付款信息",
+    "payment.qrComingSoon": "二维码即将上线",
+    "payment.domainReminder":
+      "付款前请确认页面域名为 aiieltscopilot.com。付款后请保留付款凭证。",
+    "payment.emailNoteReminder":
+      "付款时请在备注中填写注册邮箱，如付款平台支持备注。",
   },
 };
 
