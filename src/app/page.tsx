@@ -511,6 +511,15 @@ export default function Home() {
                     </Link>
                   </Button>
                 </div>
+                <Link
+                  href="/demo/writing-feedback"
+                  className="mt-4 inline-flex text-sm font-medium text-teal-800 underline-offset-4 hover:underline"
+                >
+                  {msg(
+                    "home.hero.sampleLink",
+                    "View full sample feedback",
+                  )}
+                </Link>
               </div>
               <div className="min-w-0">
                 <WritingFeedbackPreview t={msg} />
