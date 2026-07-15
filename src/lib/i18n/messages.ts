@@ -75,6 +75,26 @@ export const messages: Record<Language, Record<string, string>> = {
       "Complete Task 1 or Task 2 and receive AI band feedback, criterion scores, sentence rewrites, and next steps.",
     "home.practice.writingCta": "Try Writing feedback free",
     "home.practice.aiFeedbackBadge": "AI feedback",
+    "home.why.eyebrow": "Why AI IELTS Copilot",
+    "home.why.title": "Feedback you can use in your next essay.",
+    "home.why.description":
+      "From criterion scores and task-specific analysis to sentence rewrites and practical next steps, every part of the report is designed to help with your next essay.",
+    "home.why.card.task.title": "Task-specific feedback",
+    "home.why.card.task.description":
+      "Task 1 focuses on overview, key features, and comparisons. Task 2 focuses on position, idea development, and examples.",
+    "home.why.card.rewrite.title": "Original → Improved → Why",
+    "home.why.card.rewrite.description":
+      "See a clearer version of your sentence and understand why the revision is more accurate and natural.",
+    "home.why.card.score.title": "Scores with clear reasons",
+    "home.why.card.score.description":
+      "Criterion scores, score summary, and detailed feedback work together to show what is holding back your Band.",
+    "home.why.card.language.title": "Feedback in English or Chinese",
+    "home.why.card.language.description":
+      "Choose the language that helps you learn best without receiving two full versions of the same report.",
+    "home.why.note":
+      "You can also practise Reading and Listening in a computer-based IELTS-style interface.",
+    "home.why.primaryCta": "Try Writing feedback free",
+    "home.why.secondaryCta": "View full sample feedback",
     "demo.badge": "Sample report",
     "demo.title": "See a complete IELTS Writing AI feedback example",
     "demo.subtitle":
@@ -621,6 +641,26 @@ export const messages: Record<Language, Record<string, string>> = {
       "完成 Task 1 / Task 2 写作，提交后获得 AI band feedback、四项评分、原句改写和下一步建议。",
     "home.practice.writingCta": "免费试一次 Writing 批改",
     "home.practice.aiFeedbackBadge": "AI feedback",
+    "home.why.eyebrow": "为什么选择 AI IELTS Copilot",
+    "home.why.title": "不只告诉你哪里错，还告诉你下一篇怎么改",
+    "home.why.description":
+      "从四项评分到题型专项反馈，再到原句改写和下一步建议，每一部分都围绕“下一篇如何写得更好”。",
+    "home.why.card.task.title": "Task 1 / Task 2 专项反馈",
+    "home.why.card.task.description":
+      "Task 1 会重点检查 Overview、主要特征和数据比较；Task 2 会重点检查立场、观点展开和例子。",
+    "home.why.card.rewrite.title": "原句 → 修改后 → 为什么这样改",
+    "home.why.card.rewrite.description":
+      "不只标记问题，还展示更自然、更准确的表达，并解释修改原因。",
+    "home.why.card.score.title": "分数有原因，不只是一串数字",
+    "home.why.card.score.description":
+      "四项评分、评分小结和具体问题保持一致，让你知道是什么限制了当前 Band。",
+    "home.why.card.language.title": "中文或英文反馈",
+    "home.why.card.language.description":
+      "根据当前语言提供单语言反馈，不同时堆叠中英两套内容，阅读更清楚。",
+    "home.why.note":
+      "还可以练习 Reading 和 Listening，熟悉电脑化 IELTS 作答流程。",
+    "home.why.primaryCta": "免费试一次 Writing 批改",
+    "home.why.secondaryCta": "查看完整反馈示例",
     "demo.badge": "示例报告",
     "demo.title": "查看一份完整的 IELTS Writing AI 反馈示例",
     "demo.subtitle":

@@ -436,6 +436,40 @@ export default function Home() {
     msg("home.hero.point.criteria", "Criterion scores and score summary"),
     msg("home.hero.point.language", "Feedback in English or Chinese"),
   ];
+  const whyCards = [
+    {
+      title: msg("home.why.card.task.title", "Task-specific feedback"),
+      description: msg(
+        "home.why.card.task.description",
+        "Task 1 focuses on overview, key features, and comparisons. Task 2 focuses on position, idea development, and examples.",
+      ),
+      icon: PenLine,
+    },
+    {
+      title: msg("home.why.card.rewrite.title", "Original → Improved → Why"),
+      description: msg(
+        "home.why.card.rewrite.description",
+        "See a clearer version of your sentence and understand why the revision is more accurate and natural.",
+      ),
+      icon: CheckCircle2,
+    },
+    {
+      title: msg("home.why.card.score.title", "Scores with clear reasons"),
+      description: msg(
+        "home.why.card.score.description",
+        "Criterion scores, score summary, and detailed feedback work together to show what is holding back your Band.",
+      ),
+      icon: LineChart,
+    },
+    {
+      title: msg("home.why.card.language.title", "Feedback in English or Chinese"),
+      description: msg(
+        "home.why.card.language.description",
+        "Choose the language that helps you learn best without receiving two full versions of the same report.",
+      ),
+      icon: ShieldCheck,
+    },
+  ];
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-background">
@@ -571,6 +605,73 @@ export default function Home() {
                   </div>
                 );
               })}
+            </div>
+          </div>
+        </section>
+
+        <section className="border-b border-slate-200 bg-white">
+          <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+            <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr] lg:items-end">
+              <div className="min-w-0">
+                <Badge className="bg-teal-50 text-teal-800">
+                  {msg("home.why.eyebrow", "Why AI IELTS Copilot")}
+                </Badge>
+                <h2 className="mt-5 max-w-3xl text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
+                  {msg(
+                    "home.why.title",
+                    "Feedback you can use in your next essay.",
+                  )}
+                </h2>
+                <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base sm:leading-7">
+                  {msg(
+                    "home.why.description",
+                    "From criterion scores and task-specific analysis to sentence rewrites and practical next steps, every part of the report is designed to help with your next essay.",
+                  )}
+                </p>
+              </div>
+              <div className="min-w-0 rounded-lg border border-slate-200 bg-[#f8faf8] p-4 text-sm leading-6 text-slate-700">
+                {msg(
+                  "home.why.note",
+                  "You can also practise Reading and Listening in a computer-based IELTS-style interface.",
+                )}
+              </div>
+            </div>
+
+            <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              {whyCards.map((card) => {
+                const Icon = card.icon;
+
+                return (
+                  <div
+                    key={card.title}
+                    className="min-w-0 rounded-lg border border-slate-200 bg-white p-5 shadow-sm"
+                  >
+                    <div className="flex h-10 w-10 items-center justify-center rounded-md bg-slate-950 text-white">
+                      <Icon className="h-5 w-5" aria-hidden="true" />
+                    </div>
+                    <h3 className="mt-5 text-base font-semibold leading-6 text-slate-950">
+                      {card.title}
+                    </h3>
+                    <p className="mt-3 text-sm leading-6 text-slate-600">
+                      {card.description}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Button asChild>
+                <Link href="/practice/writing">
+                  {msg("home.why.primaryCta", "Try Writing feedback free")}
+                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link href="/demo/writing-feedback">
+                  {msg("home.why.secondaryCta", "View full sample feedback")}
+                </Link>
+              </Button>
             </div>
           </div>
         </section>
