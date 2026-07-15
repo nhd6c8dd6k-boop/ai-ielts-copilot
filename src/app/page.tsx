@@ -6,7 +6,6 @@ import {
   ArrowRight,
   BookOpen,
   CheckCircle2,
-  Circle,
   Headphones,
   LineChart,
   PenLine,
@@ -100,6 +99,13 @@ const copy = {
     oneLine: "一站式练习 Reading、Listening 和 Writing。",
     practiceCards: [
       {
+        title: "Writing Practice",
+        description:
+          "完成 Task 1 / Task 2 写作，提交后获得 AI band feedback、四项评分、原句改写和下一步建议。",
+        cta: "免费试一次 Writing 批改",
+        href: "/practice/writing",
+      },
+      {
         title: "Reading Practice",
         description:
           "练习原创英文文章和题目，提交后自动判分并查看答案解析。",
@@ -112,13 +118,6 @@ const copy = {
           "播放 IELTS-style 听力音频，完成题目后自动判分并查看复盘。",
         cta: "开始 Listening",
         href: "/practice/listening",
-      },
-      {
-        title: "Writing Practice",
-        description:
-          "完成 Task 1 / Task 2 写作，提交后获得 AI band feedback、四项评分和改进建议。",
-        cta: "开始 Writing",
-        href: "/practice/writing",
       },
     ],
     previewHeading: "机考风格界面预览",
@@ -216,6 +215,13 @@ const copy = {
     oneLine: "Practice Reading, Listening, and Writing in one place.",
     practiceCards: [
       {
+        title: "Writing Practice",
+        description:
+          "Complete Task 1 or Task 2 and receive AI band feedback, criterion scores, sentence rewrites, and next steps.",
+        cta: "Try Writing feedback free",
+        href: "/practice/writing",
+      },
+      {
         title: "Reading Practice",
         description:
           "Practice original English passages and questions, then review your score, answers, and explanations.",
@@ -228,13 +234,6 @@ const copy = {
           "Play IELTS-style listening audio, answer questions, and review your score after submitting.",
         cta: "Start Listening",
         href: "/practice/listening",
-      },
-      {
-        title: "Writing Practice",
-        description:
-          "Complete Task 1 or Task 2 and receive AI band feedback, criteria scores, and improvement advice.",
-        cta: "Start Writing",
-        href: "/practice/writing",
       },
     ],
     previewHeading: "Computer IELTS-style interface preview",
@@ -327,10 +326,116 @@ const copy = {
   },
 } satisfies Record<Language, HomeCopy>;
 
+function WritingFeedbackPreview({
+  t,
+}: {
+  t: (key: string, fallback?: string) => string;
+}) {
+  return (
+    <div className="min-w-0 rounded-xl border border-slate-200 bg-white p-4 shadow-xl sm:p-5">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-4">
+        <div>
+          <Badge className="bg-teal-50 text-teal-800">
+            {t("home.preview.badge", "Writing feedback preview")}
+          </Badge>
+          <h2 className="mt-3 text-xl font-semibold text-slate-950">
+            {t("home.preview.title", "AI Writing feedback")}
+          </h2>
+        </div>
+        <div className="rounded-md bg-slate-950 px-4 py-3 text-center text-white">
+          <p className="text-xs text-white/70">
+            {t("home.preview.overallBand", "Overall Band")}
+          </p>
+          <p className="text-3xl font-semibold">6.5</p>
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <ScoreMiniCard
+          label={t("home.preview.taskResponse", "Task Response")}
+          score="6.5"
+        />
+        <ScoreMiniCard
+          label={t(
+            "home.preview.coherence",
+            "Coherence and Cohesion",
+          )}
+          score="7.0"
+        />
+      </div>
+
+      <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-4">
+        <div className="flex items-center gap-2 text-sm font-semibold text-slate-950">
+          <PenLine className="h-4 w-4 text-teal-700" aria-hidden="true" />
+          {t("home.preview.sentenceImprovement", "Sentence Improvement")}
+        </div>
+        <div className="mt-4 space-y-3 text-sm leading-6">
+          <PreviewTextBlock
+            label={t("home.preview.original", "Original")}
+            text="Many people think work from home is good."
+          />
+          <PreviewTextBlock
+            label={t("home.preview.improved", "Improved")}
+            text="Many people believe working from home is beneficial because it provides greater flexibility."
+          />
+          <PreviewTextBlock
+            label={t("home.preview.why", "Why")}
+            text={t(
+              "home.preview.whyText",
+              "“Working from home” is more natural here, and the improved sentence develops the idea more clearly.",
+            )}
+          />
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-2 text-sm text-slate-600">
+        {[
+          t("home.preview.summaryPoint", "Score summary explains why the band is not higher."),
+          t("home.preview.nextPoint", "Next steps show what to practise in the next essay."),
+        ].map((item) => (
+          <div key={item} className="flex gap-2">
+            <CheckCircle2
+              className="mt-0.5 h-4 w-4 shrink-0 text-teal-700"
+              aria-hidden="true"
+            />
+            <span>{item}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ScoreMiniCard({ label, score }: { label: string; score: string }) {
+  return (
+    <div className="rounded-md border border-slate-200 bg-white p-3">
+      <p className="text-xs leading-5 text-slate-500">{label}</p>
+      <p className="mt-1 text-xl font-semibold text-slate-950">{score}</p>
+    </div>
+  );
+}
+
+function PreviewTextBlock({ label, text }: { label: string; text: string }) {
+  return (
+    <div>
+      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+        {label}
+      </p>
+      <p className="mt-1 text-slate-700">{text}</p>
+    </div>
+  );
+}
+
 export default function Home() {
-  const { language } = useI18n();
+  const { language, t: msg } = useI18n();
   const t = copy[language];
-  const practiceIcons = [BookOpen, Headphones, PenLine];
+  const practiceIcons = [PenLine, BookOpen, Headphones];
+  const heroPoints = [
+    msg("home.hero.point.taskFeedback", "Task 1 and Task 2 specific feedback"),
+    msg("home.hero.point.rewrite", "Original → Improved → Why"),
+    msg("home.hero.point.criteria", "Criterion scores and score summary"),
+    msg("home.hero.point.language", "Feedback in English or Chinese"),
+  ];
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-background">
@@ -338,31 +443,41 @@ export default function Home() {
       <main>
         <section className="relative overflow-hidden border-b border-slate-200 bg-[#f8faf8]">
           <div className="absolute inset-0 bg-[linear-gradient(to_right,#e5e7eb_1px,transparent_1px),linear-gradient(to_bottom,#e5e7eb_1px,transparent_1px)] bg-[size:72px_72px] opacity-40" />
-          <div className="relative mx-auto flex min-h-[calc(100vh-4rem)] max-w-7xl flex-col justify-center px-4 py-14 sm:px-6 lg:px-8">
-            <div className="mx-auto max-w-4xl text-center">
-              <div className="flex flex-wrap items-center justify-center gap-3">
+          <div className="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
+            <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-3">
                 <Badge className="border-slate-950 bg-slate-950 text-white">
                   {t.beta}
                 </Badge>
                 <Badge className="bg-white/80">{t.badge}</Badge>
               </div>
-              <div className="mt-6 flex justify-center">
+                <div className="mt-6 flex">
                 <BrandLogo
                   className="rounded-lg border border-slate-200 bg-white/80 px-3 py-2 shadow-sm"
                   textClassName="text-base"
                 />
               </div>
-              <h1 className="mt-6 break-words text-5xl font-semibold tracking-tight text-slate-950 sm:text-6xl lg:text-7xl">
-                {t.title}
+                <h1 className="mt-6 max-w-3xl break-words text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
+                  {msg(
+                    "home.hero.title",
+                    "Go beyond the Band score.",
+                  )}
               </h1>
-              <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-slate-600">
-                {t.subtitle}
+                <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">
+                  {msg(
+                    "home.hero.subtitle",
+                    "Get criterion scores, task-specific feedback, sentence rewrites, and clear next steps. Try one AI Writing feedback for free each day.",
+                  )}
               </p>
-              <p className="mt-3 text-sm font-medium text-teal-800">
-                {t.oneLine}
+                <p className="mt-4 inline-flex rounded-full border border-teal-200 bg-white/90 px-4 py-2 text-sm font-medium text-teal-800">
+                  {msg(
+                    "home.hero.freeWriting",
+                    "1 free AI Writing feedback each day",
+                  )}
               </p>
-              <div className="mx-auto mt-6 grid max-w-3xl gap-2 sm:grid-cols-3">
-                {t.availability.map((item) => (
+                <div className="mt-6 grid max-w-2xl gap-2 sm:grid-cols-2">
+                  {heroPoints.map((item) => (
                   <div
                     key={item}
                     className="rounded-md border border-slate-200 bg-white/80 p-3 text-sm leading-6 text-slate-700"
@@ -371,161 +486,82 @@ export default function Home() {
                   </div>
                 ))}
               </div>
-              <div className="mx-auto mt-5 max-w-3xl rounded-lg border border-teal-200 bg-white/85 p-4 text-sm leading-6 text-slate-700">
-                <span className="font-medium text-teal-800">{t.beta}</span>
-                <span className="ml-2">{t.betaNotice}</span>
+                <p className="mt-4 text-sm leading-6 text-slate-500">
+                  {msg(
+                    "home.hero.disclaimer",
+                    "AI scores are for study guidance and are not official IELTS results.",
+                  )}
+                </p>
+                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                  <Button asChild size="lg">
+                    <Link href="/practice/writing">
+                      {msg(
+                        "home.hero.primaryCta",
+                        "Try Writing feedback free",
+                      )}
+                      <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" size="lg">
+                    <Link href="/practice/writing">
+                      {msg(
+                        "home.hero.secondaryCta",
+                        "Browse Writing tasks",
+                      )}
+                    </Link>
+                  </Button>
+                </div>
               </div>
-              <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-                <Button asChild size="lg">
-                  <Link href="/practice">
-                    {t.primary}
-                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                  </Link>
-                </Button>
-                <Button asChild variant="outline" size="lg">
-                  <Link href="/practice">{t.secondary}</Link>
-                </Button>
+              <div className="min-w-0">
+                <WritingFeedbackPreview t={msg} />
               </div>
             </div>
 
             <div className="mt-10 grid gap-4 md:grid-cols-3">
               {t.practiceCards.map((card, index) => {
                 const Icon = practiceIcons[index] ?? BookOpen;
+                const isFeatured = index === 0;
+                const title = isFeatured
+                  ? msg("home.practice.writingTitle", card.title)
+                  : card.title;
+                const description = isFeatured
+                  ? msg("home.practice.writingDescription", card.description)
+                  : card.description;
+                const cta = isFeatured
+                  ? msg("home.practice.writingCta", card.cta)
+                  : card.cta;
 
                 return (
                   <div
-                    key={card.title}
-                    className="flex min-w-0 flex-col rounded-lg border border-slate-200 bg-white/90 p-5 text-left shadow-sm"
+                    key={title}
+                    className={
+                      isFeatured
+                        ? "flex min-w-0 flex-col rounded-lg border border-teal-300 bg-white p-5 text-left shadow-md"
+                        : "flex min-w-0 flex-col rounded-lg border border-slate-200 bg-white/90 p-5 text-left shadow-sm"
+                    }
                   >
-                    <div className="flex h-10 w-10 items-center justify-center rounded-md bg-slate-950 text-white">
-                      <Icon className="h-5 w-5" aria-hidden="true" />
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-md bg-slate-950 text-white">
+                        <Icon className="h-5 w-5" aria-hidden="true" />
+                      </div>
+                      {isFeatured ? (
+                        <Badge className="bg-teal-50 text-teal-800">
+                          {msg("home.practice.aiFeedbackBadge", "AI feedback")}
+                        </Badge>
+                      ) : null}
                     </div>
                     <h2 className="mt-5 text-lg font-semibold text-slate-950">
-                      {card.title}
+                      {title}
                     </h2>
                     <p className="mt-3 flex-1 text-sm leading-6 text-slate-600">
-                      {card.description}
+                      {description}
                     </p>
                     <Button asChild className="mt-5 w-full">
-                      <Link href={card.href}>{card.cta}</Link>
+                      <Link href={card.href}>{cta}</Link>
                     </Button>
                   </div>
                 );
               })}
-            </div>
-          </div>
-        </section>
-
-        <section className="border-b border-slate-200 bg-white">
-          <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-            <div className="mx-auto max-w-3xl text-center">
-              <Badge>{t.previewHeading}</Badge>
-              <p className="mt-4 text-sm leading-6 text-slate-600">
-                {t.previewDescription}
-              </p>
-            </div>
-
-            <div className="mx-auto mt-8 min-w-0 max-w-5xl overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg">
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-slate-950 px-5 py-3 text-white">
-                <div className="flex min-w-0 flex-wrap items-center gap-3">
-                  <Badge className="border-white/20 bg-white/10 text-white">
-                    Computer IELTS-style
-                  </Badge>
-                  <span className="text-sm font-medium">{t.passageTitle}</span>
-                </div>
-                <div className="flex shrink-0 items-center gap-2 rounded-md bg-white px-3 py-2 text-sm font-semibold text-slate-950">
-                  <Timer className="h-4 w-4" aria-hidden="true" />
-                  {t.timer}
-                </div>
-              </div>
-
-              <div className="grid min-h-[460px] min-w-0 lg:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)]">
-                <div className="min-w-0 border-b border-slate-200 p-5 lg:border-b-0 lg:border-r">
-                  <div className="mb-4 flex items-center justify-between border-b border-slate-200 pb-3 text-sm">
-                    <div className="font-medium text-slate-950">
-                      {t.previewPassageLabel}
-                    </div>
-                    <Badge className="bg-slate-50">
-                      {t.previewScrollableBadge}
-                    </Badge>
-                  </div>
-                  <div className="space-y-4 text-sm leading-7 text-slate-700">
-                    <p className="font-medium text-slate-950">{t.previewTitle}</p>
-                    {t.previewParagraphs.map((paragraph) => (
-                      <p key={paragraph}>{paragraph}</p>
-                    ))}
-                    <p>
-                      City planners now face a practical question: how can these
-                      benefits be measured and protected as urban populations
-                      grow?
-                    </p>
-                  </div>
-                </div>
-
-                <div className="min-w-0 bg-slate-50 p-5">
-                  <div className="mb-4 flex items-center justify-between">
-                    <div className="text-sm font-medium text-slate-950">
-                      {t.answerSheet}
-                    </div>
-                    <Badge className="bg-white">
-                      {t.previewAutoScoringBadge}
-                    </Badge>
-                  </div>
-                  <div className="space-y-3">
-                    {t.questions.map((question, index) => (
-                      <div
-                        key={question}
-                        className="rounded-md border border-slate-200 bg-white p-3"
-                      >
-                        <div className="flex items-start gap-3">
-                          {index === 1 ? (
-                            <CheckCircle2
-                              className="mt-0.5 h-4 w-4 text-teal-700"
-                              aria-hidden="true"
-                            />
-                          ) : (
-                            <Circle
-                              className="mt-0.5 h-4 w-4 text-slate-300"
-                              aria-hidden="true"
-                            />
-                          )}
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm leading-6 text-slate-700">
-                              {question}
-                            </p>
-                            {index === 0 ? (
-                              <div className="mt-3 grid gap-2">
-                                {["A. A design feature", "B. A health asset", "C. A tourism plan"].map(
-                                  (option) => (
-                                    <div
-                                      key={option}
-                                      className="rounded border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600"
-                                    >
-                                      {option}
-                                    </div>
-                                  ),
-                                )}
-                              </div>
-                            ) : (
-                              <div className="mt-3 h-9 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-400">
-                                {t.previewAnswerPlaceholder}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-5 flex flex-col gap-3 border-t border-slate-200 pt-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="min-w-0 text-xs text-slate-500">
-                      {t.previewSubmitHint}
-                    </div>
-                    <Button className="shrink-0" size="sm">
-                      {t.previewSubmit}
-                    </Button>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </section>

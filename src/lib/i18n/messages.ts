@@ -42,6 +42,39 @@ export const messages: Record<Language, Record<string, string>> = {
     "betaRewardModal.secondary": "Maybe later",
     "betaRewardModal.close": "Close reward modal",
 
+    "home.hero.title": "Go beyond the Band score.",
+    "home.hero.subtitle":
+      "Get criterion scores, task-specific feedback, sentence rewrites, and clear next steps. Try one AI Writing feedback for free each day.",
+    "home.hero.freeWriting": "1 free AI Writing feedback each day",
+    "home.hero.point.taskFeedback": "Task 1 and Task 2 specific feedback",
+    "home.hero.point.rewrite": "Original → Improved → Why",
+    "home.hero.point.criteria": "Criterion scores and score summary",
+    "home.hero.point.language": "Feedback in English or Chinese",
+    "home.hero.disclaimer":
+      "AI scores are for study guidance and are not official IELTS results.",
+    "home.hero.primaryCta": "Try Writing feedback free",
+    "home.hero.secondaryCta": "Browse Writing tasks",
+    "home.preview.badge": "Writing feedback preview",
+    "home.preview.title": "AI Writing feedback",
+    "home.preview.overallBand": "Overall Band",
+    "home.preview.taskResponse": "Task Response",
+    "home.preview.coherence": "Coherence and Cohesion",
+    "home.preview.sentenceImprovement": "Sentence Improvement",
+    "home.preview.original": "Original",
+    "home.preview.improved": "Improved",
+    "home.preview.why": "Why",
+    "home.preview.whyText":
+      "“Working from home” is more natural here, and the improved sentence develops the idea more clearly.",
+    "home.preview.summaryPoint":
+      "Score summary explains why the band is not higher.",
+    "home.preview.nextPoint":
+      "Next steps show what to practise in the next essay.",
+    "home.practice.writingTitle": "Writing Practice",
+    "home.practice.writingDescription":
+      "Complete Task 1 or Task 2 and receive AI band feedback, criterion scores, sentence rewrites, and next steps.",
+    "home.practice.writingCta": "Try Writing feedback free",
+    "home.practice.aiFeedbackBadge": "AI feedback",
+
     "practice.eyebrow": "Practice",
     "practice.title": "Choose a practice mode",
     "practice.description":
@@ -524,6 +557,36 @@ export const messages: Record<Language, Record<string, string>> = {
     "betaRewardModal.primary": "开始练习",
     "betaRewardModal.secondary": "稍后再看",
     "betaRewardModal.close": "关闭福利弹窗",
+
+    "home.hero.title": "不只给分，告诉你 IELTS Writing 怎么改",
+    "home.hero.subtitle":
+      "获得四项评分、Task 1 / Task 2 专项反馈、原句改写和清晰的下一步建议。每天可免费体验一次 AI Writing feedback。",
+    "home.hero.freeWriting": "每天免费 1 次 AI Writing feedback",
+    "home.hero.point.taskFeedback": "Task 1 / Task 2 专项反馈",
+    "home.hero.point.rewrite": "原句 → 修改后 → 为什么这样改",
+    "home.hero.point.criteria": "四项评分与评分小结",
+    "home.hero.point.language": "中文或英文反馈",
+    "home.hero.disclaimer": "AI 评分仅供学习参考，并非官方 IELTS 成绩。",
+    "home.hero.primaryCta": "免费试一次 Writing 批改",
+    "home.hero.secondaryCta": "查看 Writing 题目",
+    "home.preview.badge": "Writing feedback 预览",
+    "home.preview.title": "AI Writing 反馈",
+    "home.preview.overallBand": "总 Band",
+    "home.preview.taskResponse": "任务回应",
+    "home.preview.coherence": "连贯与衔接",
+    "home.preview.sentenceImprovement": "句子改进",
+    "home.preview.original": "原句",
+    "home.preview.improved": "修改后",
+    "home.preview.why": "为什么这样改",
+    "home.preview.whyText":
+      "“Working from home” 在这里更自然，修改后的句子也更清楚地展开了原因。",
+    "home.preview.summaryPoint": "评分小结会说明为什么还没到更高分。",
+    "home.preview.nextPoint": "下一步建议会告诉你下一篇最该练什么。",
+    "home.practice.writingTitle": "Writing Practice",
+    "home.practice.writingDescription":
+      "完成 Task 1 / Task 2 写作，提交后获得 AI band feedback、四项评分、原句改写和下一步建议。",
+    "home.practice.writingCta": "免费试一次 Writing 批改",
+    "home.practice.aiFeedbackBadge": "AI feedback",
 
     "practice.eyebrow": "练习中心",
     "practice.title": "选择一种练习方式",
