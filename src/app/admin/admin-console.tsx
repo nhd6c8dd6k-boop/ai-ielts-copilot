@@ -106,6 +106,24 @@ type GenerateAudioApiResponse =
       error?: string;
     };
 
+type EmailDeliveryPayload =
+  | {
+      status: "sent";
+      providerMessageId?: string;
+    }
+  | {
+      status: "failed";
+      errorCode?: string;
+    }
+  | {
+      status: "skipped";
+      reason?:
+        | "already_active_pro"
+        | "missing_recipient"
+        | "not_configured"
+        | "unsupported_environment";
+    };
+
 type AdminReviewQuestion = {
   id: string;
   number: number;
@@ -804,7 +822,11 @@ export function AdminConsole({
         body: JSON.stringify(body),
       });
       const payload = (await response.json()) as
-        | { ok: true; memberships: AdminMembershipItem[] }
+        | {
+            ok: true;
+            memberships: AdminMembershipItem[];
+            emailDelivery?: EmailDeliveryPayload;
+          }
         | { error?: string };
 
       if (!response.ok || !("ok" in payload)) {
@@ -820,7 +842,11 @@ export function AdminConsole({
         `${user.email} · ${formatMembershipAction(action)}`,
         ...current,
       ]);
-      setToastMessage(`${user.email} membership updated.`);
+      setToastMessage(
+        action === "grant"
+          ? getGrantToastMessage(payload.emailDelivery)
+          : `${user.email} membership updated.`,
+      );
       setMembershipModal(null);
     } catch (membershipError) {
       const message =
@@ -3248,4 +3274,28 @@ function formatMembershipAction(action: MembershipAction) {
   };
 
   return labels[action];
+}
+
+function getGrantToastMessage(emailDelivery?: EmailDeliveryPayload) {
+  if (emailDelivery?.status === "sent") {
+    return "Pro was activated and the notification email was sent.";
+  }
+
+  if (emailDelivery?.status === "failed") {
+    return "Pro was activated, but the notification email could not be sent. Please contact the user manually.";
+  }
+
+  if (emailDelivery?.status === "skipped") {
+    if (emailDelivery.reason === "missing_recipient") {
+      return "Pro was activated, but no recipient email was found.";
+    }
+
+    if (emailDelivery.reason === "already_active_pro") {
+      return "The user already had active Pro access, so no activation email was sent.";
+    }
+
+    return "Pro was activated, but email delivery is not configured.";
+  }
+
+  return "Pro was activated.";
 }

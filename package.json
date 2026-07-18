@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit -p tsconfig.typecheck.json",
     "test:usage-limits": "node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-usage-limits.mjs",
     "test:writing-scoring": "node scripts/verify-writing-scoring.mjs",
-    "test:memberships": "node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-memberships.mjs"
+    "test:memberships": "node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-memberships.mjs",
+    "test:pro-activation-email": "node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-pro-activation-email.mjs"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.3.0",
@@ -26,6 +27,7 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "recharts": "^3.9.0",
+    "resend": "^6.17.2",
     "stripe": "^22.3.0",
     "tailwind-merge": "^3.6.0",
     "zod": "^4.4.3",

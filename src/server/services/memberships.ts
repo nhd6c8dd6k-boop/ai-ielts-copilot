@@ -1,5 +1,10 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import {
+  sendProActivatedEmail,
+  shouldSendProActivationEmail,
+  type EmailDeliveryResult,
+} from "@/server/services/email";
+import {
   getEffectiveMembershipStatus,
   isProSubscriptionRule,
   resolveExtendedExpiry,
@@ -41,6 +46,10 @@ export type AdminMembershipItem = {
 };
 
 type SupabaseAdminClient = ReturnType<typeof createSupabaseAdminClient>;
+
+export type GrantManualProResult = {
+  emailDelivery: EmailDeliveryResult;
+};
 
 export type MembershipErrorCategory =
   | "membership_write_failed"
@@ -138,17 +147,40 @@ export async function grantManualPro({
   targetUserId: string;
   expiresAt: string;
   notes?: string | null;
-}) {
+}): Promise<GrantManualProResult> {
   const now = new Date().toISOString();
-  const { data: existingSubscription, error: loadError } = await admin
-    .from("subscriptions")
-    .select("plan,status,expires_at,current_period_end,started_at")
-    .eq("user_id", targetUserId)
-    .maybeSingle();
+  const [subscriptionResult, userResult, profileResult] = await Promise.all([
+    admin
+      .from("subscriptions")
+      .select("plan,status,expires_at,current_period_end,started_at")
+      .eq("user_id", targetUserId)
+      .maybeSingle(),
+    admin
+      .from("users")
+      .select("id,email")
+      .eq("id", targetUserId)
+      .maybeSingle(),
+    admin
+      .from("profiles")
+      .select("display_name")
+      .eq("id", targetUserId)
+      .maybeSingle(),
+  ]);
 
-  if (loadError) {
-    throwMembershipError("grant_load", loadError);
+  if (subscriptionResult.error) {
+    throwMembershipError("grant_load", subscriptionResult.error);
   }
+
+  if (userResult.error) {
+    throwMembershipError("grant_user_load", userResult.error);
+  }
+
+  if (profileResult.error) {
+    throwMembershipError("grant_profile_load", profileResult.error);
+  }
+
+  const existingSubscription = subscriptionResult.data;
+  const wasActivePro = isProSubscription(existingSubscription);
 
   const { error } = await admin.from("subscriptions").upsert(
     {
@@ -180,6 +212,38 @@ export async function grantManualPro({
     previousPlan: existingSubscription?.plan ?? null,
     previousStatus: existingSubscription?.status ?? null,
   });
+
+  const { data: finalSubscription, error: finalLoadError } = await admin
+    .from("subscriptions")
+    .select("id,expires_at,current_period_end")
+    .eq("user_id", targetUserId)
+    .maybeSingle();
+
+  if (finalLoadError) {
+    throwMembershipError("grant_final_load", finalLoadError);
+  }
+
+  const finalExpiresAt =
+    finalSubscription?.expires_at ??
+    finalSubscription?.current_period_end ??
+    expiresAt;
+  const emailDelivery = !shouldSendProActivationEmail(wasActivePro)
+    ? ({ status: "skipped", reason: "already_active_pro" } as const)
+    : await sendProActivatedEmail({
+        to: userResult.data?.email,
+        displayName: profileResult.data?.display_name,
+        locale: "en",
+        expiresAt: finalExpiresAt,
+      });
+
+  await logProActivationEmailResult(admin, {
+    adminUserId,
+    targetUserId,
+    membershipId: finalSubscription?.id ?? null,
+    emailDelivery,
+  });
+
+  return { emailDelivery };
 }
 
 export async function extendManualPro({
@@ -441,5 +505,65 @@ async function logMembershipAction(
       "Membership log insert failed.",
       error,
     );
+  }
+}
+
+async function logProActivationEmailResult(
+  admin: SupabaseAdminClient,
+  {
+    adminUserId,
+    targetUserId,
+    membershipId,
+    emailDelivery,
+  }: {
+    adminUserId: string;
+    targetUserId: string;
+    membershipId?: string | null;
+    emailDelivery: EmailDeliveryResult;
+  },
+) {
+  const action =
+    emailDelivery.status === "sent"
+      ? "pro_activation_email_sent"
+      : emailDelivery.status === "failed"
+        ? "pro_activation_email_failed"
+        : "pro_activation_email_skipped";
+  const metadata =
+    emailDelivery.status === "sent"
+      ? {
+          target_user_id: targetUserId,
+          membership_id: membershipId,
+          delivery_status: emailDelivery.status,
+          provider_message_id: emailDelivery.providerMessageId ?? null,
+        }
+      : emailDelivery.status === "failed"
+        ? {
+            target_user_id: targetUserId,
+            membership_id: membershipId,
+            delivery_status: emailDelivery.status,
+            error_code: emailDelivery.errorCode ?? null,
+          }
+        : {
+            target_user_id: targetUserId,
+            membership_id: membershipId,
+            delivery_status: emailDelivery.status,
+            reason: emailDelivery.reason,
+          };
+
+  const { error } = await admin.from("admin_logs").insert({
+    admin_user_id: adminUserId,
+    action,
+    target_type: "subscription",
+    target_id: targetUserId,
+    metadata,
+  });
+
+  if (error) {
+    console.error("pro_activation_email_log_failed", {
+      action,
+      targetUserId,
+      message: getSupabaseErrorField(error, "message"),
+      code: getSupabaseErrorField(error, "code"),
+    });
   }
 }

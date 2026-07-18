@@ -5,6 +5,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { requireAdminUser } from "@/server/services/admin-auth";
 import {
   extendManualPro,
+  type GrantManualProResult,
   getSupabaseErrorField,
   getMemberships,
   grantManualPro,
@@ -76,10 +77,11 @@ export async function POST(request: Request) {
 
   const input = membershipActionSchema.parse(await request.json());
   const admin = createSupabaseAdminClient();
+  let grantResult: GrantManualProResult | null = null;
 
   try {
     if (input.action === "grant") {
-      await grantManualPro({
+      grantResult = await grantManualPro({
         admin,
         adminUserId: adminUser.userId,
         targetUserId: input.targetUserId,
@@ -109,7 +111,11 @@ export async function POST(request: Request) {
 
     const memberships = await getMemberships(admin);
 
-    return NextResponse.json({ ok: true, memberships });
+    return NextResponse.json({
+      ok: true,
+      memberships,
+      emailDelivery: grantResult?.emailDelivery,
+    });
   } catch (error) {
     logMembershipApiError(error);
 

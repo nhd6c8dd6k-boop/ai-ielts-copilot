@@ -14,6 +14,10 @@ export const env = {
   wechatPayMchId: optionalEnv("WECHAT_PAY_MCH_ID"),
   wechatPayAppId: optionalEnv("WECHAT_PAY_APP_ID"),
   alipayAppId: optionalEnv("ALIPAY_APP_ID"),
+  resendApiKey: optionalEnv("RESEND_API_KEY"),
+  resendFromEmail: optionalEnv("RESEND_FROM_EMAIL"),
+  resendReplyToEmail: optionalEnv("RESEND_REPLY_TO_EMAIL"),
+  emailDeliveryEnabled: optionalEnv("EMAIL_DELIVERY_ENABLED"),
 };
 
 export function isSupabaseConfigured() {
