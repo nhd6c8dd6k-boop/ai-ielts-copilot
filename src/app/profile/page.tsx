@@ -2,7 +2,16 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { CalendarDays, CheckCircle2, Crown, Save, Target } from "lucide-react";
+import {
+  AlertCircle,
+  CalendarDays,
+  CheckCircle2,
+  Crown,
+  Loader2,
+  Save,
+  Target,
+  UserRound,
+} from "lucide-react";
 
 import { useI18n } from "@/components/i18n/language-provider";
 import { AppShell } from "@/components/layout/app-shell";
@@ -17,6 +26,10 @@ import {
   saveStudyProfile,
   type StudyProfile,
 } from "@/features/profile/storage";
+import {
+  getProfileHeroSummary,
+  type ProfileHeroSummary,
+} from "@/features/profile/hero-summary";
 
 type ProfileSyncMode = "loading" | "local" | "supabase" | "anonymous" | "error";
 
@@ -26,6 +39,7 @@ type ApiProfile = {
   exam_date?: string | null;
   country?: string | null;
   timezone?: string | null;
+  created_at?: string | null;
 };
 
 type ApiSubscription = {
@@ -55,11 +69,21 @@ type ApiUsage = {
   };
 };
 
+type ApiAuthUser = {
+  email?: string | null;
+  created_at?: string | null;
+  name?: string | null;
+};
+
 type ProfileApiResponse = {
   mode?: "demo" | "anonymous" | "supabase";
   profile?: ApiProfile | null;
+  authUser?: ApiAuthUser | null;
   subscription?: ApiSubscription | null;
+  subscription_error?: boolean;
   usage?: ApiUsage | null;
+  practice_total?: number | null;
+  practice_total_error?: boolean;
   error?: string;
 };
 
@@ -85,13 +109,18 @@ function mergeApiProfile(
 }
 
 export default function ProfilePage() {
-  const { t } = useI18n();
+  const { language, t } = useI18n();
   const [profile, setProfile] = useState<StudyProfile>(() => readStudyProfile());
   const [saved, setSaved] = useState(false);
   const [syncMode, setSyncMode] = useState<ProfileSyncMode>("loading");
   const [isSaving, setIsSaving] = useState(false);
+  const [authUser, setAuthUser] = useState<ApiAuthUser | null>(null);
+  const [profileCreatedAt, setProfileCreatedAt] = useState<string | null>(null);
   const [subscription, setSubscription] = useState<ApiSubscription | null>(null);
+  const [subscriptionError, setSubscriptionError] = useState(false);
   const [usage, setUsage] = useState<ApiUsage | null>(null);
+  const [totalPractice, setTotalPractice] = useState<number | null>(null);
+  const [totalPracticeError, setTotalPracticeError] = useState(false);
 
   useEffect(() => {
     let isActive = true;
@@ -111,8 +140,13 @@ export default function ProfilePage() {
         }
 
         if (payload.mode === "supabase") {
+          setAuthUser(payload.authUser ?? null);
+          setProfileCreatedAt(payload.profile?.created_at ?? null);
           setSubscription(payload.subscription ?? null);
+          setSubscriptionError(Boolean(payload.subscription_error));
           setUsage(payload.usage ?? null);
+          setTotalPractice(payload.practice_total ?? null);
+          setTotalPracticeError(Boolean(payload.practice_total_error));
           setProfile((currentProfile) => {
             const nextProfile = mergeApiProfile(
               currentProfile,
@@ -125,10 +159,19 @@ export default function ProfilePage() {
           return;
         }
 
+        setAuthUser(null);
+        setProfileCreatedAt(null);
+        setSubscription(null);
+        setSubscriptionError(false);
+        setUsage(null);
+        setTotalPractice(0);
+        setTotalPracticeError(false);
         setSyncMode(payload.mode === "anonymous" ? "anonymous" : "local");
       } catch {
         if (isActive) {
           setSyncMode("error");
+          setSubscriptionError(true);
+          setTotalPracticeError(true);
         }
       }
     }
@@ -180,6 +223,28 @@ export default function ProfilePage() {
     ),
   ];
   const subscriptionSummary = getSubscriptionSummary(subscription, t);
+  const heroSummary = getProfileHeroSummary({
+    profile: {
+      displayName: profile.displayName,
+      createdAt: profileCreatedAt,
+    },
+    authUser: {
+      email: authUser?.email,
+      createdAt: authUser?.created_at,
+      name: authUser?.name,
+    },
+    subscription: subscription
+      ? {
+          isPro: subscription.is_pro,
+        }
+      : null,
+    isMembershipLoading: syncMode === "loading",
+    isMembershipError: subscriptionError || syncMode === "error",
+    totalPracticeCount: totalPractice,
+    isPracticeCountLoading: syncMode === "loading",
+    isPracticeCountError: totalPracticeError || syncMode === "error",
+    fallbackName: t("profile.hero.fallbackName", "IELTS learner"),
+  });
 
   const submitProfile = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -231,6 +296,32 @@ export default function ProfilePage() {
           "Manage your target band, exam date, region, and membership. When signed in, your profile syncs to your account.",
         )}
       />
+
+      {syncMode === "loading" ? (
+        <ProfileHeroStatusCard
+          icon="loading"
+          title={t("profile.hero.loadingTitle", "Loading your overview")}
+          description={t(
+            "profile.hero.loadingDescription",
+            "We are checking your account, membership, and completed practice history.",
+          )}
+        />
+      ) : syncMode === "error" ? (
+        <ProfileHeroStatusCard
+          icon="error"
+          title={t("profile.hero.errorTitle", "Profile overview unavailable")}
+          description={t(
+            "profile.hero.errorDescription",
+            "We could not load your account overview. Please refresh the page or try again later.",
+          )}
+        />
+      ) : (
+        <ProfileHeroSummaryCard
+          summary={heroSummary}
+          language={language}
+          t={t}
+        />
+      )}
 
       <div className="grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">
         <Card>
@@ -467,6 +558,130 @@ function ProfileUsageItem({ label, value }: { label: string; value: string }) {
       <p className="mt-2 text-sm text-slate-600">{value}</p>
     </div>
   );
+}
+
+function ProfileHeroStatusCard({
+  icon,
+  title,
+  description,
+}: {
+  icon: "loading" | "error";
+  title: string;
+  description: string;
+}) {
+  const Icon = icon === "loading" ? Loader2 : AlertCircle;
+
+  return (
+    <Card className="mb-6">
+      <CardContent className="flex min-h-36 flex-col justify-center p-6">
+        <div className="flex items-start gap-4">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-slate-950 text-white">
+            <Icon
+              className={icon === "loading" ? "h-5 w-5 animate-spin" : "h-5 w-5"}
+              aria-hidden="true"
+            />
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold text-slate-950">{title}</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              {description}
+            </p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ProfileHeroSummaryCard({
+  summary,
+  language,
+  t,
+}: {
+  summary: ProfileHeroSummary;
+  language: "zh" | "en";
+  t: (key: string, fallback: string) => string;
+}) {
+  const membershipLabel =
+    summary.membershipStatus === "pro"
+      ? t("profile.hero.proMember", "Pro Member")
+      : summary.membershipStatus === "free"
+        ? t("profile.hero.freeMember", "Free Member")
+        : null;
+  const formattedMemberSince = summary.memberSince
+    ? formatMemberSince(summary.memberSince, language)
+    : null;
+
+  return (
+    <Card className="mb-6 overflow-hidden">
+      <CardContent className="grid gap-6 p-6 md:grid-cols-[1.1fr_0.9fr] md:items-center">
+        <div className="min-w-0">
+          <div className="flex items-start gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-slate-950 text-white">
+              <UserRound className="h-6 w-6" aria-hidden="true" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-slate-500">
+                {t("profile.hero.overview", "Personal overview")}
+              </p>
+              <h2 className="mt-1 break-words text-2xl font-semibold leading-tight text-slate-950">
+                {summary.displayName}
+              </h2>
+              {summary.email ? (
+                <p className="mt-2 break-all text-sm text-slate-600">
+                  {summary.email}
+                </p>
+              ) : null}
+              {formattedMemberSince ? (
+                <p className="mt-2 text-sm text-slate-500">
+                  {t("profile.hero.memberSince", "Member since {date}").replace(
+                    "{date}",
+                    formattedMemberSince,
+                  )}
+                </p>
+              ) : null}
+            </div>
+          </div>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2">
+          <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+            <p className="text-sm font-medium text-slate-600">
+              {t("profile.currentPlan", "Current Plan")}
+            </p>
+            {membershipLabel ? (
+              <Badge
+                className={
+                  summary.membershipStatus === "pro"
+                    ? "mt-3 bg-teal-50 text-teal-800"
+                    : "mt-3 bg-white text-slate-700"
+                }
+              >
+                {membershipLabel}
+              </Badge>
+            ) : (
+              <p className="mt-3 text-lg font-semibold text-slate-950">-</p>
+            )}
+          </div>
+          <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+            <p className="text-sm font-medium text-slate-600">
+              {t("profile.hero.totalPractice", "Total Practice")}
+            </p>
+            <p className="mt-2 text-3xl font-semibold text-slate-950">
+              {summary.totalPractice === null ? "-" : summary.totalPractice}
+            </p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function formatMemberSince(date: Date, language: "zh" | "en") {
+  return new Intl.DateTimeFormat(language === "zh" ? "zh-CN" : "en", {
+    month: language === "zh" ? "numeric" : "short",
+    year: "numeric",
+  }).format(date);
 }
 
 function formatPracticeUsage(

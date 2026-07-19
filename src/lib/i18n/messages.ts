@@ -546,6 +546,18 @@ export const messages: Record<Language, Record<string, string>> = {
     "profile.title": "Profile",
     "profile.description":
       "Manage your target band, exam date, region, and membership. When signed in, your profile syncs to your account.",
+    "profile.hero.overview": "Personal overview",
+    "profile.hero.fallbackName": "IELTS learner",
+    "profile.hero.freeMember": "Free Member",
+    "profile.hero.proMember": "Pro Member",
+    "profile.hero.memberSince": "Member since {date}",
+    "profile.hero.totalPractice": "Total Practice",
+    "profile.hero.loadingTitle": "Loading your overview",
+    "profile.hero.loadingDescription":
+      "We are checking your account, membership, and completed practice history.",
+    "profile.hero.errorTitle": "Profile overview unavailable",
+    "profile.hero.errorDescription":
+      "We could not load your account overview. Please refresh the page or try again later.",
     "profile.accountInformation": "Account information",
     "profile.displayName": "Display name",
     "profile.targetBand": "Target band",
@@ -1246,6 +1258,17 @@ export const messages: Record<Language, Record<string, string>> = {
     "profile.title": "个人资料",
     "profile.description":
       "保存目标分、考试日期、地区和订阅状态。登录后会同步到账号。",
+    "profile.hero.overview": "个人概览",
+    "profile.hero.fallbackName": "雅思学习者",
+    "profile.hero.freeMember": "免费会员",
+    "profile.hero.proMember": "Pro 会员",
+    "profile.hero.memberSince": "加入于 {date}",
+    "profile.hero.totalPractice": "累计练习",
+    "profile.hero.loadingTitle": "正在加载个人概览",
+    "profile.hero.loadingDescription":
+      "正在检查你的账号、会员状态和已完成练习记录。",
+    "profile.hero.errorTitle": "暂时无法加载个人概览",
+    "profile.hero.errorDescription": "账号概览加载失败。请刷新页面，或稍后再试。",
     "profile.accountInformation": "账号信息",
     "profile.displayName": "显示名称",
     "profile.targetBand": "目标分",
