@@ -162,7 +162,7 @@ export default function PricingPage() {
                 </li>
               ))}
             </ul>
-            <ManualPaymentMethods compact />
+            <ManualPaymentMethods compact hideWechatQr />
             <p className="mt-5 text-sm leading-6 text-slate-600">
               <LocalizedText
                 k="pricing.manualActivationNote"

@@ -21,10 +21,12 @@ const manualPaymentQr = {
 
 type ManualPaymentMethodsProps = {
   compact?: boolean;
+  hideWechatQr?: boolean;
 };
 
 export function ManualPaymentMethods({
   compact = false,
+  hideWechatQr = false,
 }: ManualPaymentMethodsProps) {
   return (
     <section className={compact ? "mt-6" : "mt-8"}>
@@ -39,7 +41,7 @@ export function ManualPaymentMethods({
       <div className={compact ? "mt-3 grid gap-3" : "mt-4 grid gap-4 md:grid-cols-3"}>
         <PaymentQrCard
           title="WeChat Pay"
-          src={manualPaymentQr.wechat.src}
+          src={hideWechatQr ? undefined : manualPaymentQr.wechat.src}
           alt="WeChat Pay QR code"
         />
         <PaymentQrCard
@@ -97,10 +99,10 @@ function PaymentQrCard({
   alt,
 }: {
   title: string;
-  src: string;
+  src?: string;
   alt: string;
 }) {
-  const hasQrImage = publicFileExists(src);
+  const qrSrc = src && publicFileExists(src) ? src : null;
 
   return (
     <Card>
@@ -111,10 +113,10 @@ function PaymentQrCard({
         <CardTitle className="text-base">{title}</CardTitle>
       </CardHeader>
       <CardContent>
-        {hasQrImage ? (
+        {qrSrc ? (
           <div className="rounded-md border border-slate-200 bg-white p-3">
             <Image
-              src={src}
+              src={qrSrc}
               alt={alt}
               width={220}
               height={220}
