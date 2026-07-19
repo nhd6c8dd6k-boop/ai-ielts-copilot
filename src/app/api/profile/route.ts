@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { isSupabaseConfigured } from "@/lib/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getLifetimeStatistics } from "@/features/profile/lifetime-statistics";
 import { isProSubscription } from "@/server/services/memberships";
 import { getUserPracticeUsage } from "@/server/services/usage-limits";
 import { apiErrorResponse } from "@/server/utils/api-error";
@@ -29,8 +30,16 @@ export async function GET() {
     return NextResponse.json({ mode: "anonymous", profile: null });
   }
 
-  const [profileResult, subscriptionResult, usage, practiceStatsResult] =
-    await Promise.all([
+  const [
+    profileResult,
+    subscriptionResult,
+    usage,
+    practiceStatsResult,
+    readingCountResult,
+    listeningCountResult,
+    writingCountResult,
+    wordsWrittenResult,
+  ] = await Promise.all([
     supabase
       .from("profiles")
       .select("display_name,target_band,exam_date,country,timezone,created_at")
@@ -47,6 +56,26 @@ export async function GET() {
       .select("id,skill,band_estimate")
       .eq("user_id", user.id)
       .in("skill", ["reading", "listening", "writing"]),
+    supabase
+      .from("practice_history")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("skill", "reading"),
+    supabase
+      .from("practice_history")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("skill", "listening"),
+    supabase
+      .from("writing_attempts")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id),
+    supabase
+      .from("writing_attempts")
+      .select("words_written:word_count.sum()")
+      .eq("user_id", user.id)
+      .gte("word_count", 0)
+      .maybeSingle(),
   ]);
 
   if (profileResult.error) {
@@ -58,6 +87,10 @@ export async function GET() {
   }
 
   const subscription = subscriptionResult.data;
+  const wordsWritten = parseWordsWrittenAggregate({
+    data: wordsWrittenResult.data,
+    hasError: Boolean(wordsWrittenResult.error),
+  });
 
   return NextResponse.json({
     mode: "supabase",
@@ -97,6 +130,14 @@ export async function GET() {
           band_estimate: attempt.band_estimate,
         })),
     best_scores_error: Boolean(practiceStatsResult.error),
+    lifetime_statistics: getLifetimeStatistics({
+      readingCompleted: readingCountResult.error ? null : readingCountResult.count,
+      listeningCompleted: listeningCountResult.error
+        ? null
+        : listeningCountResult.count,
+      writingCompleted: writingCountResult.error ? null : writingCountResult.count,
+      wordsWritten,
+    }),
     usage,
   });
 }
@@ -139,4 +180,42 @@ export async function PUT(request: Request) {
   }
 
   return NextResponse.json({ mode: "supabase", profile: data });
+}
+
+function parseWordsWrittenAggregate({
+  data,
+  hasError,
+}: {
+  data: unknown;
+  hasError: boolean;
+}) {
+  if (hasError || !data || typeof data !== "object" || Array.isArray(data)) {
+    return null;
+  }
+
+  if (!("words_written" in data)) {
+    return null;
+  }
+
+  return parseAggregateNumber(
+    (data as { words_written?: unknown }).words_written,
+  );
+}
+
+function parseAggregateNumber(value: unknown) {
+  if (value === null) {
+    return 0;
+  }
+
+  if (typeof value === "number") {
+    return Number.isFinite(value) && value >= 0 ? value : null;
+  }
+
+  if (typeof value !== "string" || value.trim() === "") {
+    return null;
+  }
+
+  const parsed = Number(value);
+
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
 }

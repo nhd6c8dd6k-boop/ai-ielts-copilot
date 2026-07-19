@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
   AlertCircle,
+  BarChart3,
   CalendarDays,
   CheckCircle2,
   Crown,
@@ -36,6 +37,12 @@ import {
   type BestScoreAttempt,
   type BestScores,
 } from "@/features/profile/best-scores";
+import {
+  formatLifetimeStatisticValue,
+  getLifetimeStatistics,
+  type LifetimeStatistics,
+  type LifetimeStatisticsInput,
+} from "@/features/profile/lifetime-statistics";
 
 type ProfileSyncMode = "loading" | "local" | "supabase" | "anonymous" | "error";
 
@@ -81,6 +88,13 @@ type ApiBestScoreAttempt = {
   band_estimate?: number | null;
 };
 
+type ApiLifetimeStatistics = {
+  readingCompleted?: number | null;
+  listeningCompleted?: number | null;
+  writingCompleted?: number | null;
+  wordsWritten?: number | null;
+};
+
 type ApiAuthUser = {
   email?: string | null;
   created_at?: string | null;
@@ -98,6 +112,7 @@ type ProfileApiResponse = {
   practice_total_error?: boolean;
   best_score_attempts?: ApiBestScoreAttempt[] | null;
   best_scores_error?: boolean;
+  lifetime_statistics?: ApiLifetimeStatistics | null;
   error?: string;
 };
 
@@ -139,6 +154,8 @@ export default function ProfilePage() {
     BestScoreAttempt[] | null
   >(null);
   const [bestScoresError, setBestScoresError] = useState(false);
+  const [lifetimeStatisticsInput, setLifetimeStatisticsInput] =
+    useState<LifetimeStatisticsInput | null>(null);
 
   useEffect(() => {
     let isActive = true;
@@ -175,6 +192,7 @@ export default function ProfilePage() {
             })),
           );
           setBestScoresError(Boolean(payload.best_scores_error));
+          setLifetimeStatisticsInput(payload.lifetime_statistics ?? null);
           setProfile((currentProfile) => {
             const nextProfile = mergeApiProfile(
               currentProfile,
@@ -196,6 +214,12 @@ export default function ProfilePage() {
         setTotalPracticeError(false);
         setBestScoreAttempts([]);
         setBestScoresError(false);
+        setLifetimeStatisticsInput({
+          readingCompleted: 0,
+          listeningCompleted: 0,
+          writingCompleted: 0,
+          wordsWritten: 0,
+        });
         setSyncMode(payload.mode === "anonymous" ? "anonymous" : "local");
       } catch {
         if (isActive) {
@@ -204,6 +228,7 @@ export default function ProfilePage() {
           setTotalPracticeError(true);
           setBestScoreAttempts(null);
           setBestScoresError(true);
+          setLifetimeStatisticsInput(null);
         }
       }
     }
@@ -278,6 +303,7 @@ export default function ProfilePage() {
     fallbackName: t("profile.hero.fallbackName", "IELTS learner"),
   });
   const bestScores = getBestScores(bestScoreAttempts);
+  const lifetimeStatistics = getLifetimeStatistics(lifetimeStatisticsInput);
 
   const submitProfile = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -360,6 +386,13 @@ export default function ProfilePage() {
         scores={bestScores}
         isLoading={syncMode === "loading"}
         hasError={bestScoresError || syncMode === "error"}
+        t={t}
+      />
+
+      <LifetimeStatisticsCard
+        statistics={lifetimeStatistics}
+        isLoading={syncMode === "loading"}
+        language={language}
         t={t}
       />
 
@@ -667,6 +700,91 @@ function BestScoresCard({
               )}
             </div>
           ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function LifetimeStatisticsCard({
+  statistics,
+  isLoading,
+  language,
+  t,
+}: {
+  statistics: LifetimeStatistics;
+  isLoading: boolean;
+  language: "zh" | "en";
+  t: (key: string, fallback: string) => string;
+}) {
+  const items = [
+    {
+      key: "reading-completed",
+      label: t("profile.statistics.readingCompleted", "Reading Completed"),
+      value: statistics.readingCompleted,
+    },
+    {
+      key: "listening-completed",
+      label: t("profile.statistics.listeningCompleted", "Listening Completed"),
+      value: statistics.listeningCompleted,
+    },
+    {
+      key: "writing-completed",
+      label: t("profile.statistics.writingCompleted", "Writing Completed"),
+      value: statistics.writingCompleted,
+    },
+    {
+      key: "words-written",
+      label: t("profile.statistics.wordsWritten", "Words Written"),
+      value: statistics.wordsWritten,
+    },
+  ];
+  const unavailableLabel = t(
+    "profile.statistics.unavailable",
+    "Data unavailable",
+  );
+
+  return (
+    <Card className="mb-6">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0">
+        <CardTitle>
+          {t("profile.statistics.title", "Lifetime Statistics")}
+        </CardTitle>
+        <BarChart3 className="h-5 w-5 text-slate-400" aria-hidden="true" />
+      </CardHeader>
+      <CardContent aria-busy={isLoading}>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {items.map((item) => {
+            const formattedValue = formatLifetimeStatisticValue(
+              item.value,
+              language,
+            );
+
+            return (
+              <div
+                key={item.key}
+                className="rounded-md border border-slate-200 bg-slate-50 p-4"
+              >
+                <p className="text-sm font-medium text-slate-600">
+                  {item.label}
+                </p>
+                {isLoading ? (
+                  <div className="mt-3 h-8 w-20 animate-pulse rounded bg-slate-200" />
+                ) : (
+                  <p
+                    className="mt-2 text-3xl font-semibold text-slate-950"
+                    aria-label={
+                      item.value === null
+                        ? `${item.label}: ${unavailableLabel}`
+                        : undefined
+                    }
+                  >
+                    {formattedValue}
+                  </p>
+                )}
+              </div>
+            );
+          })}
         </div>
       </CardContent>
     </Card>
