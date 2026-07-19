@@ -49,6 +49,13 @@ import {
   type DashboardNextAction,
   type DashboardWritingDraft,
 } from "@/features/dashboard/next-action";
+import {
+  mapPracticeHistoryToWeeklyAttempts,
+  type WeeklyPracticeProgress,
+  type WeeklyProgressItem,
+  WEEKLY_GOALS,
+  getWeeklyPracticeProgress,
+} from "@/features/dashboard/weekly-progress";
 import { countWords } from "@/lib/word-count";
 
 const skillLabels: Record<PracticeSkill, string> = {
@@ -81,10 +88,12 @@ export default function DashboardPage() {
   const [writingDraft, setWritingDraft] = useState<DashboardWritingDraft | null>(
     null,
   );
+  const [dashboardNow, setDashboardNow] = useState<Date | null>(null);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
       setWritingDraft(findWritingDraft());
+      setDashboardNow(new Date());
     }, 0);
 
     return () => window.clearTimeout(timer);
@@ -104,6 +113,14 @@ export default function DashboardPage() {
     isLoading,
     isError: isSyncError,
   });
+  const weeklyProgress =
+    dashboardNow && totalCompletedAttempts > 0 && !isLoading && !isSyncError
+      ? getWeeklyPracticeProgress({
+          attempts: mapPracticeHistoryToWeeklyAttempts(history),
+          now: dashboardNow,
+          goals: WEEKLY_GOALS,
+        })
+      : null;
   const trendData = history
     .slice(0, 8)
     .reverse()
@@ -213,6 +230,10 @@ export default function DashboardPage() {
         <>
           {nextAction ? (
             <DashboardNextActionCard action={nextAction} t={t} />
+          ) : null}
+
+          {weeklyProgress ? (
+            <DashboardWeeklyProgressCard progress={weeklyProgress} t={t} />
           ) : null}
 
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -621,6 +642,159 @@ function DashboardNextActionCard({
         </Button>
       </CardContent>
     </Card>
+  );
+}
+
+function DashboardWeeklyProgressCard({
+  progress,
+  t,
+}: {
+  progress: WeeklyPracticeProgress;
+  t: (key: string, fallback?: string) => string;
+}) {
+  const skillProgress = [
+    {
+      skill: "reading" as const,
+      label: t("dashboard.weeklyProgress.reading", "Reading"),
+      item: progress.reading,
+    },
+    {
+      skill: "listening" as const,
+      label: t("dashboard.weeklyProgress.listening", "Listening"),
+      item: progress.listening,
+    },
+    {
+      skill: "writing" as const,
+      label: t("dashboard.weeklyProgress.writing", "Writing"),
+      item: progress.writing,
+    },
+  ];
+  const description = progress.isGoalComplete
+    ? t(
+        "dashboard.weeklyProgress.description.completed",
+        "Weekly goal completed. Keep practising if you would like to build more consistency.",
+      )
+    : t(
+        "dashboard.weeklyProgress.description.inProgress",
+        "You are making progress. Complete a few more practices to reach this week's goal.",
+      );
+
+  return (
+    <Card className="mb-6">
+      <CardContent className="grid gap-6 p-6 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            {t("dashboard.weeklyProgress.eyebrow", "This week")}
+          </p>
+          <h2 className="mt-2 text-xl font-semibold leading-tight text-slate-950">
+            {t(
+              "dashboard.weeklyProgress.title",
+              "Weekly practice progress",
+            )}
+          </h2>
+          <p className="mt-2 text-2xl font-semibold text-slate-950">
+            {formatMessage(
+              t(
+                "dashboard.weeklyProgress.summary",
+                "{completed} of {goal} practices completed",
+              ),
+              {
+                completed: `${progress.total.completed}`,
+                goal: `${progress.total.goal}`,
+              },
+            )}
+          </p>
+          <div className="mt-4">
+            <ProgressBar
+              item={progress.total}
+              ariaLabel={formatMessage(
+                t(
+                  "dashboard.weeklyProgress.aria.totalProgress",
+                  "Total weekly progress: {completed} of {goal} practices completed",
+                ),
+                {
+                  completed: `${progress.total.completed}`,
+                  goal: `${progress.total.goal}`,
+                },
+              )}
+            />
+          </div>
+          <p className="mt-3 text-sm leading-6 text-slate-600">
+            {description}
+          </p>
+          <Button asChild variant="outline" size="sm" className="mt-5">
+            <Link href="/practice">
+              {t("dashboard.weeklyProgress.viewPractice", "View all practice")}
+            </Link>
+          </Button>
+        </div>
+
+        <div className="space-y-4">
+          {skillProgress.map(({ skill, label, item }) => (
+            <div
+              key={skill}
+              className="rounded-md border border-slate-200 bg-slate-50 p-4"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="text-sm font-medium text-slate-950">{label}</p>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-slate-950">
+                    {item.completed} / {item.goal}
+                  </span>
+                  {item.completed >= item.goal ? (
+                    <Badge className="border-slate-200 bg-white text-slate-700">
+                      {t("dashboard.weeklyProgress.completed", "Completed")}
+                    </Badge>
+                  ) : null}
+                </div>
+              </div>
+              <div className="mt-3">
+                <ProgressBar
+                  item={item}
+                  ariaLabel={formatMessage(
+                    t(
+                      "dashboard.weeklyProgress.aria.skillProgress",
+                      "{skill} weekly progress: {completed} of {goal}",
+                    ),
+                    {
+                      skill: label,
+                      completed: `${item.completed}`,
+                      goal: `${item.goal}`,
+                    },
+                  )}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ProgressBar({
+  item,
+  ariaLabel,
+}: {
+  item: WeeklyProgressItem;
+  ariaLabel: string;
+}) {
+  const ariaValue = Math.min(item.completed, item.goal);
+
+  return (
+    <div
+      className="h-2.5 overflow-hidden rounded-full bg-slate-200"
+      role="progressbar"
+      aria-label={ariaLabel}
+      aria-valuemin={0}
+      aria-valuemax={item.goal}
+      aria-valuenow={ariaValue}
+    >
+      <div
+        className="h-full rounded-full bg-slate-950"
+        style={{ width: `${item.percent}%` }}
+      />
+    </div>
   );
 }
 

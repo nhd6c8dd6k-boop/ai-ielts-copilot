@@ -482,6 +482,23 @@ export const messages: Record<Language, Record<string, string>> = {
     "dashboard.nextAction.genericTitle": "Keep your momentum going",
     "dashboard.nextAction.genericDescription":
       "Choose another IELTS practice activity to keep building your score history.",
+    "dashboard.weeklyProgress.eyebrow": "This week",
+    "dashboard.weeklyProgress.title": "Weekly practice progress",
+    "dashboard.weeklyProgress.summary":
+      "{completed} of {goal} practices completed",
+    "dashboard.weeklyProgress.description.inProgress":
+      "You are making progress. Complete a few more practices to reach this week's goal.",
+    "dashboard.weeklyProgress.description.completed":
+      "Weekly goal completed. Keep practising if you would like to build more consistency.",
+    "dashboard.weeklyProgress.reading": "Reading",
+    "dashboard.weeklyProgress.listening": "Listening",
+    "dashboard.weeklyProgress.writing": "Writing",
+    "dashboard.weeklyProgress.completed": "Completed",
+    "dashboard.weeklyProgress.viewPractice": "View all practice",
+    "dashboard.weeklyProgress.aria.skillProgress":
+      "{skill} weekly progress: {completed} of {goal}",
+    "dashboard.weeklyProgress.aria.totalProgress":
+      "Total weekly progress: {completed} of {goal} practices completed",
     "dashboard.skill.notStarted": "Not started",
     "dashboard.skill.readingActionActive":
       "Review answer explanations and focus on question types you missed most often.",
@@ -1138,6 +1155,22 @@ export const messages: Record<Language, Record<string, string>> = {
     "dashboard.nextAction.genericTitle": "继续保持练习节奏",
     "dashboard.nextAction.genericDescription":
       "选择下一项 IELTS 练习，继续积累更完整的成绩记录。",
+    "dashboard.weeklyProgress.eyebrow": "本周",
+    "dashboard.weeklyProgress.title": "每周练习进度",
+    "dashboard.weeklyProgress.summary": "已完成 {completed} / {goal} 次练习",
+    "dashboard.weeklyProgress.description.inProgress":
+      "你正在稳步推进，再完成几次练习即可达到本周目标。",
+    "dashboard.weeklyProgress.description.completed":
+      "本周目标已完成，可以继续练习来保持稳定性。",
+    "dashboard.weeklyProgress.reading": "阅读",
+    "dashboard.weeklyProgress.listening": "听力",
+    "dashboard.weeklyProgress.writing": "写作",
+    "dashboard.weeklyProgress.completed": "已完成",
+    "dashboard.weeklyProgress.viewPractice": "查看全部练习",
+    "dashboard.weeklyProgress.aria.skillProgress":
+      "{skill}本周进度：已完成 {completed} / {goal}",
+    "dashboard.weeklyProgress.aria.totalProgress":
+      "本周总进度：已完成 {completed} / {goal} 次练习",
     "dashboard.skill.notStarted": "未开始",
     "dashboard.skill.readingActionActive": "继续做一套不同题型的阅读，观察正确率是否稳定。",
     "dashboard.skill.readingActionEmpty": "先选择一套已发布的 Reading 练习，建立初始阅读水平。",
