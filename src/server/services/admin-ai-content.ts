@@ -3,7 +3,11 @@ import { z } from "zod";
 import { createOpenAIClient } from "@/lib/openai/client";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { assertOriginalContentPolicy } from "@/lib/validators/content-policy";
-import { writingVisualDataSchema } from "@/lib/writing-visual-data";
+import {
+  adminWritingOutputSchema,
+  normalizeAdminWritingVisualDataForStorage,
+  validateAdminWritingContentPayload,
+} from "@/server/services/admin-writing-generation-schema";
 
 const adminReadingQuestionSchema = z.object({
   type: z.string().min(1),
@@ -57,18 +61,6 @@ const adminListeningOutputSchema = z.object({
   audio_status: z.literal("pending"),
 });
 
-const adminWritingOutputSchema = z.object({
-  task_type: z.union([z.literal(1), z.literal(2)]),
-  band_target: z.number().int().min(5).max(9),
-  topic: z.string().min(1),
-  prompt: z.string().min(1),
-  sample_answer_band_7: z.string().min(1),
-  sample_answer_band_8: z.string().min(1),
-  sample_answer_band_9: z.string().min(1),
-  scoring_notes: z.array(z.string()).min(1),
-  visual_data: writingVisualDataSchema.nullable(),
-});
-
 export const adminGenerateReadingInputSchema = z.object({
   band: z.number().int().min(5).max(9),
   topic: z.string().min(1),
@@ -113,7 +105,34 @@ type UsageSummary = {
 
 type UsageTrackedError = Error & {
   usage?: UsageSummary;
+  code?: string;
+  requestId?: string;
+  safeMessage?: string;
 };
+
+class AdminGenerationRequestError extends Error {
+  safeMessage: string;
+  code: string;
+  requestId?: string;
+
+  constructor({
+    message,
+    safeMessage,
+    code,
+    requestId,
+  }: {
+    message: string;
+    safeMessage: string;
+    code: string;
+    requestId?: string;
+  }) {
+    super(message);
+    this.name = "AdminGenerationRequestError";
+    this.safeMessage = safeMessage;
+    this.code = code;
+    this.requestId = requestId;
+  }
+}
 
 export async function generateAdminReadingContent({
   adminUserId,
@@ -299,27 +318,34 @@ export async function generateAdminWritingContent({
             "Generate a fully original IELTS Writing task.",
             "Prompt and sample answers must be in English.",
             "Do not copy official IELTS, Cambridge IELTS, exam recalls, or copyrighted materials.",
-            "For Task 1 chart, graph, pie chart, table or process diagram tasks, include visual_data as structured JSON. For Task 2, set visual_data to null.",
+            "Use the fixed visual_data shape exactly. Never output null and never omit visual_data fields.",
+            "For Task 2, visual_data.type must be none, all visual_data strings must be empty, and all visual_data arrays must be empty.",
+            "For Task 1 bar_chart, line_chart, and pie_chart, fill categories and series. Every series.values array must have the same length as categories. Use empty table_headers, table_rows, and stages.",
+            "For Task 1 table, fill table_headers and table_rows. Every row must have the same length as table_headers. Use empty categories, series, and stages.",
+            "For Task 1 process_diagram, fill stages in order. Use empty categories, series, table_headers, and table_rows.",
+            "Do not output schema fields outside the requested JSON shape.",
           ],
         }),
       });
+      const data = validateAdminWritingContentPayload(payload.data);
+      const visualData = normalizeAdminWritingVisualDataForStorage(data.visual_data);
 
-      assertOriginalContentPolicy(payload.data.prompt);
+      assertOriginalContentPolicy(data.prompt);
 
       const admin = createSupabaseAdminClient();
-      const title = `Task ${payload.data.task_type}: ${payload.data.topic}`;
+      const title = `Task ${data.task_type}: ${data.topic}`;
       const { data: task, error } = await admin
         .from("writing_tasks")
         .insert({
-          task_type: payload.data.task_type,
-          topic: payload.data.topic,
-          prompt: payload.data.prompt,
-          band_target: payload.data.band_target,
-          sample_answer_band_7: payload.data.sample_answer_band_7,
-          sample_answer_band_8: payload.data.sample_answer_band_8,
-          sample_answer_band_9: payload.data.sample_answer_band_9,
-          scoring_notes: payload.data.scoring_notes,
-          visual_data: payload.data.visual_data,
+          task_type: data.task_type,
+          topic: data.topic,
+          prompt: data.prompt,
+          band_target: data.band_target,
+          sample_answer_band_7: data.sample_answer_band_7,
+          sample_answer_band_8: data.sample_answer_band_8,
+          sample_answer_band_9: data.sample_answer_band_9,
+          scoring_notes: data.scoring_notes,
+          visual_data: visualData,
           source_type: "ai_generated",
           status: "review",
           created_by: adminUserId,
@@ -399,6 +425,9 @@ async function generateMany({
       targetId: null,
       metadata: {
         error: error instanceof Error ? error.message : "Unknown generation error",
+        errorCode: (error as UsageTrackedError).code,
+        requestId: (error as UsageTrackedError).requestId,
+        operation: "admin_content_generation",
         model: usage?.model,
         inputTokens: usage?.inputTokens,
         outputTokens: usage?.outputTokens,
@@ -423,27 +452,34 @@ async function callStrictJson<Schema extends z.ZodType>({
 }) {
   const model = "gpt-5.2";
   const openai = createOpenAIClient();
-  const response = await openai.responses.create({
-    model,
-    input: [
-      {
-        role: "system",
-        content: systemPrompt,
+  let response;
+
+  try {
+    response = await openai.responses.create({
+      model,
+      input: [
+        {
+          role: "system",
+          content: systemPrompt,
+        },
+        {
+          role: "user",
+          content: userPrompt,
+        },
+      ],
+      text: {
+        format: {
+          type: "json_schema",
+          name: schemaName,
+          schema: schema.toJSONSchema(),
+          strict: true,
+        },
       },
-      {
-        role: "user",
-        content: userPrompt,
-      },
-    ],
-    text: {
-      format: {
-        type: "json_schema",
-        name: schemaName,
-        schema: schema.toJSONSchema(),
-        strict: true,
-      },
-    },
-  });
+    });
+  } catch (error) {
+    throw normalizeOpenAIRequestError(error);
+  }
+
   const usage = extractUsage(model, response);
 
   try {
@@ -461,6 +497,41 @@ async function callStrictJson<Schema extends z.ZodType>({
     validationError.usage = usage;
     throw validationError;
   }
+}
+
+function normalizeOpenAIRequestError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  const code = readStringProperty(error, "code");
+  const requestId =
+    readStringProperty(error, "request_id") ??
+    readStringProperty(error, "requestId");
+
+  if (code === "invalid_json_schema" || /invalid schema/i.test(message)) {
+    return new AdminGenerationRequestError({
+      message,
+      safeMessage:
+        "Writing generation could not start because the output schema is invalid.",
+      code: "invalid_json_schema",
+      requestId,
+    });
+  }
+
+  return new AdminGenerationRequestError({
+    message,
+    safeMessage: "Admin generation request failed.",
+    code: code ?? "openai_request_failed",
+    requestId,
+  });
+}
+
+function readStringProperty(object: unknown, key: string) {
+  if (!object || typeof object !== "object") {
+    return undefined;
+  }
+
+  const value = (object as Record<string, unknown>)[key];
+
+  return typeof value === "string" ? value : undefined;
 }
 
 async function loadPromptTemplate(skill: string, promptTemplateId?: string) {
