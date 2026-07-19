@@ -427,6 +427,61 @@ export const messages: Record<Language, Record<string, string>> = {
     "dashboard.onboarding.startListening": "Start Listening",
     "dashboard.onboarding.startWriting": "Start Writing",
     "dashboard.onboarding.continueDraft": "Continue Writing draft",
+    "dashboard.nextAction.continueEyebrow": "Continue practice",
+    "dashboard.nextAction.recommendedEyebrow": "Recommended next",
+    "dashboard.nextAction.continueWritingTitle": "Continue your Writing draft",
+    "dashboard.nextAction.continueWritingDescription":
+      "You have an unfinished response with {count} words. Pick up where you left off.",
+    "dashboard.nextAction.continueWritingButton": "Continue Writing",
+    "dashboard.nextAction.reason.continueDraft": "Unfinished draft",
+    "dashboard.nextAction.reason.notPracticed": "Not practised yet",
+    "dashboard.nextAction.reason.lowerRecentAverage": "Lower recent average",
+    "dashboard.nextAction.reason.leastRecentlyPracticed":
+      "Least recently practised",
+    "dashboard.nextAction.reason.buildConsistency":
+      "Continue building consistency",
+    "dashboard.nextAction.button.reading": "Start Reading",
+    "dashboard.nextAction.button.listening": "Start Listening",
+    "dashboard.nextAction.button.writing": "Start Writing",
+    "dashboard.nextAction.notPracticedTitle.reading":
+      "Build your Reading baseline",
+    "dashboard.nextAction.notPracticedTitle.listening":
+      "Build your Listening baseline",
+    "dashboard.nextAction.notPracticedTitle.writing":
+      "Build your Writing baseline",
+    "dashboard.nextAction.notPracticedDescription.reading":
+      "Complete your first Reading practice to add Reading insights to your dashboard.",
+    "dashboard.nextAction.notPracticedDescription.listening":
+      "Complete your first Listening practice to add Listening insights to your dashboard.",
+    "dashboard.nextAction.notPracticedDescription.writing":
+      "Complete your first Writing practice to add Writing insights to your dashboard.",
+    "dashboard.nextAction.weakSkillTitle.reading":
+      "Strengthen your Reading accuracy",
+    "dashboard.nextAction.weakSkillTitle.listening":
+      "Strengthen your Listening accuracy",
+    "dashboard.nextAction.weakSkillTitle.writing":
+      "Strengthen your Writing consistency",
+    "dashboard.nextAction.weakSkillDescription.reading":
+      "Your recent Reading results are lower than your other skills. Complete another practice to build consistency.",
+    "dashboard.nextAction.weakSkillDescription.listening":
+      "Your recent Listening results are lower than your other skills. Complete another practice to build consistency.",
+    "dashboard.nextAction.weakSkillDescription.writing":
+      "Your recent Writing results are lower than your other skills. Complete another practice to build consistency.",
+    "dashboard.nextAction.leastRecentTitle.reading":
+      "Return to Reading practice",
+    "dashboard.nextAction.leastRecentTitle.listening":
+      "Return to Listening practice",
+    "dashboard.nextAction.leastRecentTitle.writing":
+      "Return to Writing practice",
+    "dashboard.nextAction.leastRecentDescription.reading":
+      "Reading is the skill you have practised least recently. Complete another practice to keep your baseline fresh.",
+    "dashboard.nextAction.leastRecentDescription.listening":
+      "Listening is the skill you have practised least recently. Complete another practice to keep your baseline fresh.",
+    "dashboard.nextAction.leastRecentDescription.writing":
+      "Writing is the skill you have practised least recently. Complete another practice to keep your baseline fresh.",
+    "dashboard.nextAction.genericTitle": "Keep your momentum going",
+    "dashboard.nextAction.genericDescription":
+      "Choose another IELTS practice activity to keep building your score history.",
     "dashboard.skill.notStarted": "Not started",
     "dashboard.skill.readingActionActive":
       "Review answer explanations and focus on question types you missed most often.",
@@ -1039,6 +1094,50 @@ export const messages: Record<Language, Record<string, string>> = {
     "dashboard.onboarding.startListening": "开始听力练习",
     "dashboard.onboarding.startWriting": "开始写作练习",
     "dashboard.onboarding.continueDraft": "继续 Writing 草稿",
+    "dashboard.nextAction.continueEyebrow": "继续练习",
+    "dashboard.nextAction.recommendedEyebrow": "下一步建议",
+    "dashboard.nextAction.continueWritingTitle": "继续完成 Writing 草稿",
+    "dashboard.nextAction.continueWritingDescription":
+      "你有一篇尚未完成的作文，当前约 {count} 词，可以从上次的位置继续。",
+    "dashboard.nextAction.continueWritingButton": "继续 Writing",
+    "dashboard.nextAction.reason.continueDraft": "未完成草稿",
+    "dashboard.nextAction.reason.notPracticed": "尚未练习",
+    "dashboard.nextAction.reason.lowerRecentAverage": "近期平均表现较低",
+    "dashboard.nextAction.reason.leastRecentlyPracticed": "最近较少练习",
+    "dashboard.nextAction.reason.buildConsistency": "继续保持练习节奏",
+    "dashboard.nextAction.button.reading": "开始 Reading",
+    "dashboard.nextAction.button.listening": "开始 Listening",
+    "dashboard.nextAction.button.writing": "开始 Writing",
+    "dashboard.nextAction.notPracticedTitle.reading": "建立 Reading 基线",
+    "dashboard.nextAction.notPracticedTitle.listening": "建立 Listening 基线",
+    "dashboard.nextAction.notPracticedTitle.writing": "建立 Writing 基线",
+    "dashboard.nextAction.notPracticedDescription.reading":
+      "完成第一次 Reading 练习，让 Dashboard 开始记录你的 Reading 表现。",
+    "dashboard.nextAction.notPracticedDescription.listening":
+      "完成第一次 Listening 练习，让 Dashboard 开始记录你的 Listening 表现。",
+    "dashboard.nextAction.notPracticedDescription.writing":
+      "完成第一次 Writing 练习，让 Dashboard 开始记录你的 Writing 表现。",
+    "dashboard.nextAction.weakSkillTitle.reading": "加强 Reading 准确率",
+    "dashboard.nextAction.weakSkillTitle.listening": "加强 Listening 准确率",
+    "dashboard.nextAction.weakSkillTitle.writing": "继续打磨 Writing 表现",
+    "dashboard.nextAction.weakSkillDescription.reading":
+      "近期 Reading 结果相对低一些。再完成一套练习，有助于观察是否稳定。",
+    "dashboard.nextAction.weakSkillDescription.listening":
+      "近期 Listening 结果相对低一些。再完成一套练习，有助于观察是否稳定。",
+    "dashboard.nextAction.weakSkillDescription.writing":
+      "近期 Writing 结果相对低一些。再完成一篇练习，有助于观察是否稳定。",
+    "dashboard.nextAction.leastRecentTitle.reading": "回到 Reading 练习",
+    "dashboard.nextAction.leastRecentTitle.listening": "回到 Listening 练习",
+    "dashboard.nextAction.leastRecentTitle.writing": "回到 Writing 练习",
+    "dashboard.nextAction.leastRecentDescription.reading":
+      "Reading 是最近较少练习的一项。再完成一套练习，可以保持能力基线清晰。",
+    "dashboard.nextAction.leastRecentDescription.listening":
+      "Listening 是最近较少练习的一项。再完成一套练习，可以保持能力基线清晰。",
+    "dashboard.nextAction.leastRecentDescription.writing":
+      "Writing 是最近较少练习的一项。再完成一篇练习，可以保持能力基线清晰。",
+    "dashboard.nextAction.genericTitle": "继续保持练习节奏",
+    "dashboard.nextAction.genericDescription":
+      "选择下一项 IELTS 练习，继续积累更完整的成绩记录。",
     "dashboard.skill.notStarted": "未开始",
     "dashboard.skill.readingActionActive": "继续做一套不同题型的阅读，观察正确率是否稳定。",
     "dashboard.skill.readingActionEmpty": "先选择一套已发布的 Reading 练习，建立初始阅读水平。",

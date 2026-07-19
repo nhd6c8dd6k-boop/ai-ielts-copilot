@@ -23,7 +23,7 @@ assert.match(dashboardSource, /isSyncError && !history\.length/);
 console.log("PASS loading and error states are handled before onboarding");
 
 assert.match(dashboardSource, /shouldShowOnboarding \? \(/);
-assert.match(dashboardSource, /<NewUserOnboarding writingDraftHref=\{writingDraftHref\} t=\{t\} \/>/);
+assert.match(dashboardSource, /<NewUserOnboarding writingDraft=\{writingDraft\} t=\{t\} \/>/);
 console.log("PASS zero-attempt users see a dedicated onboarding panel");
 
 assert.match(dashboardSource, /href: "\/practice\/reading"/);
@@ -34,11 +34,12 @@ assert.match(dashboardSource, /className="w-full"/);
 console.log("PASS Reading, Listening, and Writing onboarding actions are present and responsive");
 
 assert.match(dashboardSource, /writingDraftStoragePrefix/);
-assert.match(dashboardSource, /findWritingDraftHref/);
+assert.match(dashboardSource, /findWritingDraft/);
 assert.match(dashboardSource, /dashboard\.onboarding\.continueDraft/);
 console.log("PASS saved Writing drafts keep a continue entry in the empty state");
 
-assert.match(dashboardSource, /<>\s*<div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">/);
+assert.match(dashboardSource, /DashboardNextActionCard/);
+assert.match(dashboardSource, /<div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">/);
 assert.match(dashboardSource, /dashboard\.learningTrend/);
 assert.match(dashboardSource, /dashboard\.skillRadar/);
 assert.match(dashboardSource, /dashboard\.recentPractice/);

@@ -44,6 +44,12 @@ import {
   type PracticeSkill,
 } from "@/features/practice-history/storage";
 import { useSyncedPracticeHistory } from "@/features/practice-history/use-practice-history";
+import {
+  getDashboardNextAction,
+  type DashboardNextAction,
+  type DashboardWritingDraft,
+} from "@/features/dashboard/next-action";
+import { countWords } from "@/lib/word-count";
 
 const skillLabels: Record<PracticeSkill, string> = {
   reading: "Reading",
@@ -72,11 +78,13 @@ export default function DashboardPage() {
   const { history, syncMode } = useSyncedPracticeHistory();
   const [activeRecentSkill, setActiveRecentSkill] =
     useState<PracticeSkill>("reading");
-  const [writingDraftHref, setWritingDraftHref] = useState<string | null>(null);
+  const [writingDraft, setWritingDraft] = useState<DashboardWritingDraft | null>(
+    null,
+  );
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      setWritingDraftHref(findWritingDraftHref());
+      setWritingDraft(findWritingDraft());
     }, 0);
 
     return () => window.clearTimeout(timer);
@@ -90,6 +98,12 @@ export default function DashboardPage() {
   const isSyncError = syncMode === "error";
   const shouldShowOnboarding =
     totalCompletedAttempts === 0 && !isLoading && !isSyncError;
+  const nextAction = getDashboardNextAction({
+    history,
+    writingDraft,
+    isLoading,
+    isError: isSyncError,
+  });
   const trendData = history
     .slice(0, 8)
     .reverse()
@@ -194,9 +208,13 @@ export default function DashboardPage() {
           )}
         />
       ) : shouldShowOnboarding ? (
-        <NewUserOnboarding writingDraftHref={writingDraftHref} t={t} />
+        <NewUserOnboarding writingDraft={writingDraft} t={t} />
       ) : (
         <>
+          {nextAction ? (
+            <DashboardNextActionCard action={nextAction} t={t} />
+          ) : null}
+
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {stats.map((stat) => {
               const Icon = stat.icon;
@@ -424,10 +442,10 @@ function DashboardStatusPanel({
 }
 
 function NewUserOnboarding({
-  writingDraftHref,
+  writingDraft,
   t,
 }: {
-  writingDraftHref: string | null;
+  writingDraft: DashboardWritingDraft | null;
   t: (key: string, fallback?: string) => string;
 }) {
   const skillActions = [
@@ -468,7 +486,7 @@ function NewUserOnboarding({
       <Card className="overflow-hidden">
         <CardHeader className="border-b border-slate-100 bg-slate-50/70">
           <CardTitle className="text-2xl leading-tight">
-            {writingDraftHref
+            {writingDraft
               ? t(
                   "dashboard.onboarding.draftTitle",
                   "Complete your first practice to unlock dashboard insights",
@@ -479,7 +497,7 @@ function NewUserOnboarding({
                 )}
           </CardTitle>
           <CardDescription className="max-w-2xl text-base leading-7">
-            {writingDraftHref
+            {writingDraft
               ? t(
                   "dashboard.onboarding.draftDescription",
                   "You have a Writing draft saved in this browser. Finish it or complete one practice to unlock score trends, skill insights, and clearer next-step recommendations.",
@@ -514,9 +532,9 @@ function NewUserOnboarding({
               </div>
             ))}
           </div>
-          {writingDraftHref ? (
+          {writingDraft ? (
             <Button asChild variant="outline" className="mt-5">
-              <Link href={writingDraftHref}>
+              <Link href={writingDraft.href}>
                 {t("dashboard.onboarding.continueDraft", "Continue Writing draft")}
               </Link>
             </Button>
@@ -555,6 +573,57 @@ function NewUserOnboarding({
   );
 }
 
+function DashboardNextActionCard({
+  action,
+  t,
+}: {
+  action: DashboardNextAction;
+  t: (key: string, fallback?: string) => string;
+}) {
+  const description = formatMessage(
+    t(action.descriptionKey, action.descriptionFallback),
+    {
+      count: `${action.metadata?.wordCount ?? 0}`,
+    },
+  );
+
+  return (
+    <Card className="mb-6 overflow-hidden border-slate-300">
+      <CardContent className="flex flex-col gap-5 p-6 md:flex-row md:items-center md:justify-between">
+        <div className="flex min-w-0 gap-4">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-slate-950 text-white">
+            {renderSkillIcon(action.skill)}
+          </div>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                {t(action.eyebrowKey, action.eyebrowFallback)}
+              </p>
+              {action.reasonKey ? (
+                <Badge className="border-slate-200 bg-slate-50 text-slate-700">
+                  {t(action.reasonKey, action.reasonFallback)}
+                </Badge>
+              ) : null}
+            </div>
+            <h2 className="mt-2 text-xl font-semibold leading-tight text-slate-950">
+              {t(action.titleKey, action.titleFallback)}
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+              {description}
+            </p>
+          </div>
+        </div>
+        <Button asChild className="w-full shrink-0 md:w-auto">
+          <Link href={action.href}>
+            {t(action.buttonKey, action.buttonFallback)}
+            <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </Link>
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
 function EmptyChart({ label }: { label: string }) {
   return (
     <div className="flex h-72 items-center justify-center rounded-md border border-dashed border-slate-300 bg-slate-50">
@@ -575,7 +644,7 @@ function capitalize(value: string) {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
-function findWritingDraftHref() {
+function findWritingDraft(): DashboardWritingDraft | null {
   if (typeof window === "undefined") {
     return null;
   }
@@ -595,10 +664,35 @@ function findWritingDraftHref() {
 
     const taskId = key.slice(writingDraftStoragePrefix.length);
 
-    return taskId ? `/practice/writing/${taskId}` : "/practice/writing";
+    return {
+      href: taskId ? `/practice/writing/${taskId}` : "/practice/writing",
+      wordCount: countWords(draft),
+    };
   }
 
   return null;
+}
+
+function renderSkillIcon(skill: PracticeSkill) {
+  if (skill === "reading") {
+    return <BookOpen className="h-5 w-5" aria-hidden="true" />;
+  }
+
+  if (skill === "listening") {
+    return <Headphones className="h-5 w-5" aria-hidden="true" />;
+  }
+
+  return <PencilLine className="h-5 w-5" aria-hidden="true" />;
+}
+
+function formatMessage(
+  template: string,
+  values: Record<string, string>,
+) {
+  return Object.entries(values).reduce(
+    (message, [key, value]) => message.replaceAll(`{${key}}`, value),
+    template,
+  );
 }
 
 function buildSkillRows(
