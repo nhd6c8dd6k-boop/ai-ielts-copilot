@@ -1,11 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
+  AlertCircle,
+  ArrowRight,
   BookOpen,
   CalendarDays,
+  Headphones,
   LineChart as LineChartIcon,
+  Loader2,
+  PencilLine,
   Target,
 } from "lucide-react";
 import {
@@ -26,7 +31,13 @@ import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   getSkillAverage,
   type PracticeHistoryItem,
@@ -54,16 +65,31 @@ const syncLabels = {
   error: "云端同步失败",
 };
 
+const writingDraftStoragePrefix = "ai-ielts-writing-draft-";
+
 export default function DashboardPage() {
   const { t } = useI18n();
   const { history, syncMode } = useSyncedPracticeHistory();
   const [activeRecentSkill, setActiveRecentSkill] =
     useState<PracticeSkill>("reading");
+  const [writingDraftHref, setWritingDraftHref] = useState<string | null>(null);
 
-  const completedSets = history.length;
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setWritingDraftHref(findWritingDraftHref());
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  const totalCompletedAttempts = history.length;
   const latestAttempt = history[0];
   const averageReadingScore = getAverageAccuracy(history, "reading");
   const averageListeningScore = getAverageAccuracy(history, "listening");
+  const isLoading = syncMode === "loading";
+  const isSyncError = syncMode === "error";
+  const shouldShowOnboarding =
+    totalCompletedAttempts === 0 && !isLoading && !isSyncError;
   const trendData = history
     .slice(0, 8)
     .reverse()
@@ -95,7 +121,7 @@ export default function DashboardPage() {
     {
       label: "Total Attempts",
       labelKey: "dashboard.totalAttempts",
-      value: `${completedSets}`,
+      value: `${totalCompletedAttempts}`,
       icon: BookOpen,
     },
     {
@@ -149,194 +175,383 @@ export default function DashboardPage() {
         </Badge>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {stats.map((stat) => {
-          const Icon = stat.icon;
+      {isLoading ? (
+        <DashboardStatusPanel
+          icon="loading"
+          title={t("dashboard.loadingTitle", "Loading your dashboard")}
+          description={t(
+            "dashboard.loadingDescription",
+            "We are syncing your practice history before showing insights.",
+          )}
+        />
+      ) : isSyncError && !history.length ? (
+        <DashboardStatusPanel
+          icon="error"
+          title={t("dashboard.errorTitle", "Dashboard is temporarily unavailable")}
+          description={t(
+            "dashboard.errorDescription",
+            "We could not load your practice history. Please refresh the page or try again later.",
+          )}
+        />
+      ) : shouldShowOnboarding ? (
+        <NewUserOnboarding writingDraftHref={writingDraftHref} t={t} />
+      ) : (
+        <>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {stats.map((stat) => {
+              const Icon = stat.icon;
 
-          return (
-            <Card key={stat.label}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-slate-600">
-                  {t(stat.labelKey, stat.label)}
+              return (
+                <Card key={stat.label}>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium text-slate-600">
+                      {t(stat.labelKey, stat.label)}
+                    </CardTitle>
+                    <Icon className="h-4 w-4 text-slate-400" aria-hidden="true" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-semibold text-slate-950">
+                      {stat.value}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+
+          <div className="mt-6 grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+            <Card>
+              <CardHeader>
+                <CardTitle>
+                  {t("dashboard.learningTrend", "Learning trend")}
                 </CardTitle>
-                <Icon className="h-4 w-4 text-slate-400" aria-hidden="true" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-semibold text-slate-950">
-                  {stat.value}
+                {trendData.length ? (
+                  <div className="h-72">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={trendData}>
+                        <CartesianGrid stroke="#e5e7eb" strokeDasharray="3 3" />
+                        <XAxis dataKey="name" stroke="#64748b" />
+                        <YAxis domain={[4, 9]} stroke="#64748b" />
+                        <Line
+                          type="monotone"
+                          dataKey="band"
+                          stroke="#0f766e"
+                          strokeWidth={2}
+                          dot={{ r: 4 }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <EmptyChart label={t("dashboard.emptyChart")} />
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>{t("dashboard.skillRadar", "Skill radar")}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {history.length ? (
+                  <div className="h-72">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RadarChart data={radarData}>
+                        <PolarGrid />
+                        <PolarAngleAxis dataKey="skill" />
+                        <Radar
+                          dataKey="band"
+                          stroke="#0f766e"
+                          fill="#0f766e"
+                          fillOpacity={0.18}
+                        />
+                      </RadarChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <EmptyChart label={t("dashboard.emptyChart")} />
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="mt-6 grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+            <Card>
+              <CardHeader>
+                <CardTitle>{t("dashboard.skillFocus", "Skill focus")}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {skillRows.map((row) => (
+                  <div
+                    key={row.skill}
+                    className="rounded-md border border-slate-200 bg-slate-50 p-4"
+                  >
+                    <div className="flex items-center justify-between gap-4">
+                      <p className="text-sm font-medium text-slate-950">
+                        {row.skill}
+                      </p>
+                      <Badge className="bg-white">{row.status}</Badge>
+                    </div>
+                    <p className="mt-2 text-sm text-slate-600">{row.action}</p>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                  <CardTitle>
+                    {t("dashboard.recentPractice", "Recent Practice")}
+                  </CardTitle>
+                  <div className="flex max-w-full gap-2 overflow-x-auto rounded-md bg-slate-100 p-1">
+                    {recentPracticeTabs.map((tab) => {
+                      const isActive = activeRecentSkill === tab.skill;
+
+                      return (
+                        <button
+                          key={tab.skill}
+                          type="button"
+                          className={
+                            isActive
+                              ? "whitespace-nowrap rounded px-3 py-2 text-sm font-medium text-white bg-slate-950"
+                              : "whitespace-nowrap rounded px-3 py-2 text-sm font-medium text-slate-600 hover:bg-white hover:text-slate-950"
+                          }
+                          onClick={() => setActiveRecentSkill(tab.skill)}
+                        >
+                          {tab.label} ({recentAttemptsBySkill[tab.skill].length})
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {activeRecentAttempts.length ? (
+                  activeRecentAttempts.map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex flex-col gap-2 rounded-md border border-slate-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge>{skillLabels[item.skill]}</Badge>
+                          <p className="text-sm font-medium text-slate-950">
+                            {getDisplayTitle(item.title)}
+                          </p>
+                        </div>
+                        <p className="mt-2 text-xs text-slate-500">
+                          {item.detail}
+                        </p>
+                      </div>
+                      <div className="text-left sm:text-right">
+                        <p className="text-sm font-semibold text-slate-950">
+                          {item.scoreLabel}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-500">
+                          {new Date(item.createdAt).toLocaleDateString()}
+                        </p>
+                        {item.resultUrl ? (
+                          <Button asChild variant="outline" size="sm" className="mt-2">
+                            <Link href={item.resultUrl}>
+                              {t("dashboard.viewResult", "View Result")}
+                            </Link>
+                          </Button>
+                        ) : null}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="rounded-md border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
+                    <p className="text-sm font-medium text-slate-950">
+                      {t(
+                        `dashboard.${activeRecentSkill}Empty`,
+                        `No ${skillLabels[activeRecentSkill]} practice yet.`,
+                      )}
+                    </p>
+                    {activeRecentTab ? (
+                      <Button asChild className="mt-5">
+                        <Link href={activeRecentTab.href}>
+                          {t(
+                            `dashboard.start${capitalize(activeRecentTab.label)}`,
+                            `Start ${activeRecentTab.label}`,
+                          )}
+                        </Link>
+                      </Button>
+                    ) : null}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </>
+      )}
+    </AppShell>
+  );
+}
+
+function DashboardStatusPanel({
+  icon,
+  title,
+  description,
+}: {
+  icon: "loading" | "error";
+  title: string;
+  description: string;
+}) {
+  const Icon = icon === "loading" ? Loader2 : AlertCircle;
+
+  return (
+    <Card>
+      <CardContent className="flex min-h-64 flex-col items-center justify-center p-8 text-center">
+        <Icon
+          className={
+            icon === "loading"
+              ? "h-8 w-8 animate-spin text-slate-400"
+              : "h-8 w-8 text-amber-600"
+          }
+          aria-hidden="true"
+        />
+        <h2 className="mt-4 text-lg font-semibold text-slate-950">{title}</h2>
+        <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
+          {description}
+        </p>
+      </CardContent>
+    </Card>
+  );
+}
+
+function NewUserOnboarding({
+  writingDraftHref,
+  t,
+}: {
+  writingDraftHref: string | null;
+  t: (key: string, fallback?: string) => string;
+}) {
+  const skillActions = [
+    {
+      title: "Reading",
+      description: t(
+        "dashboard.onboarding.readingDescription",
+        "Practice with timed IELTS-style reading sets and detailed answer explanations.",
+      ),
+      button: t("dashboard.onboarding.startReading", "Start Reading"),
+      href: "/practice/reading",
+      icon: BookOpen,
+    },
+    {
+      title: "Listening",
+      description: t(
+        "dashboard.onboarding.listeningDescription",
+        "Complete IELTS-style listening practice with instant scoring and answer review.",
+      ),
+      button: t("dashboard.onboarding.startListening", "Start Listening"),
+      href: "/practice/listening",
+      icon: Headphones,
+    },
+    {
+      title: "Writing",
+      description: t(
+        "dashboard.onboarding.writingDescription",
+        "Write a Task 1 or Task 2 response and receive AI-powered feedback.",
+      ),
+      button: t("dashboard.onboarding.startWriting", "Start Writing"),
+      href: "/practice/writing",
+      icon: PencilLine,
+    },
+  ];
+
+  return (
+    <div className="space-y-5">
+      <Card className="overflow-hidden">
+        <CardHeader className="border-b border-slate-100 bg-slate-50/70">
+          <CardTitle className="text-2xl leading-tight">
+            {writingDraftHref
+              ? t(
+                  "dashboard.onboarding.draftTitle",
+                  "Complete your first practice to unlock dashboard insights",
+                )
+              : t(
+                  "dashboard.onboarding.title",
+                  "Start building your IELTS baseline",
+                )}
+          </CardTitle>
+          <CardDescription className="max-w-2xl text-base leading-7">
+            {writingDraftHref
+              ? t(
+                  "dashboard.onboarding.draftDescription",
+                  "You have a Writing draft saved in this browser. Finish it or complete one practice to unlock score trends, skill insights, and clearer next-step recommendations.",
+                )
+              : t(
+                  "dashboard.onboarding.description",
+                  "Complete one practice in each skill to unlock score trends, skill insights, and personalized recommendations.",
+                )}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="grid gap-3 sm:grid-cols-3">
+            {[
+              t(
+                "dashboard.onboarding.benefitProgress",
+                "Track your score progress",
+              ),
+              t(
+                "dashboard.onboarding.benefitCompare",
+                "Compare your IELTS skills",
+              ),
+              t(
+                "dashboard.onboarding.benefitNextSteps",
+                "Get clearer next-step recommendations",
+              ),
+            ].map((benefit) => (
+              <div
+                key={benefit}
+                className="rounded-md border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700"
+              >
+                {benefit}
+              </div>
+            ))}
+          </div>
+          {writingDraftHref ? (
+            <Button asChild variant="outline" className="mt-5">
+              <Link href={writingDraftHref}>
+                {t("dashboard.onboarding.continueDraft", "Continue Writing draft")}
+              </Link>
+            </Button>
+          ) : null}
+        </CardContent>
+      </Card>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        {skillActions.map((action) => {
+          const Icon = action.icon;
+
+          return (
+            <Card key={action.title} className="h-full">
+              <CardHeader>
+                <div className="flex h-10 w-10 items-center justify-center rounded-md bg-slate-950 text-white">
+                  <Icon className="h-5 w-5" aria-hidden="true" />
+                </div>
+                <CardTitle className="text-xl">{action.title}</CardTitle>
+                <CardDescription className="leading-6">
+                  {action.description}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button asChild className="w-full">
+                  <Link href={action.href}>
+                    {action.button}
+                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                  </Link>
+                </Button>
               </CardContent>
             </Card>
           );
         })}
       </div>
-
-      <div className="mt-6 grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              {t("dashboard.learningTrend", "Learning trend")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {trendData.length ? (
-              <div className="h-72">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={trendData}>
-                    <CartesianGrid stroke="#e5e7eb" strokeDasharray="3 3" />
-                    <XAxis dataKey="name" stroke="#64748b" />
-                    <YAxis domain={[4, 9]} stroke="#64748b" />
-                    <Line
-                      type="monotone"
-                      dataKey="band"
-                      stroke="#0f766e"
-                      strokeWidth={2}
-                      dot={{ r: 4 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            ) : (
-              <EmptyChart label={t("dashboard.emptyChart")} />
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("dashboard.skillRadar", "Skill radar")}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {history.length ? (
-              <div className="h-72">
-                <ResponsiveContainer width="100%" height="100%">
-                  <RadarChart data={radarData}>
-                    <PolarGrid />
-                    <PolarAngleAxis dataKey="skill" />
-                    <Radar
-                      dataKey="band"
-                      stroke="#0f766e"
-                      fill="#0f766e"
-                      fillOpacity={0.18}
-                    />
-                  </RadarChart>
-                </ResponsiveContainer>
-              </div>
-            ) : (
-              <EmptyChart label={t("dashboard.emptyChart")} />
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="mt-6 grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("dashboard.skillFocus", "Skill focus")}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {skillRows.map((row) => (
-              <div
-                key={row.skill}
-                className="rounded-md border border-slate-200 bg-slate-50 p-4"
-              >
-                <div className="flex items-center justify-between gap-4">
-                  <p className="text-sm font-medium text-slate-950">
-                    {row.skill}
-                  </p>
-                  <Badge className="bg-white">{row.status}</Badge>
-                </div>
-                <p className="mt-2 text-sm text-slate-600">{row.action}</p>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <CardTitle>
-                {t("dashboard.recentPractice", "Recent Practice")}
-              </CardTitle>
-              <div className="flex max-w-full gap-2 overflow-x-auto rounded-md bg-slate-100 p-1">
-                {recentPracticeTabs.map((tab) => {
-                  const isActive = activeRecentSkill === tab.skill;
-
-                  return (
-                    <button
-                      key={tab.skill}
-                      type="button"
-                      className={
-                        isActive
-                          ? "whitespace-nowrap rounded px-3 py-2 text-sm font-medium text-white bg-slate-950"
-                          : "whitespace-nowrap rounded px-3 py-2 text-sm font-medium text-slate-600 hover:bg-white hover:text-slate-950"
-                      }
-                      onClick={() => setActiveRecentSkill(tab.skill)}
-                    >
-                      {tab.label} ({recentAttemptsBySkill[tab.skill].length})
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {activeRecentAttempts.length ? (
-              activeRecentAttempts.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex flex-col gap-2 rounded-md border border-slate-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Badge>{skillLabels[item.skill]}</Badge>
-                      <p className="text-sm font-medium text-slate-950">
-                        {getDisplayTitle(item.title)}
-                      </p>
-                    </div>
-                    <p className="mt-2 text-xs text-slate-500">{item.detail}</p>
-                  </div>
-                  <div className="text-left sm:text-right">
-                    <p className="text-sm font-semibold text-slate-950">
-                      {item.scoreLabel}
-                    </p>
-                    <p className="mt-1 text-xs text-slate-500">
-                      {new Date(item.createdAt).toLocaleDateString()}
-                    </p>
-                    {item.resultUrl ? (
-                      <Button asChild variant="outline" size="sm" className="mt-2">
-                        <Link href={item.resultUrl}>
-                          {t("dashboard.viewResult", "View Result")}
-                        </Link>
-                      </Button>
-                    ) : null}
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="rounded-md border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
-                <p className="text-sm font-medium text-slate-950">
-                  {t(
-                    `dashboard.${activeRecentSkill}Empty`,
-                    `No ${skillLabels[activeRecentSkill]} practice yet.`,
-                  )}
-                </p>
-                {activeRecentTab ? (
-                  <Button asChild className="mt-5">
-                    <Link href={activeRecentTab.href}>
-                      {t(
-                        `dashboard.start${capitalize(activeRecentTab.label)}`,
-                        `Start ${activeRecentTab.label}`,
-                      )}
-                    </Link>
-                  </Button>
-                ) : null}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    </AppShell>
+    </div>
   );
 }
 
@@ -358,6 +573,32 @@ function EmptyChart({ label }: { label: string }) {
 
 function capitalize(value: string) {
   return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function findWritingDraftHref() {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  for (let index = 0; index < window.localStorage.length; index += 1) {
+    const key = window.localStorage.key(index);
+
+    if (!key?.startsWith(writingDraftStoragePrefix)) {
+      continue;
+    }
+
+    const draft = window.localStorage.getItem(key)?.trim();
+
+    if (!draft) {
+      continue;
+    }
+
+    const taskId = key.slice(writingDraftStoragePrefix.length);
+
+    return taskId ? `/practice/writing/${taskId}` : "/practice/writing";
+  }
+
+  return null;
 }
 
 function buildSkillRows(

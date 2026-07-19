@@ -400,6 +400,33 @@ export const messages: Record<Language, Record<string, string>> = {
     "dashboard.viewResult": "View Result",
     "dashboard.emptyChart":
       "Your chart will appear after your first practice attempt.",
+    "dashboard.loadingTitle": "Loading your dashboard",
+    "dashboard.loadingDescription":
+      "We are syncing your practice history before showing insights.",
+    "dashboard.errorTitle": "Dashboard is temporarily unavailable",
+    "dashboard.errorDescription":
+      "We could not load your practice history. Please refresh the page or try again later.",
+    "dashboard.onboarding.title": "Start building your IELTS baseline",
+    "dashboard.onboarding.description":
+      "Complete one practice in each skill to unlock score trends, skill insights, and personalized recommendations.",
+    "dashboard.onboarding.draftTitle":
+      "Complete your first practice to unlock dashboard insights",
+    "dashboard.onboarding.draftDescription":
+      "You have a Writing draft saved in this browser. Finish it or complete one practice to unlock score trends, skill insights, and clearer next-step recommendations.",
+    "dashboard.onboarding.benefitProgress": "Track your score progress",
+    "dashboard.onboarding.benefitCompare": "Compare your IELTS skills",
+    "dashboard.onboarding.benefitNextSteps":
+      "Get clearer next-step recommendations",
+    "dashboard.onboarding.readingDescription":
+      "Practice with timed IELTS-style reading sets and detailed answer explanations.",
+    "dashboard.onboarding.listeningDescription":
+      "Complete IELTS-style listening practice with instant scoring and answer review.",
+    "dashboard.onboarding.writingDescription":
+      "Write a Task 1 or Task 2 response and receive AI-powered feedback.",
+    "dashboard.onboarding.startReading": "Start Reading",
+    "dashboard.onboarding.startListening": "Start Listening",
+    "dashboard.onboarding.startWriting": "Start Writing",
+    "dashboard.onboarding.continueDraft": "Continue Writing draft",
     "dashboard.skill.notStarted": "Not started",
     "dashboard.skill.readingActionActive":
       "Review answer explanations and focus on question types you missed most often.",
@@ -989,6 +1016,29 @@ export const messages: Record<Language, Record<string, string>> = {
     "dashboard.skillFocus": "技能重点",
     "dashboard.viewResult": "查看结果",
     "dashboard.emptyChart": "完成第一次练习后，图表会自动出现。",
+    "dashboard.loadingTitle": "正在加载学习记录",
+    "dashboard.loadingDescription": "正在同步练习记录，完成后会显示你的学习分析。",
+    "dashboard.errorTitle": "暂时无法加载 Dashboard",
+    "dashboard.errorDescription": "练习记录加载失败。请刷新页面，或稍后再试。",
+    "dashboard.onboarding.title": "开始建立你的雅思能力基线",
+    "dashboard.onboarding.description":
+      "完成每项技能的第一次练习，即可解锁成绩趋势、能力分析和更清晰的下一步建议。",
+    "dashboard.onboarding.draftTitle": "完成第一次练习，解锁学习分析",
+    "dashboard.onboarding.draftDescription":
+      "当前浏览器里有一篇 Writing 草稿。你可以先完成草稿，或完成任意一次练习来解锁成绩趋势、能力分析和更清晰的下一步建议。",
+    "dashboard.onboarding.benefitProgress": "追踪成绩变化",
+    "dashboard.onboarding.benefitCompare": "比较各项雅思能力",
+    "dashboard.onboarding.benefitNextSteps": "获得更清晰的练习建议",
+    "dashboard.onboarding.readingDescription":
+      "使用限时 IELTS-style Reading 套题练习，并查看详细答案解析。",
+    "dashboard.onboarding.listeningDescription":
+      "完成 IELTS-style Listening 音频练习，提交后立即查看分数和答案复盘。",
+    "dashboard.onboarding.writingDescription":
+      "完成一篇 Task 1 或 Task 2 写作，并获得 AI feedback。",
+    "dashboard.onboarding.startReading": "开始阅读练习",
+    "dashboard.onboarding.startListening": "开始听力练习",
+    "dashboard.onboarding.startWriting": "开始写作练习",
+    "dashboard.onboarding.continueDraft": "继续 Writing 草稿",
     "dashboard.skill.notStarted": "未开始",
     "dashboard.skill.readingActionActive": "继续做一套不同题型的阅读，观察正确率是否稳定。",
     "dashboard.skill.readingActionEmpty": "先选择一套已发布的 Reading 练习，建立初始阅读水平。",
