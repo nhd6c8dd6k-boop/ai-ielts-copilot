@@ -499,19 +499,48 @@ export const messages: Record<Language, Record<string, string>> = {
       "{skill} weekly progress: {completed} of {goal}",
     "dashboard.weeklyProgress.aria.totalProgress":
       "Total weekly progress: {completed} of {goal} practices completed",
-    "dashboard.skill.notStarted": "Not started",
-    "dashboard.skill.readingActionActive":
-      "Review answer explanations and focus on question types you missed most often.",
-    "dashboard.skill.readingActionEmpty":
-      "Start with one Reading practice set to build your initial reading baseline.",
-    "dashboard.skill.writingActionActive":
-      "Use AI feedback to identify repeated grammar, vocabulary, and structure issues.",
-    "dashboard.skill.writingActionEmpty":
-      "Choose a Writing task and complete your first essay practice.",
-    "dashboard.skill.listeningActionActive":
-      "Practise with audio and review spelling, numbers, and short-answer accuracy.",
-    "dashboard.skill.listeningActionEmpty":
-      "Start with one Listening practice set to build your listening baseline.",
+    "dashboard.skillFocus.status.not_practised": "Not practised yet",
+    "dashboard.skillFocus.status.needs_practice": "Needs more practice",
+    "dashboard.skillFocus.status.building_consistency":
+      "Building consistency",
+    "dashboard.skillFocus.status.good_progress": "Good progress",
+    "dashboard.skillFocus.status.strong_performance": "Strong performance",
+    "dashboard.skillFocus.reading.title": "Reading",
+    "dashboard.skillFocus.listening.title": "Listening",
+    "dashboard.skillFocus.writing.title": "Writing",
+    "dashboard.skillFocus.reading.button": "Practice Reading",
+    "dashboard.skillFocus.listening.button": "Practice Listening",
+    "dashboard.skillFocus.writing.button": "Practice Writing",
+    "dashboard.skillFocus.reading.description.not_practised":
+      "Complete your first Reading set to unlock Reading insights.",
+    "dashboard.skillFocus.reading.description.needs_practice":
+      "Recent results suggest practising longer passages and reviewing answer explanations.",
+    "dashboard.skillFocus.reading.description.building_consistency":
+      "Keep practising to improve consistency across different Reading question types.",
+    "dashboard.skillFocus.reading.description.good_progress":
+      "You are building a solid Reading foundation.",
+    "dashboard.skillFocus.reading.description.strong_performance":
+      "Maintain your Reading performance with regular timed practice.",
+    "dashboard.skillFocus.listening.description.not_practised":
+      "Complete your first Listening set to unlock Listening insights.",
+    "dashboard.skillFocus.listening.description.needs_practice":
+      "Recent results suggest practising with audio and reviewing missed details.",
+    "dashboard.skillFocus.listening.description.building_consistency":
+      "Keep practising to improve consistency with spelling, numbers, and short answers.",
+    "dashboard.skillFocus.listening.description.good_progress":
+      "You are building a solid Listening foundation.",
+    "dashboard.skillFocus.listening.description.strong_performance":
+      "Maintain your Listening performance with regular audio practice.",
+    "dashboard.skillFocus.writing.description.not_practised":
+      "Complete your first Writing task to receive AI feedback.",
+    "dashboard.skillFocus.writing.description.needs_practice":
+      "Focus on developing ideas and supporting examples in your next response.",
+    "dashboard.skillFocus.writing.description.building_consistency":
+      "Keep strengthening organisation and clarity in your writing.",
+    "dashboard.skillFocus.writing.description.good_progress":
+      "Keep refining paragraph development and language control.",
+    "dashboard.skillFocus.writing.description.strong_performance":
+      "Maintain your writing quality with regular practice.",
 
     "profile.eyebrow": "Profile",
     "profile.title": "Profile",
@@ -1171,13 +1200,47 @@ export const messages: Record<Language, Record<string, string>> = {
       "{skill}本周进度：已完成 {completed} / {goal}",
     "dashboard.weeklyProgress.aria.totalProgress":
       "本周总进度：已完成 {completed} / {goal} 次练习",
-    "dashboard.skill.notStarted": "未开始",
-    "dashboard.skill.readingActionActive": "继续做一套不同题型的阅读，观察正确率是否稳定。",
-    "dashboard.skill.readingActionEmpty": "先选择一套已发布的 Reading 练习，建立初始阅读水平。",
-    "dashboard.skill.writingActionActive": "根据 AI 反馈重写开头段和一个主体段。",
-    "dashboard.skill.writingActionEmpty": "选择一篇已发布的 Writing 题目，先完成作文练习。",
-    "dashboard.skill.listeningActionActive": "继续练习不同 Section，特别关注拼写和数字信息。",
-    "dashboard.skill.listeningActionEmpty": "选择一套已发布的 Listening 练习，建立听力基线。",
+    "dashboard.skillFocus.status.not_practised": "尚未练习",
+    "dashboard.skillFocus.status.needs_practice": "需要更多练习",
+    "dashboard.skillFocus.status.building_consistency": "正在建立稳定性",
+    "dashboard.skillFocus.status.good_progress": "进展良好",
+    "dashboard.skillFocus.status.strong_performance": "表现稳定",
+    "dashboard.skillFocus.reading.title": "Reading",
+    "dashboard.skillFocus.listening.title": "Listening",
+    "dashboard.skillFocus.writing.title": "Writing",
+    "dashboard.skillFocus.reading.button": "练习 Reading",
+    "dashboard.skillFocus.listening.button": "练习 Listening",
+    "dashboard.skillFocus.writing.button": "练习 Writing",
+    "dashboard.skillFocus.reading.description.not_practised":
+      "完成第一套 Reading 练习后，就能看到 Reading 相关建议。",
+    "dashboard.skillFocus.reading.description.needs_practice":
+      "近期结果提示你可以多练较长文章，并认真复盘答案解析。",
+    "dashboard.skillFocus.reading.description.building_consistency":
+      "继续练习不同 Reading 题型，提升正确率稳定性。",
+    "dashboard.skillFocus.reading.description.good_progress":
+      "你的 Reading 基础正在稳步建立。",
+    "dashboard.skillFocus.reading.description.strong_performance":
+      "继续保持限时 Reading 练习，巩固当前表现。",
+    "dashboard.skillFocus.listening.description.not_practised":
+      "完成第一套 Listening 练习后，就能看到 Listening 相关建议。",
+    "dashboard.skillFocus.listening.description.needs_practice":
+      "近期结果提示你可以继续练音频细节，并复盘漏听信息。",
+    "dashboard.skillFocus.listening.description.building_consistency":
+      "继续关注拼写、数字和短答案，提升 Listening 稳定性。",
+    "dashboard.skillFocus.listening.description.good_progress":
+      "你的 Listening 基础正在稳步建立。",
+    "dashboard.skillFocus.listening.description.strong_performance":
+      "继续保持音频练习，巩固当前 Listening 表现。",
+    "dashboard.skillFocus.writing.description.not_practised":
+      "完成第一篇 Writing 任务后，即可获得 AI feedback。",
+    "dashboard.skillFocus.writing.description.needs_practice":
+      "下一篇重点练习观点展开和例子支撑。",
+    "dashboard.skillFocus.writing.description.building_consistency":
+      "继续加强文章结构、表达清晰度和段落组织。",
+    "dashboard.skillFocus.writing.description.good_progress":
+      "继续打磨段落展开和语言准确性。",
+    "dashboard.skillFocus.writing.description.strong_performance":
+      "通过规律练习保持当前 Writing 质量。",
 
     "profile.eyebrow": "个人资料",
     "profile.title": "个人资料",

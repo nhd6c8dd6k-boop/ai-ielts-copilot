@@ -49,6 +49,7 @@ import {
   type DashboardNextAction,
   type DashboardWritingDraft,
 } from "@/features/dashboard/next-action";
+import { getSkillFocusInsights } from "@/features/dashboard/skill-focus";
 import {
   mapPracticeHistoryToWeeklyAttempts,
   type WeeklyPracticeProgress,
@@ -134,7 +135,7 @@ export default function DashboardPage() {
       band: Number((getSkillAverage(history, skill) ?? 0).toFixed(1)),
     }),
   );
-  const skillRows = buildSkillRows(history, t);
+  const skillRows = getSkillFocusInsights(history);
   const recentAttemptsBySkill = recentPracticeTabs.reduce(
     (groups, tab) => ({
       ...groups,
@@ -327,13 +328,27 @@ export default function DashboardPage() {
                     key={row.skill}
                     className="rounded-md border border-slate-200 bg-slate-50 p-4"
                   >
-                    <div className="flex items-center justify-between gap-4">
-                      <p className="text-sm font-medium text-slate-950">
-                        {row.skill}
-                      </p>
-                      <Badge className="bg-white">{row.status}</Badge>
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-white text-slate-950">
+                          {renderSkillIcon(row.skill)}
+                        </div>
+                        <p className="text-sm font-medium text-slate-950">
+                          {t(row.titleKey, row.titleFallback)}
+                        </p>
+                      </div>
+                      <Badge className="bg-white">
+                        {t(row.statusKey, row.statusFallback)}
+                      </Badge>
                     </div>
-                    <p className="mt-2 text-sm text-slate-600">{row.action}</p>
+                    <p className="mt-3 text-sm leading-6 text-slate-600">
+                      {t(row.descriptionKey, row.descriptionFallback)}
+                    </p>
+                    <Button asChild variant="outline" size="sm" className="mt-4">
+                      <Link href={row.href}>
+                        {t(row.buttonKey, row.buttonFallback)}
+                      </Link>
+                    </Button>
                   </div>
                 ))}
               </CardContent>
@@ -867,63 +882,6 @@ function formatMessage(
     (message, [key, value]) => message.replaceAll(`{${key}}`, value),
     template,
   );
-}
-
-function buildSkillRows(
-  history: PracticeHistoryItem[],
-  t: (key: string, fallback?: string) => string,
-) {
-  const readingAverage = getSkillAverage(history, "reading");
-  const writingAverage = getSkillAverage(history, "writing");
-  const listeningAverage = getSkillAverage(history, "listening");
-
-  return [
-    {
-      skill: "Reading",
-      status: readingAverage
-        ? `Band ${readingAverage.toFixed(1)}`
-        : t("dashboard.skill.notStarted", "Not started"),
-      action: readingAverage
-        ? t(
-            "dashboard.skill.readingActionActive",
-            "Review answer explanations and focus on question types you missed most often.",
-          )
-        : t(
-            "dashboard.skill.readingActionEmpty",
-            "Start with one Reading practice set to build your initial reading baseline.",
-          ),
-    },
-    {
-      skill: "Writing",
-      status: writingAverage
-        ? `Band ${writingAverage.toFixed(1)}`
-        : t("dashboard.skill.notStarted", "Not started"),
-      action: writingAverage
-        ? t(
-            "dashboard.skill.writingActionActive",
-            "Use AI feedback to identify repeated grammar, vocabulary, and structure issues.",
-          )
-        : t(
-            "dashboard.skill.writingActionEmpty",
-            "Choose a Writing task and complete your first essay practice.",
-          ),
-    },
-    {
-      skill: "Listening",
-      status: listeningAverage
-        ? `Band ${listeningAverage.toFixed(1)}`
-        : t("dashboard.skill.notStarted", "Not started"),
-      action: listeningAverage
-        ? t(
-            "dashboard.skill.listeningActionActive",
-            "Practise with audio and review spelling, numbers, and short-answer accuracy.",
-          )
-        : t(
-            "dashboard.skill.listeningActionEmpty",
-            "Start with one Listening practice set to build your listening baseline.",
-          ),
-    },
-  ];
 }
 
 function getAverageAccuracy(

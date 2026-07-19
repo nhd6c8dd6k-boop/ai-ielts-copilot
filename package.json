@@ -15,6 +15,7 @@
     "test:dashboard-empty-state": "node scripts/verify-dashboard-empty-state.mjs",
     "test:dashboard-next-action": "node scripts/verify-dashboard-next-action.mjs",
     "test:dashboard-weekly-progress": "node scripts/verify-dashboard-weekly-progress.mjs",
+    "test:dashboard-skill-focus": "node scripts/verify-dashboard-skill-focus.mjs",
     "test:admin-writing-generation": "node scripts/verify-admin-writing-generation.mjs",
     "test:writing-task-cards": "node scripts/verify-writing-task-cards.mjs"
   },
