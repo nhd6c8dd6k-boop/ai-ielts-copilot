@@ -1,4 +1,6 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getWritingDisplayTitle } from "@/lib/writing-task-display";
+import { normalizeWritingVisualData } from "@/lib/writing-visual-data";
 import {
   getMemberships,
   type AdminMembershipItem,
@@ -83,7 +85,7 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
       .limit(20),
     admin
       .from("writing_tasks")
-      .select("id,task_type,topic,source_type,status,created_at")
+      .select("id,title,task_type,topic,prompt,visual_data,source_type,status,created_at")
       .order("created_at", { ascending: false })
       .limit(20),
     admin
@@ -134,7 +136,13 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
       ...(writingTasks.data ?? []).map((item) => ({
         id: item.id,
         type: "writing" as const,
-        title: `Task ${item.task_type}: ${item.topic}`,
+        title: getWritingDisplayTitle({
+          taskType: item.task_type === 1 ? 1 : 2,
+          topic: item.topic,
+          prompt: item.prompt,
+          title: item.title,
+          visualTitle: normalizeWritingVisualData(item.visual_data)?.title,
+        }),
         skill: "Writing" as const,
         source: formatSource(item.source_type),
         status: item.status as AdminContentStatus,

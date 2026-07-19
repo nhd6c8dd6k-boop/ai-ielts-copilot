@@ -2,7 +2,11 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { writingVisualDataSchema } from "@/lib/writing-visual-data";
+import { getWritingDisplayTitle } from "@/lib/writing-task-display";
+import {
+  normalizeWritingVisualData,
+  writingVisualDataSchema,
+} from "@/lib/writing-visual-data";
 import { requireAdminUser } from "@/server/services/admin-auth";
 import { apiErrorResponse } from "@/server/utils/api-error";
 
@@ -54,6 +58,7 @@ const patchContentDetailSchema = z.discriminatedUnion("type", [
     type: z.literal("writing"),
     id: z.string().uuid(),
     data: z.object({
+      title: z.string().min(1).nullable().optional(),
       taskType: z.number().int().min(1).max(2),
       bandTarget: z.number().int().min(5).max(9).nullable(),
       topic: z.string().min(1),
@@ -208,7 +213,7 @@ export async function GET(request: Request) {
   const { data, error } = await admin
     .from("writing_tasks")
     .select(
-      "id,task_type,topic,prompt,visual_data,band_target,sample_answer_band_7,sample_answer_band_8,sample_answer_band_9,scoring_notes,source_type,status,created_by,published_at,created_at,updated_at",
+      "id,title,task_type,topic,prompt,visual_data,band_target,sample_answer_band_7,sample_answer_band_8,sample_answer_band_9,scoring_notes,source_type,status,created_by,published_at,created_at,updated_at",
     )
     .eq("id", id)
     .maybeSingle();
@@ -229,7 +234,7 @@ export async function GET(request: Request) {
     type,
     content: {
       id: data.id,
-      title: `Task ${data.task_type}: ${data.topic}`,
+      title: buildWritingDetailTitle(data),
       taskType: data.task_type,
       topic: data.topic,
       prompt: data.prompt,
@@ -424,9 +429,14 @@ export async function PATCH(request: Request) {
     return current.response;
   }
 
+  const normalizedWritingTitle =
+    input.data.title === undefined
+      ? current.data.title
+      : input.data.title?.trim() || null;
   const changedFields = getChangedFields(
     {
       taskType: current.data.task_type,
+      title: current.data.title,
       bandTarget: current.data.band_target,
       topic: current.data.topic,
       prompt: current.data.prompt,
@@ -436,12 +446,16 @@ export async function PATCH(request: Request) {
       scoringNotes: current.data.scoring_notes,
       visualData: current.data.visual_data,
     },
-    input.data,
+    {
+      ...input.data,
+      title: normalizedWritingTitle,
+    },
   );
   const { error } = await admin
     .from("writing_tasks")
     .update({
       task_type: input.data.taskType,
+      title: normalizedWritingTitle,
       topic: input.data.topic,
       prompt: input.data.prompt,
       band_target: input.data.bandTarget,
@@ -565,6 +579,22 @@ function formatSource(source: string) {
   return labels[source] ?? source;
 }
 
+function buildWritingDetailTitle(data: {
+  title: string | null;
+  task_type: number;
+  topic: string;
+  prompt: string;
+  visual_data: unknown;
+}) {
+  return getWritingDisplayTitle({
+    taskType: data.task_type === 1 ? 1 : 2,
+    topic: data.topic,
+    prompt: data.prompt,
+    title: data.title,
+    visualTitle: normalizeWritingVisualData(data.visual_data)?.title,
+  });
+}
+
 async function loadCurrentReading(
   admin: ReturnType<typeof createSupabaseAdminClient>,
   id: string,
@@ -626,7 +656,7 @@ async function loadCurrentWriting(
   const { data, error } = await admin
     .from("writing_tasks")
     .select(
-      "id,task_type,topic,prompt,visual_data,band_target,sample_answer_band_7,sample_answer_band_8,sample_answer_band_9,scoring_notes",
+      "id,title,task_type,topic,prompt,visual_data,band_target,sample_answer_band_7,sample_answer_band_8,sample_answer_band_9,scoring_notes",
     )
     .eq("id", id)
     .maybeSingle();

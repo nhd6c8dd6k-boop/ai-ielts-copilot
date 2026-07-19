@@ -9,6 +9,41 @@ const supportedVisualTypes = [
   "process_diagram",
 ] as const;
 
+const genericWritingTitles = new Set([
+  "education",
+  "technology",
+  "environment",
+  "work",
+  "health",
+  "society",
+  "transport",
+  "business",
+  "lifestyle",
+  "economy",
+  "a bar chart",
+  "a line graph",
+  "a pie chart",
+  "a table",
+  "a process diagram",
+  "bar chart",
+  "line graph",
+  "pie chart",
+  "table",
+  "process diagram",
+  "writing question",
+  "essay question",
+]);
+
+const questionTypeOnlyTitles = new Set([
+  "agree or disagree",
+  "discuss both views",
+  "advantages and disadvantages",
+  "causes and solutions",
+  "problem and solution",
+  "two part question",
+  "positive or negative development",
+]);
+
 const adminWritingVisualSeriesSchema = z.object({
   name: z.string(),
   values: z.array(z.number()),
@@ -34,6 +69,7 @@ export const adminWritingGeneratedVisualDataSchema = z.object({
 });
 
 export const adminWritingOutputSchema = z.object({
+  title: z.string().min(1),
   task_type: z.number().int().min(1).max(2),
   band_target: z.number().int().min(5).max(9),
   topic: z.string().min(1),
@@ -77,6 +113,11 @@ export class AdminWritingGenerationValidationError extends Error {
 }
 
 export function validateAdminWritingContentPayload(data: AdminWritingOutput) {
+  validateGeneratedWritingTitle({
+    title: data.title,
+    topic: data.topic,
+    prompt: data.prompt,
+  });
   validateGeneratedWritingVisualData({
     taskType: data.task_type,
     visualData: data.visual_data,
@@ -151,6 +192,88 @@ export function normalizeAdminWritingVisualDataForStorage(
       return row;
     }),
   };
+}
+
+export function validateGeneratedWritingTitle({
+  title,
+  topic,
+  prompt,
+}: {
+  title: string;
+  topic: string;
+  prompt: string;
+}) {
+  const trimmed = title.trim();
+  const normalizedTitle = normalizeTitleText(trimmed);
+  const normalizedTopic = normalizeTitleText(topic);
+  const wordCount = countTitleWords(trimmed);
+
+  if (!trimmed) {
+    throw new AdminWritingGenerationValidationError("Writing title is required.");
+  }
+
+  if (wordCount < 3) {
+    throw new AdminWritingGenerationValidationError(
+      "Writing title must contain at least 3 words.",
+    );
+  }
+
+  if (wordCount > 12) {
+    throw new AdminWritingGenerationValidationError(
+      "Writing title must not exceed 12 words.",
+    );
+  }
+
+  if (normalizedTitle === normalizedTopic) {
+    throw new AdminWritingGenerationValidationError(
+      "Writing title must not be identical to the topic.",
+    );
+  }
+
+  if (/^task\s*[12]\s*:/i.test(trimmed)) {
+    throw new AdminWritingGenerationValidationError(
+      "Writing title must not start with Task 1 or Task 2.",
+    );
+  }
+
+  if (/^(?:writing\s+)?task\s*[12]$/i.test(trimmed)) {
+    throw new AdminWritingGenerationValidationError(
+      "Writing title must not be a generic task label.",
+    );
+  }
+
+  if (/[:.?]$/.test(trimmed)) {
+    throw new AdminWritingGenerationValidationError(
+      "Writing title must not end with punctuation.",
+    );
+  }
+
+  if (genericWritingTitles.has(normalizedTitle)) {
+    throw new AdminWritingGenerationValidationError(
+      "Writing title is too generic.",
+    );
+  }
+
+  if (questionTypeOnlyTitles.has(normalizedTitle)) {
+    throw new AdminWritingGenerationValidationError(
+      "Writing title must describe the task content, not only the question type.",
+    );
+  }
+
+  const normalizedPromptStart = normalizeTitleText(prompt).slice(0, 180);
+
+  if (
+    normalizedTitle.length > 35 &&
+    normalizedPromptStart.startsWith(normalizedTitle)
+  ) {
+    throw new AdminWritingGenerationValidationError(
+      "Writing title must not copy the prompt opening.",
+    );
+  }
+}
+
+export function normalizeWritingTitleKey(title: string) {
+  return normalizeTitleText(title);
 }
 
 function validateGeneratedWritingVisualData({
@@ -285,4 +408,18 @@ function parseCellValue(value: string) {
   const numeric = Number(normalized);
 
   return normalized && Number.isFinite(numeric) ? numeric : value;
+}
+
+function normalizeTitleText(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/['"“”]/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function countTitleWords(value: string) {
+  return value.match(/[A-Za-z0-9]+(?:[-'][A-Za-z0-9]+)*/g)?.length ?? 0;
 }

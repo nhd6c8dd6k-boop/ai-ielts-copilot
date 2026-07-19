@@ -163,7 +163,7 @@ export const getPublishedWritingTaskSummaries = cache(
   const admin = createSupabaseAdminClient();
   const { data, error } = await admin
     .from("writing_tasks")
-    .select("id,task_type,topic,prompt,visual_data,band_target,created_at")
+    .select("id,title,task_type,topic,prompt,visual_data,band_target,created_at")
     .eq("status", "published")
     .order("created_at", { ascending: false })
     .limit(50);
@@ -190,6 +190,7 @@ export const getPublishedWritingTaskSummaries = cache(
           taskType,
           topic: task.topic,
           prompt: task.prompt,
+          title: task.title,
           visualTitle: structuredVisualData?.title,
         }),
         promptSummary: summarizePrompt(task.prompt),
@@ -270,7 +271,7 @@ export const getPublishedWritingTask = cache(async (id: string) => {
   const { data, error } = await admin
     .from("writing_tasks")
     .select(
-      "id,task_type,topic,prompt,visual_data,band_target,sample_answer_band_7,sample_answer_band_8,created_at",
+      "id,title,task_type,topic,prompt,visual_data,band_target,sample_answer_band_7,sample_answer_band_8,created_at",
     )
     .eq("id", id)
     .eq("status", "published")
@@ -295,6 +296,7 @@ export const getPublishedWritingTask = cache(async (id: string) => {
       taskType,
       topic: data.topic,
       prompt: data.prompt,
+      title: data.title,
       visualTitle: structuredVisualData?.title,
     }),
     prompt: data.prompt,
@@ -455,7 +457,7 @@ export async function getWritingAttemptResult({
 
   const { data: task, error: taskError } = await admin
     .from("writing_tasks")
-    .select("id,task_type,topic,prompt,visual_data")
+    .select("id,title,task_type,topic,prompt,visual_data")
     .eq("id", attempt.writing_task_id)
     .maybeSingle();
 
@@ -474,6 +476,7 @@ export async function getWritingAttemptResult({
       taskType,
       topic: task?.topic ?? "Writing",
       prompt: task?.prompt ?? "",
+      title: task?.title,
       visualTitle: structuredVisualData?.title,
     }),
     prompt: task?.prompt ?? "",
@@ -1151,17 +1154,19 @@ function buildWritingTaskTitle({
   topic,
   prompt,
   visualTitle,
+  title,
 }: {
   taskType: 1 | 2;
   topic: string;
   prompt: string;
+  title?: string | null;
   visualTitle?: string | null;
 }) {
   return getWritingDisplayTitle({
     taskType,
     topic,
     prompt,
-    title: `Task ${taskType}: ${topic}`,
+    title,
     visualTitle,
   });
 }

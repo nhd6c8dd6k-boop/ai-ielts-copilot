@@ -3,9 +3,13 @@ import { z } from "zod";
 import { createOpenAIClient } from "@/lib/openai/client";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { assertOriginalContentPolicy } from "@/lib/validators/content-policy";
+import { getWritingDisplayTitle } from "@/lib/writing-task-display";
+import { normalizeWritingVisualData } from "@/lib/writing-visual-data";
 import {
+  AdminWritingGenerationValidationError,
   adminWritingOutputSchema,
   normalizeAdminWritingVisualDataForStorage,
+  normalizeWritingTitleKey,
   validateAdminWritingContentPayload,
 } from "@/server/services/admin-writing-generation-schema";
 
@@ -302,41 +306,33 @@ export async function generateAdminWritingContent({
   adminUserId: string;
   input: z.infer<typeof adminGenerateWritingInputSchema>;
 }) {
+  const admin = createSupabaseAdminClient();
+  const existingTitleKeys = await loadExistingWritingTitleKeys(admin);
+  const batchTitleKeys = new Set<string>();
+
   return generateMany({
     quantity: input.quantity,
     contentType: "writing",
     adminUserId,
     createOne: async () => {
       const promptTemplate = await loadPromptTemplate("writing", input.promptTemplateId);
-      const payload = await callStrictJson({
-        schemaName: "admin_writing_content",
-        schema: adminWritingOutputSchema,
-        systemPrompt: buildSystemPrompt(promptTemplate, "writing"),
-        userPrompt: JSON.stringify({
-          ...input,
-          requirements: [
-            "Generate a fully original IELTS Writing task.",
-            "Prompt and sample answers must be in English.",
-            "Do not copy official IELTS, Cambridge IELTS, exam recalls, or copyrighted materials.",
-            "Use the fixed visual_data shape exactly. Never output null and never omit visual_data fields.",
-            "For Task 2, visual_data.type must be none, all visual_data strings must be empty, and all visual_data arrays must be empty.",
-            "For Task 1 bar_chart, line_chart, and pie_chart, fill categories and series. Every series.values array must have the same length as categories. Use empty table_headers, table_rows, and stages.",
-            "For Task 1 table, fill table_headers and table_rows. Every row must have the same length as table_headers. Use empty categories, series, and stages.",
-            "For Task 1 process_diagram, fill stages in order. Use empty categories, series, table_headers, and table_rows.",
-            "Do not output schema fields outside the requested JSON shape.",
-          ],
-        }),
+      const generated = await generateAdminWritingPayloadWithRetry({
+        input,
+        promptTemplate,
+        existingTitleKeys,
+        batchTitleKeys,
       });
-      const data = validateAdminWritingContentPayload(payload.data);
-      const visualData = normalizeAdminWritingVisualDataForStorage(data.visual_data);
+      const { data, payload, titleKey } = generated;
+      const visualData = normalizeAdminWritingVisualDataForStorage(
+        data.visual_data,
+      );
 
       assertOriginalContentPolicy(data.prompt);
 
-      const admin = createSupabaseAdminClient();
-      const title = `Task ${data.task_type}: ${data.topic}`;
       const { data: task, error } = await admin
         .from("writing_tasks")
         .insert({
+          title: data.title.trim(),
           task_type: data.task_type,
           topic: data.topic,
           prompt: data.prompt,
@@ -350,12 +346,15 @@ export async function generateAdminWritingContent({
           status: "review",
           created_by: adminUserId,
         })
-        .select("id,topic,band_target,status")
+        .select("id,title,topic,band_target,status")
         .single();
 
       if (error) {
         throw new Error(error.message);
       }
+
+      batchTitleKeys.add(titleKey);
+      existingTitleKeys.add(titleKey);
 
       await recordUsageAndAdminLog({
         adminUserId,
@@ -363,12 +362,15 @@ export async function generateAdminWritingContent({
         targetId: task.id,
         usage: payload.usage,
         action: "ai_writing_generated",
+        metadata: {
+          title: data.title,
+        },
       });
 
       return {
         result: {
           id: task.id,
-          title,
+          title: task.title ?? data.title,
           band: task.band_target,
           topic: task.topic,
           status: "pending_review" as const,
@@ -377,6 +379,127 @@ export async function generateAdminWritingContent({
       };
     },
   });
+}
+
+async function generateAdminWritingPayloadWithRetry({
+  input,
+  promptTemplate,
+  existingTitleKeys,
+  batchTitleKeys,
+}: {
+  input: z.infer<typeof adminGenerateWritingInputSchema>;
+  promptTemplate: string | null;
+  existingTitleKeys: Set<string>;
+  batchTitleKeys: Set<string>;
+}) {
+  const maxAttempts = 3;
+  let retryReason: string | null = null;
+  let lastError: unknown;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    const payload = await callStrictJson({
+      schemaName: "admin_writing_content",
+      schema: adminWritingOutputSchema,
+      systemPrompt: buildSystemPrompt(promptTemplate, "writing"),
+      userPrompt: JSON.stringify({
+        ...input,
+        retryReason,
+        requirements: buildAdminWritingGenerationRequirements(),
+      }),
+    });
+
+    try {
+      const data = validateAdminWritingContentPayload(payload.data);
+      const titleKey = normalizeWritingTitleKey(data.title);
+
+      if (batchTitleKeys.has(titleKey)) {
+        throw new AdminWritingGenerationValidationError(
+          "Writing title duplicates another title in the same generation batch.",
+        );
+      }
+
+      if (existingTitleKeys.has(titleKey)) {
+        throw new AdminWritingGenerationValidationError(
+          "Writing title duplicates an existing writing task title.",
+        );
+      }
+
+      return { payload, data, titleKey };
+    } catch (error) {
+      lastError = error;
+
+      if (
+        !(error instanceof AdminWritingGenerationValidationError) ||
+        attempt === maxAttempts
+      ) {
+        throw error;
+      }
+
+      retryReason = error.message;
+    }
+  }
+
+  throw lastError instanceof Error
+    ? lastError
+    : new Error("Writing generation failed validation.");
+}
+
+function buildAdminWritingGenerationRequirements() {
+  return [
+    "Generate a fully original IELTS Writing task.",
+    "Prompt and sample answers must be in English.",
+    "Do not copy official IELTS, Cambridge IELTS, exam recalls, or copyrighted materials.",
+    "Output title as a concise, specific, standalone title of 4 to 9 words in Title Case.",
+    "The title must describe the specific issue, comparison, trend, visual measure, or process.",
+    "Do not include Task 1, Task 2, Writing Task 1, Writing Task 2, or the topic name by itself in the title.",
+    "Do not copy the full question or the opening of the prompt into title.",
+    "Do not end title with punctuation, including colon, period, or question mark.",
+    "Titles in the same generation batch must be distinct.",
+    "Avoid overly broad titles such as Education, Technology, Environment, Society, A Bar Chart, A Line Graph, Writing Question, Discuss Both Views, or Agree or Disagree.",
+    "Task 2 agree/disagree titles should summarize the core controversy, for example Practical Skills in School Education.",
+    "Task 2 discuss-both-views titles may use X Versus Y, for example Remote Work Versus Office Work.",
+    "Task 2 advantages/disadvantages titles should summarize the object being discussed, for example AI Tools in Modern Education.",
+    "Task 2 causes/solutions titles should summarize the problem, for example Urban Traffic and Pollution Solutions.",
+    "Task 1 chart/table titles should summarize the measure and groups/time period, for example Household Spending by Category or Internet Use Across Age Groups.",
+    "Task 1 process titles should name the process, for example The Plastic Bottle Recycling Process.",
+    "Use the fixed visual_data shape exactly. Never output null and never omit visual_data fields.",
+    "For Task 2, visual_data.type must be none, all visual_data strings must be empty, and all visual_data arrays must be empty.",
+    "For Task 1 bar_chart, line_chart, and pie_chart, fill categories and series. Every series.values array must have the same length as categories. Use empty table_headers, table_rows, and stages.",
+    "For Task 1 table, fill table_headers and table_rows. Every row must have the same length as table_headers. Use empty categories, series, and stages.",
+    "For Task 1 process_diagram, fill stages in order. Use empty categories, series, table_headers, and table_rows.",
+    "Do not output schema fields outside the requested JSON shape.",
+  ];
+}
+
+async function loadExistingWritingTitleKeys(
+  admin: ReturnType<typeof createSupabaseAdminClient>,
+) {
+  const { data, error } = await admin
+    .from("writing_tasks")
+    .select("id,title,task_type,topic,prompt,visual_data,status")
+    .in("status", ["published", "review", "draft"])
+    .limit(200);
+
+  if (error) {
+    return new Set<string>();
+  }
+
+  return new Set(
+    (data ?? []).map((task) => {
+      const taskType = task.task_type === 1 ? 1 : 2;
+      const visualData = normalizeWritingVisualData(task.visual_data);
+
+      return normalizeWritingTitleKey(
+        getWritingDisplayTitle({
+          taskType,
+          topic: task.topic,
+          prompt: task.prompt,
+          title: task.title,
+          visualTitle: visualData?.title,
+        }),
+      );
+    }),
+  );
 }
 
 async function generateMany({
@@ -632,12 +755,14 @@ async function recordUsageAndAdminLog({
   targetId,
   usage,
   action,
+  metadata,
 }: {
   adminUserId: string;
   contentType: string;
   targetId: string;
   usage: UsageSummary;
   action: string;
+  metadata?: Record<string, unknown>;
 }) {
   await recordUsageLog({
     adminUserId,
@@ -656,6 +781,7 @@ async function recordUsageAndAdminLog({
       inputTokens: usage.inputTokens,
       outputTokens: usage.outputTokens,
       estimatedCost: usage.estimatedCost,
+      ...metadata,
     },
   });
 }

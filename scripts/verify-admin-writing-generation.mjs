@@ -30,6 +30,8 @@ await writeFile(compiledPath, compiled.outputText);
 const {
   adminWritingOutputSchema,
   normalizeAdminWritingVisualDataForStorage,
+  normalizeWritingTitleKey,
+  validateGeneratedWritingTitle,
   validateAdminWritingContentPayload,
 } = await import(`file://${compiledPath}`);
 
@@ -58,6 +60,7 @@ function findKeys(value, key, path = "$", matches = []) {
 
 function basePayload(overrides = {}) {
   return {
+    title: "AI Tools in Modern Education",
     task_type: 2,
     band_target: 7,
     topic: "Technology",
@@ -112,6 +115,7 @@ function chartVisual(type, overrides = {}) {
 const jsonSchema = adminWritingOutputSchema.toJSONSchema();
 assert.deepEqual(findKeys(jsonSchema, "oneOf"), []);
 assert.equal(findKeys(jsonSchema, "anyOf").length, 0);
+assert.equal(jsonSchema.properties.title.type, "string");
 assert.deepEqual(
   jsonSchema.properties.visual_data.required,
   [
@@ -130,6 +134,57 @@ assert.deepEqual(
 );
 assert.equal(jsonSchema.properties.visual_data.additionalProperties, false);
 console.log("PASS admin writing JSON schema has fixed visual_data shape");
+
+for (const invalidTitle of [
+  "Task 2: Education",
+  "Education",
+  "Writing Task 2",
+  "Discuss Both Views",
+  "A Bar Chart",
+  "Remote Work?",
+  "AI",
+  "This Is a Very Long Writing Task Title That Goes Well Beyond Twelve Words",
+]) {
+  assert.throws(() =>
+    validateGeneratedWritingTitle({
+      title: invalidTitle,
+      topic: "Education",
+      prompt:
+        "Some people think remote work is more productive than office work. Discuss both views and give your opinion.",
+    }),
+  );
+}
+console.log("PASS generic, punctuation, too-short, and too-long titles are rejected");
+
+for (const validTitle of [
+  "Remote Work and Office Productivity",
+  "Practical Skills in School Education",
+  "Household Spending by Category",
+]) {
+  assert.doesNotThrow(() =>
+    validateGeneratedWritingTitle({
+      title: validTitle,
+      topic: "Education",
+      prompt:
+        "Some people think remote work is more productive than office work. Discuss both views and give your opinion.",
+    }),
+  );
+}
+console.log("PASS specific standalone writing titles are accepted");
+
+assert.equal(
+  normalizeWritingTitleKey("Remote Work and Office Productivity!"),
+  normalizeWritingTitleKey("remote work and office productivity"),
+);
+const batchKeys = new Set();
+const firstTitleKey = normalizeWritingTitleKey("Remote Work and Office Productivity");
+assert.equal(batchKeys.has(firstTitleKey), false);
+batchKeys.add(firstTitleKey);
+assert.equal(
+  batchKeys.has(normalizeWritingTitleKey("remote-work and office productivity")),
+  true,
+);
+console.log("PASS duplicate title keys are case and punctuation insensitive");
 
 const task2Payload = validateAdminWritingContentPayload(basePayload());
 assert.equal(task2Payload.visual_data.type, "none");
@@ -235,3 +290,81 @@ const legacyChart = {
 };
 assert.equal(legacyChart.type, "bar_chart");
 console.log("PASS legacy visual_data remains a separate renderer-compatible shape");
+
+const migrationSource = await readFile(
+  new URL("../supabase/migrations/009_add_writing_task_title.sql", import.meta.url),
+  "utf8",
+);
+assert.match(migrationSource, /alter table public\.writing_tasks/i);
+assert.match(migrationSource, /add column if not exists title text/i);
+assert.equal(/not null/i.test(migrationSource), false);
+console.log("PASS writing_tasks.title migration is nullable text and idempotent");
+
+const adminAiContentSource = await readFile(
+  new URL("../src/server/services/admin-ai-content.ts", import.meta.url),
+  "utf8",
+);
+for (const removedRuntimeFallback of [
+  "writingTaskTitleColumnAvailable",
+  "insertWritingTaskWithOptionalTitle",
+  "isMissingWritingTitleColumnError",
+  "retry without title",
+  "fallback insert",
+  "title column does not exist",
+  "schema cache",
+  "PGRST204",
+  "undefined column",
+]) {
+  assert.equal(
+    adminAiContentSource.includes(removedRuntimeFallback),
+    false,
+    `${removedRuntimeFallback} should not remain in writing title persistence code`,
+  );
+}
+assert.match(adminAiContentSource, /title:\s*data\.title\.trim\(\)/);
+assert.match(
+  adminAiContentSource,
+  /\.select\("id,title,topic,band_target,status"\)/,
+);
+assert.match(
+  adminAiContentSource,
+  /\.select\("id,title,task_type,topic,prompt,visual_data,status"\)/,
+);
+assert.match(adminAiContentSource, /title:\s*task\.title/);
+console.log("PASS Admin Writing generation saves title directly and loads persisted titles for duplicate checks");
+
+const writingPracticeSource = await readFile(
+  new URL("../src/server/services/writing-practice.ts", import.meta.url),
+  "utf8",
+);
+assert.match(
+  writingPracticeSource,
+  /\.select\("id,title,task_type,topic,prompt,visual_data,band_target,created_at"\)/,
+);
+assert.match(writingPracticeSource, /title:\s*task\.title/);
+assert.match(writingPracticeSource, /title:\s*data\.title/);
+console.log("PASS Writing practice reads persisted title before display fallback");
+
+const adminDashboardSource = await readFile(
+  new URL("../src/server/services/admin-dashboard.ts", import.meta.url),
+  "utf8",
+);
+assert.match(
+  adminDashboardSource,
+  /\.select\("id,title,task_type,topic,prompt,visual_data,source_type,status,created_at"\)/,
+);
+assert.match(adminDashboardSource, /getWritingDisplayTitle\(/);
+console.log("PASS Admin list uses persisted writing title with display fallback");
+
+const adminDetailSource = await readFile(
+  new URL("../src/app/api/admin/content/detail/route.ts", import.meta.url),
+  "utf8",
+);
+assert.match(
+  adminDetailSource,
+  /\.select\(\s*"id,title,task_type,topic,prompt,visual_data,/,
+);
+assert.match(adminDetailSource, /buildWritingDetailTitle\(data\)/);
+assert.match(adminDetailSource, /const normalizedWritingTitle/);
+assert.match(adminDetailSource, /title:\s*normalizedWritingTitle/);
+console.log("PASS Admin detail and edit include persisted writing title");
