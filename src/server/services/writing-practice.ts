@@ -6,6 +6,10 @@ import { createOpenAIClient } from "@/lib/openai/client";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { countWords } from "@/lib/word-count";
 import {
+  getWritingDisplayTitle,
+  getWritingQuestionTypeLabel,
+} from "@/lib/writing-task-display";
+import {
   getWritingVisualTypeLabel,
   normalizeWritingVisualData,
   type StructuredWritingVisualData,
@@ -22,6 +26,7 @@ export type PublishedWritingTaskSummary = {
   topic: string;
   title: string;
   promptSummary: string;
+  questionTypeLabel: string | null;
   visualType: StructuredWritingVisualData["type"] | null;
   visualTypeLabel: string | null;
   bandTarget: number | null;
@@ -181,8 +186,15 @@ export const getPublishedWritingTaskSummaries = cache(
         id: task.id,
         taskType,
         topic: task.topic,
-        title: buildWritingTaskTitle(task.task_type, task.topic),
+        title: buildWritingTaskTitle({
+          taskType,
+          topic: task.topic,
+          prompt: task.prompt,
+          visualTitle: structuredVisualData?.title,
+        }),
         promptSummary: summarizePrompt(task.prompt),
+        questionTypeLabel:
+          taskType === 2 ? getWritingQuestionTypeLabel(task.prompt) : null,
         visualType: structuredVisualData?.type ?? null,
         visualTypeLabel: getWritingVisualTypeLabel({
           prompt: task.prompt,
@@ -279,10 +291,17 @@ export const getPublishedWritingTask = cache(async (id: string) => {
     id: data.id,
     taskType,
     topic: data.topic,
-    title: buildWritingTaskTitle(taskType, data.topic),
+    title: buildWritingTaskTitle({
+      taskType,
+      topic: data.topic,
+      prompt: data.prompt,
+      visualTitle: structuredVisualData?.title,
+    }),
     prompt: data.prompt,
     visualData: structuredVisualData,
     promptSummary: summarizePrompt(data.prompt),
+    questionTypeLabel:
+      taskType === 2 ? getWritingQuestionTypeLabel(data.prompt) : null,
     visualType: structuredVisualData?.type ?? null,
     visualTypeLabel: getWritingVisualTypeLabel({
       prompt: data.prompt,
@@ -445,14 +464,20 @@ export async function getWritingAttemptResult({
   }
 
   const taskType = normalizeTaskType(task?.task_type ?? 2);
+  const structuredVisualData = normalizeWritingVisualData(task?.visual_data);
 
   return {
     id: attempt.id,
     taskType,
     topic: task?.topic ?? "Writing",
-    title: buildWritingTaskTitle(taskType, task?.topic ?? "Writing"),
+    title: buildWritingTaskTitle({
+      taskType,
+      topic: task?.topic ?? "Writing",
+      prompt: task?.prompt ?? "",
+      visualTitle: structuredVisualData?.title,
+    }),
     prompt: task?.prompt ?? "",
-    visualData: normalizeWritingVisualData(task?.visual_data),
+    visualData: structuredVisualData,
     essay: attempt.essay,
     wordCount: attempt.word_count,
     overallBand: Number(attempt.overall_band),
@@ -1121,8 +1146,24 @@ function looksMostlyEnglish(value: string) {
   return letters > 20 && letters > chinese * 2;
 }
 
-function buildWritingTaskTitle(taskType: number, topic: string) {
-  return `Task ${normalizeTaskType(taskType)}: ${topic}`;
+function buildWritingTaskTitle({
+  taskType,
+  topic,
+  prompt,
+  visualTitle,
+}: {
+  taskType: 1 | 2;
+  topic: string;
+  prompt: string;
+  visualTitle?: string | null;
+}) {
+  return getWritingDisplayTitle({
+    taskType,
+    topic,
+    prompt,
+    title: `Task ${taskType}: ${topic}`,
+    visualTitle,
+  });
 }
 
 function summarizePrompt(prompt: string) {

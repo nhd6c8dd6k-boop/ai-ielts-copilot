@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { CheckCircle2, Clock3, FileText, PenLine } from "lucide-react";
+import { CheckCircle2, Clock3, PenLine } from "lucide-react";
 
 import { LocalizedText } from "@/components/i18n/localized-text";
 import { AppShell } from "@/components/layout/app-shell";
@@ -86,13 +86,20 @@ export default async function WritingPracticePage({ searchParams }: PageProps) {
             <Card key={task.id}>
               <CardHeader>
                 <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <CardTitle className="text-lg">{task.title}</CardTitle>
+                  <div className="min-w-0">
+                    <CardTitle className="line-clamp-2 text-lg leading-6">
+                      {task.title}
+                    </CardTitle>
                     <div className="mt-3 flex flex-wrap gap-2">
                       <Badge>Task {task.taskType}</Badge>
-                      {task.visualTypeLabel ? (
+                      {task.taskType === 1 && task.visualTypeLabel ? (
                         <Badge className="bg-slate-50">
                           {task.visualTypeLabel}
+                        </Badge>
+                      ) : null}
+                      {task.taskType === 2 && task.questionTypeLabel ? (
+                        <Badge className="bg-slate-50">
+                          {task.questionTypeLabel}
                         </Badge>
                       ) : null}
                       <Badge className="bg-white">{task.topic}</Badge>
@@ -117,24 +124,12 @@ export default async function WritingPracticePage({ searchParams }: PageProps) {
                   {task.promptSummary}
                 </p>
 
-                <div className="mt-5 grid gap-3 text-sm text-slate-600 sm:grid-cols-3">
+                <div className="mt-5 max-w-xs text-sm text-slate-600">
                   <InfoMetric
                     icon={Clock3}
                     labelKey="practice.estimatedTime"
                     label="Estimated time"
                     value={`${task.estimatedTimeMinutes} min`}
-                  />
-                  <InfoMetric
-                    icon={FileText}
-                    labelKey="practice.taskType"
-                    label="Task type"
-                    value={`Task ${task.taskType}`}
-                  />
-                  <InfoMetric
-                    icon={PenLine}
-                    labelKey="practice.added"
-                    label="Added"
-                    value={new Date(task.createdAt).toLocaleDateString()}
                   />
                 </div>
 
@@ -240,7 +235,7 @@ function InfoMetric({
   labelKey,
   value,
 }: {
-  icon: typeof FileText;
+  icon: typeof Clock3;
   label: string;
   labelKey: string;
   value: string;
