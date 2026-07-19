@@ -10,6 +10,7 @@ import {
   Loader2,
   Save,
   Target,
+  Trophy,
   UserRound,
 } from "lucide-react";
 
@@ -30,6 +31,11 @@ import {
   getProfileHeroSummary,
   type ProfileHeroSummary,
 } from "@/features/profile/hero-summary";
+import {
+  getBestScores,
+  type BestScoreAttempt,
+  type BestScores,
+} from "@/features/profile/best-scores";
 
 type ProfileSyncMode = "loading" | "local" | "supabase" | "anonymous" | "error";
 
@@ -69,6 +75,12 @@ type ApiUsage = {
   };
 };
 
+type ApiBestScoreAttempt = {
+  id?: string | null;
+  skill?: string | null;
+  band_estimate?: number | null;
+};
+
 type ApiAuthUser = {
   email?: string | null;
   created_at?: string | null;
@@ -84,6 +96,8 @@ type ProfileApiResponse = {
   usage?: ApiUsage | null;
   practice_total?: number | null;
   practice_total_error?: boolean;
+  best_score_attempts?: ApiBestScoreAttempt[] | null;
+  best_scores_error?: boolean;
   error?: string;
 };
 
@@ -121,6 +135,10 @@ export default function ProfilePage() {
   const [usage, setUsage] = useState<ApiUsage | null>(null);
   const [totalPractice, setTotalPractice] = useState<number | null>(null);
   const [totalPracticeError, setTotalPracticeError] = useState(false);
+  const [bestScoreAttempts, setBestScoreAttempts] = useState<
+    BestScoreAttempt[] | null
+  >(null);
+  const [bestScoresError, setBestScoresError] = useState(false);
 
   useEffect(() => {
     let isActive = true;
@@ -147,6 +165,16 @@ export default function ProfilePage() {
           setUsage(payload.usage ?? null);
           setTotalPractice(payload.practice_total ?? null);
           setTotalPracticeError(Boolean(payload.practice_total_error));
+          setBestScoreAttempts(
+            (payload.best_score_attempts ?? []).map((attempt) => ({
+              id: attempt.id,
+              skill: attempt.skill,
+              bandEstimate: attempt.band_estimate,
+              overallBand:
+                attempt.skill === "writing" ? attempt.band_estimate : null,
+            })),
+          );
+          setBestScoresError(Boolean(payload.best_scores_error));
           setProfile((currentProfile) => {
             const nextProfile = mergeApiProfile(
               currentProfile,
@@ -166,12 +194,16 @@ export default function ProfilePage() {
         setUsage(null);
         setTotalPractice(0);
         setTotalPracticeError(false);
+        setBestScoreAttempts([]);
+        setBestScoresError(false);
         setSyncMode(payload.mode === "anonymous" ? "anonymous" : "local");
       } catch {
         if (isActive) {
           setSyncMode("error");
           setSubscriptionError(true);
           setTotalPracticeError(true);
+          setBestScoreAttempts(null);
+          setBestScoresError(true);
         }
       }
     }
@@ -245,6 +277,7 @@ export default function ProfilePage() {
     isPracticeCountError: totalPracticeError || syncMode === "error",
     fallbackName: t("profile.hero.fallbackName", "IELTS learner"),
   });
+  const bestScores = getBestScores(bestScoreAttempts);
 
   const submitProfile = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -322,6 +355,13 @@ export default function ProfilePage() {
           t={t}
         />
       )}
+
+      <BestScoresCard
+        scores={bestScores}
+        isLoading={syncMode === "loading"}
+        hasError={bestScoresError || syncMode === "error"}
+        t={t}
+      />
 
       <div className="grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">
         <Card>
@@ -560,6 +600,79 @@ function ProfileUsageItem({ label, value }: { label: string; value: string }) {
   );
 }
 
+function BestScoresCard({
+  scores,
+  isLoading,
+  hasError,
+  t,
+}: {
+  scores: BestScores;
+  isLoading: boolean;
+  hasError: boolean;
+  t: (key: string, fallback: string) => string;
+}) {
+  const items = [
+    {
+      key: "reading",
+      label: t("profile.bestScores.reading", "Reading"),
+      value: scores.reading,
+    },
+    {
+      key: "listening",
+      label: t("profile.bestScores.listening", "Listening"),
+      value: scores.listening,
+    },
+    {
+      key: "writing",
+      label: t("profile.bestScores.writing", "Writing"),
+      value: scores.writing,
+    },
+    {
+      key: "personal-best",
+      label: t("profile.bestScores.personalBest", "Personal Best"),
+      value: scores.personalBest,
+    },
+  ];
+  const noScoreLabel = t("profile.bestScores.noScoreYet", "No score yet");
+
+  return (
+    <Card className="mb-6">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0">
+        <CardTitle>{t("profile.bestScores.title", "Best Scores")}</CardTitle>
+        <Trophy className="h-5 w-5 text-slate-400" aria-hidden="true" />
+      </CardHeader>
+      <CardContent aria-busy={isLoading}>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {items.map((item) => (
+            <div
+              key={item.key}
+              className="rounded-md border border-slate-200 bg-slate-50 p-4"
+            >
+              <p className="text-sm font-medium text-slate-600">
+                {item.label}
+              </p>
+              {isLoading ? (
+                <div className="mt-3 h-8 w-16 animate-pulse rounded bg-slate-200" />
+              ) : (
+                <p
+                  className="mt-2 text-3xl font-semibold text-slate-950"
+                  aria-label={
+                    hasError || item.value === null ? noScoreLabel : undefined
+                  }
+                >
+                  {hasError || item.value === null
+                    ? "—"
+                    : formatBestBand(item.value)}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 function ProfileHeroStatusCard({
   icon,
   title,
@@ -675,6 +788,10 @@ function ProfileHeroSummaryCard({
       </CardContent>
     </Card>
   );
+}
+
+function formatBestBand(value: number | null) {
+  return value === null ? "—" : value.toFixed(1);
 }
 
 function formatMemberSince(date: Date, language: "zh" | "en") {

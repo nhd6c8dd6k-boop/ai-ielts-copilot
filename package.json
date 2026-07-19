@@ -17,6 +17,7 @@
     "test:dashboard-weekly-progress": "node scripts/verify-dashboard-weekly-progress.mjs",
     "test:dashboard-skill-focus": "node scripts/verify-dashboard-skill-focus.mjs",
     "test:profile-hero-summary": "node scripts/verify-profile-hero-summary.mjs",
+    "test:profile-best-scores": "node scripts/verify-profile-best-scores.mjs",
     "test:admin-writing-generation": "node scripts/verify-admin-writing-generation.mjs",
     "test:writing-task-cards": "node scripts/verify-writing-task-cards.mjs"
   },

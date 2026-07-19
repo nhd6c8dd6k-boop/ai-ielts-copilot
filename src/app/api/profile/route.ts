@@ -29,7 +29,8 @@ export async function GET() {
     return NextResponse.json({ mode: "anonymous", profile: null });
   }
 
-  const [profileResult, subscriptionResult, usage] = await Promise.all([
+  const [profileResult, subscriptionResult, usage, practiceStatsResult] =
+    await Promise.all([
     supabase
       .from("profiles")
       .select("display_name,target_band,exam_date,country,timezone,created_at")
@@ -41,13 +42,12 @@ export async function GET() {
       .eq("user_id", user.id)
       .maybeSingle(),
     getUserPracticeUsage(user.id),
+    supabase
+      .from("practice_history")
+      .select("id,skill,band_estimate")
+      .eq("user_id", user.id)
+      .in("skill", ["reading", "listening", "writing"]),
   ]);
-
-  const practiceCountResult = await supabase
-    .from("practice_history")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", user.id)
-    .in("skill", ["reading", "listening", "writing"]);
 
   if (profileResult.error) {
     return apiErrorResponse(profileResult.error, {
@@ -85,11 +85,18 @@ export async function GET() {
         }
       : null,
     subscription_error: Boolean(subscriptionResult.error),
-    practice_total:
-      practiceCountResult.error || practiceCountResult.count === null
-        ? null
-        : practiceCountResult.count,
-    practice_total_error: Boolean(practiceCountResult.error),
+    practice_total: practiceStatsResult.error
+      ? null
+      : (practiceStatsResult.data ?? []).length,
+    practice_total_error: Boolean(practiceStatsResult.error),
+    best_score_attempts: practiceStatsResult.error
+      ? null
+      : (practiceStatsResult.data ?? []).map((attempt) => ({
+          id: attempt.id,
+          skill: attempt.skill,
+          band_estimate: attempt.band_estimate,
+        })),
+    best_scores_error: Boolean(practiceStatsResult.error),
     usage,
   });
 }
