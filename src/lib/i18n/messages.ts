@@ -266,7 +266,7 @@ export const messages: Record<Language, Record<string, string>> = {
       "Listen to the recording, then answer the questions on the right.",
     "practice.ready": "Ready",
     "practice.audioFallback":
-      "Audio is not ready yet. A transcript-based practice fallback is available for this set.",
+      "Audio is not ready yet. Please come back when the recording is available.",
     "practice.transcriptReview": "Transcript for review",
     "practice.transcriptPractice": "Transcript Practice",
     "practice.multiBlankHint":
@@ -1017,7 +1017,7 @@ export const messages: Record<Language, Record<string, string>> = {
     "practice.audioPlayer": "音频播放器",
     "practice.audioPlayerDescription": "先听录音，然后在右侧完成题目。",
     "practice.ready": "可用",
-    "practice.audioFallback": "音频暂未就绪。你可以先使用听力原文练习流程。",
+    "practice.audioFallback": "音频暂未就绪。请稍后在录音可用后再练习。",
     "practice.transcriptReview": "听力原文复盘",
     "practice.transcriptPractice": "听力原文练习",
     "practice.multiBlankHint": "多空题请分别填写每个空。",

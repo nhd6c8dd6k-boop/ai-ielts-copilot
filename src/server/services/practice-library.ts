@@ -2,6 +2,7 @@ import { cache } from "react";
 
 import { isSupabaseConfigured } from "@/lib/env";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { hasUsableAudioUrl } from "@/server/services/listening-practice";
 
 export type PracticeLibraryStats = {
   readingCount: number;
@@ -33,8 +34,10 @@ export const getPracticeLibraryStats = cache(async () => {
       .eq("status", "published"),
     admin
       .from("listening_sets")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "published"),
+      .select("id,audio_url")
+      .eq("status", "published")
+      .eq("audio_status", "ready")
+      .not("audio_url", "is", null),
     admin
       .from("writing_tasks")
       .select("id", { count: "exact", head: true })
@@ -59,7 +62,9 @@ export const getPracticeLibraryStats = cache(async () => {
 
   return {
     readingCount: readingResult.count ?? 0,
-    listeningCount: listeningResult.count ?? 0,
+    listeningCount: (listeningResult.data ?? []).filter((set) =>
+      hasUsableAudioUrl(set.audio_url),
+    ).length,
     writingCount: writingResult.count ?? 0,
     pendingListeningCount: pendingListeningResult.count ?? 0,
   } satisfies PracticeLibraryStats;

@@ -35,15 +35,14 @@ export type ListeningPracticeQuestion = {
   answerCount: number;
 };
 
-export type ListeningPracticeSet = {
+export type ListeningExamPracticeSet = {
   id: string;
   title: string;
   band: number;
   topic: string;
   section: number;
-  script: string;
-  audioUrl: string | null;
-  audioStatus: string;
+  audioUrl: string;
+  audioStatus: "ready";
   estimatedTimeMinutes: number;
   questions: ListeningPracticeQuestion[];
 };
@@ -89,6 +88,10 @@ type RawAnswerRow = {
   explanation_en: string | null;
 };
 
+export function hasUsableAudioUrl(url: unknown): url is string {
+  return typeof url === "string" && url.trim().length > 0;
+}
+
 export const getPublishedListeningSummaries = cache(
   async (userId?: string | null) => {
   if (!isSupabaseConfigured()) {
@@ -98,8 +101,10 @@ export const getPublishedListeningSummaries = cache(
   const admin = createSupabaseAdminClient();
   const { data: sets, error } = await admin
     .from("listening_sets")
-    .select("id,title,band,topic,section,audio_status,created_at")
+    .select("id,title,band,topic,section,audio_status,audio_url,created_at")
     .eq("status", "published")
+    .eq("audio_status", "ready")
+    .not("audio_url", "is", null)
     .order("created_at", { ascending: false })
     .limit(50);
 
@@ -107,7 +112,10 @@ export const getPublishedListeningSummaries = cache(
     throw new Error(error.message);
   }
 
-  const setIds = (sets ?? []).map((set) => set.id);
+  const readySets = (sets ?? []).filter((set) =>
+    hasUsableAudioUrl(set.audio_url),
+  );
+  const setIds = readySets.map((set) => set.id);
 
   if (!setIds.length) {
     return [];
@@ -133,7 +141,7 @@ export const getPublishedListeningSummaries = cache(
     ? await getListeningCompletionBySetId({ userId, setIds })
     : new Map<string, PracticeCompletionSummary>();
 
-  return (sets ?? []).map(
+  return readySets.map(
     (set): PublishedListeningSummary => ({
       id: set.id,
       title: set.title,
@@ -202,18 +210,22 @@ export const getPublishedListeningPracticeSet = cache(async (id: string) => {
   const admin = createSupabaseAdminClient();
   const { data: set, error } = await admin
     .from("listening_sets")
-    .select("id,title,band,topic,section,script,audio_url,audio_status,status")
+    .select("id,title,band,topic,section,audio_url,audio_status,status")
     .eq("id", id)
     .eq("status", "published")
+    .eq("audio_status", "ready")
+    .not("audio_url", "is", null)
     .maybeSingle();
 
   if (error) {
     throw new Error(error.message);
   }
 
-  if (!set) {
+  if (!set || !hasUsableAudioUrl(set.audio_url)) {
     return null;
   }
+
+  const audioUrl = set.audio_url;
 
   const { data: questions, error: questionError } = await admin
     .from("generated_questions")
@@ -252,14 +264,13 @@ export const getPublishedListeningPracticeSet = cache(async (id: string) => {
     band: set.band,
     topic: set.topic,
     section: set.section,
-    script: set.script,
-    audioUrl: set.audio_url,
-    audioStatus: set.audio_status ?? "pending",
+    audioUrl,
+    audioStatus: "ready",
     estimatedTimeMinutes: estimateListeningTime(set.section),
     questions: ((questions ?? []) as RawQuestionRow[]).map((question) =>
       mapQuestionRow(question, answerByQuestionId.get(question.id)),
     ),
-  } satisfies ListeningPracticeSet;
+  } satisfies ListeningExamPracticeSet;
 });
 
 export async function getListeningAttemptResult({

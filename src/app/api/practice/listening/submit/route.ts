@@ -6,6 +6,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
   estimateListeningBand,
+  hasUsableAudioUrl,
   isListeningAnswerCorrect,
   normalizePracticeAnswer,
 } from "@/server/services/listening-practice";
@@ -52,9 +53,11 @@ export async function POST(request: Request) {
   const admin = createSupabaseAdminClient();
   const { data: listeningSet, error: setError } = await admin
     .from("listening_sets")
-    .select("id,title,band,topic,section,status")
+    .select("id,title,band,topic,section,status,audio_status,audio_url")
     .eq("id", input.listeningSetId)
     .eq("status", "published")
+    .eq("audio_status", "ready")
+    .not("audio_url", "is", null)
     .maybeSingle();
 
   if (setError) {
@@ -65,9 +68,12 @@ export async function POST(request: Request) {
     });
   }
 
-  if (!listeningSet) {
+  if (
+    listeningSet?.audio_status !== "ready" ||
+    !hasUsableAudioUrl(listeningSet.audio_url)
+  ) {
     return NextResponse.json(
-      { error: "Listening set not found or not published." },
+      { error: "Listening set not found, not published, or audio is not ready." },
       { status: 404 },
     );
   }
