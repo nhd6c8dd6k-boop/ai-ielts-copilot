@@ -1,22 +1,17 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Bookmark,
-  CheckCircle2,
-  Clock3,
-  Flag,
-  Headphones,
-  Loader2,
-} from "lucide-react";
+import { Flag, Headphones } from "lucide-react";
 
 import { useI18n } from "@/components/i18n/language-provider";
 import { AppShell } from "@/components/layout/app-shell";
+import { ExamStatusHeader } from "@/components/practice/exam-status-header";
 import { UsageStatus } from "@/components/practice/usage-status";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { getElapsedSeconds } from "@/lib/exam-timer";
 import { joinAnswerParts } from "@/lib/listening-answer-parts";
 import { cn } from "@/lib/utils";
 import type { ListeningPracticeSet } from "@/server/services/listening-practice";
@@ -52,20 +47,12 @@ export function ListeningPracticeClient({
   const [activeQuestionId, setActiveQuestionId] = useState(
     listeningSet.questions[0]?.id ?? "",
   );
-  const [secondsElapsed, setSecondsElapsed] = useState(0);
+  const [startedAtMs] = useState(() => Date.now());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const questionRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const hasReadyAudio =
     Boolean(listeningSet.audioUrl) && listeningSet.audioStatus === "ready";
-
-  useEffect(() => {
-    const intervalId = window.setInterval(() => {
-      setSecondsElapsed((current) => current + 1);
-    }, 1000);
-
-    return () => window.clearInterval(intervalId);
-  }, []);
 
   const answeredCount = useMemo(
     () =>
@@ -128,7 +115,7 @@ export function ListeningPracticeClient({
         body: JSON.stringify({
           listeningSetId: listeningSet.id,
           answers,
-          timeSpentSeconds: secondsElapsed,
+          timeSpentSeconds: getElapsedSeconds(startedAtMs),
         }),
       });
       const payload = (await response.json()) as SubmitResponse;
@@ -162,37 +149,21 @@ export function ListeningPracticeClient({
 
   return (
     <AppShell>
-      <div className="mb-4 flex flex-col gap-3 border-b border-slate-200 pb-4 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <div className="flex flex-wrap gap-2">
-            <Badge>Listening</Badge>
-            <Badge className="bg-white">Band {listeningSet.band}</Badge>
-            <Badge className="bg-white">Section {listeningSet.section}</Badge>
-            <Badge className="bg-white">{listeningSet.topic}</Badge>
-          </div>
-          <h1 className="mt-3 text-2xl font-semibold tracking-tight text-slate-950">
-            {listeningSet.title}
-          </h1>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge className="bg-slate-50">
-            {answeredCount}/{listeningSet.questions.length}{" "}
-            {t("practice.answered", "answered")}
-          </Badge>
-          <Badge className="bg-slate-50">
-            <Clock3 className="h-3.5 w-3.5" aria-hidden="true" />
-            {formatTime(secondsElapsed)}
-          </Badge>
-          <Button type="button" onClick={submitPractice} disabled={isSubmitting}>
-            {isSubmitting ? (
-              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-            ) : (
-              <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-            )}
-            {t("practice.submit", "Submit")}
-          </Button>
-        </div>
-      </div>
+      <ExamStatusHeader
+        testLabel={t("practice.examHeader.listeningTest", "Listening Test")}
+        title={listeningSet.title}
+        metadata={[
+          `Band ${listeningSet.band}`,
+          `Section ${listeningSet.section}`,
+          listeningSet.topic,
+        ]}
+        answeredCount={answeredCount}
+        totalQuestions={listeningSet.questions.length}
+        flaggedCount={flaggedIds.length}
+        startedAtMs={startedAtMs}
+        isSubmitting={isSubmitting}
+        onSubmit={submitPractice}
+      />
 
       <UsageStatus
         resource="listening"
@@ -210,9 +181,9 @@ export function ListeningPracticeClient({
         </div>
       ) : null}
 
-      <div className="grid min-h-[calc(100vh-210px)] gap-4 xl:grid-cols-[minmax(0,1fr)_430px]">
+      <div className="grid min-h-0 items-start gap-4 xl:grid-cols-[minmax(0,1fr)_430px]">
         <Card className="min-h-0">
-          <CardContent className="h-[calc(100vh-230px)] overflow-auto p-0">
+          <CardContent className="overflow-visible p-0 xl:max-h-[100dvh] xl:overflow-auto">
             <div className="sticky top-0 z-10 border-b border-slate-200 bg-white p-5">
               <div className="flex items-center justify-between gap-4">
                 <div className="text-sm font-medium text-slate-950">
@@ -293,7 +264,7 @@ export function ListeningPracticeClient({
         </Card>
 
         <Card className="min-h-0">
-          <CardContent className="flex h-[calc(100vh-230px)] flex-col p-0">
+          <CardContent className="flex flex-col p-0 xl:max-h-[100dvh] xl:overflow-hidden">
             <div className="border-b border-slate-200 p-4">
               <div className="flex flex-wrap gap-2">
                 {listeningSet.questions.map((question) => {
@@ -328,7 +299,7 @@ export function ListeningPracticeClient({
               </div>
             </div>
 
-            <div className="flex-1 space-y-4 overflow-auto p-4">
+            <div className="space-y-4 p-4 xl:min-h-0 xl:flex-1 xl:overflow-auto">
               {listeningSet.questions.map((question) => (
                 <div
                   key={question.id}
@@ -433,9 +404,14 @@ export function ListeningPracticeClient({
             </div>
 
             <div className="border-t border-slate-200 p-4">
-              <div className="mb-3 flex items-center gap-2 text-xs text-slate-500">
-                <Bookmark className="h-3.5 w-3.5" aria-hidden="true" />
-                {flaggedIds.length} {t("practice.flagged", "flagged")}
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+                <span>
+                  {answeredCount}/{listeningSet.questions.length}{" "}
+                  {t("practice.answered", "answered")}
+                </span>
+                <span>
+                  {flaggedIds.length} {t("practice.flagged", "flagged")}
+                </span>
               </div>
               <Button
                 type="button"
@@ -453,13 +429,6 @@ export function ListeningPracticeClient({
       </div>
     </AppShell>
   );
-}
-
-function formatTime(totalSeconds: number) {
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-
-  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 }
 
 function formatAudioStatus(status: string) {
