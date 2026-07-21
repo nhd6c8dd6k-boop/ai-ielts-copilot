@@ -3,12 +3,14 @@ import { cache } from "react";
 import { isSupabaseConfigured } from "@/lib/env";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { hasUsableAudioUrl } from "@/server/services/listening-practice";
+import { getSpeakingLibraryCounts } from "@/server/services/speaking-practice";
 
 export type PracticeLibraryStats = {
   readingCount: number;
   listeningCount: number;
   writingCount: number;
-  speakingCount: number;
+  speakingCount: number | null;
+  speakingQuestionCount: number | null;
   pendingListeningCount: number;
 };
 
@@ -19,6 +21,7 @@ export const getPracticeLibraryStats = cache(async () => {
       listeningCount: 0,
       writingCount: 0,
       speakingCount: 0,
+      speakingQuestionCount: 0,
       pendingListeningCount: 0,
     } satisfies PracticeLibraryStats;
   }
@@ -28,7 +31,7 @@ export const getPracticeLibraryStats = cache(async () => {
     readingResult,
     listeningResult,
     writingResult,
-    speakingResult,
+    speakingCounts,
     pendingListeningResult,
   ] = await Promise.all([
     admin
@@ -45,10 +48,7 @@ export const getPracticeLibraryStats = cache(async () => {
       .from("writing_tasks")
       .select("id", { count: "exact", head: true })
       .eq("status", "published"),
-    admin
-      .from("speaking_topics")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "published"),
+    getSpeakingLibraryCounts().catch(() => null),
     admin
       .from("listening_sets")
       .select("id", { count: "exact", head: true })
@@ -60,7 +60,6 @@ export const getPracticeLibraryStats = cache(async () => {
     readingResult,
     listeningResult,
     writingResult,
-    speakingResult,
     pendingListeningResult,
   ]) {
     if (result.error) {
@@ -74,7 +73,8 @@ export const getPracticeLibraryStats = cache(async () => {
       hasUsableAudioUrl(set.audio_url),
     ).length,
     writingCount: writingResult.count ?? 0,
-    speakingCount: speakingResult.count ?? 0,
+    speakingCount: speakingCounts?.topicCount ?? null,
+    speakingQuestionCount: speakingCounts?.questionCount ?? null,
     pendingListeningCount: pendingListeningResult.count ?? 0,
   } satisfies PracticeLibraryStats;
 });

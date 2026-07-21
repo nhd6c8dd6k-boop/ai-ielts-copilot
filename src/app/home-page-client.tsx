@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   Headphones,
   LineChart,
+  MessageSquareText,
   PenLine,
   ShieldCheck,
   Timer,
@@ -118,6 +119,13 @@ const copy = {
           "播放 IELTS-style 听力音频，完成题目后自动判分并查看复盘。",
         cta: "开始 Listening",
         href: "/practice/listening",
+      },
+      {
+        title: "Speaking",
+        description:
+          "练习雅思口语 Part 1、Part 2 和 Part 3 题目，查看 Band 6–8 示例答案与实用表达。",
+        cta: "开始 Speaking",
+        href: "/practice/speaking",
       },
     ],
     previewHeading: "机考风格界面预览",
@@ -234,6 +242,13 @@ const copy = {
           "Play IELTS-style listening audio, answer questions, and review your score after submitting.",
         cta: "Start Listening",
         href: "/practice/listening",
+      },
+      {
+        title: "Speaking",
+        description:
+          "Practice IELTS-style Part 1, Part 2 and Part 3 questions with Band 6–8 sample answers and useful language.",
+        cta: "Start Speaking Practice",
+        href: "/practice/speaking",
       },
     ],
     previewHeading: "Computer IELTS-style interface preview",
@@ -429,7 +444,7 @@ function PreviewTextBlock({ label, text }: { label: string; text: string }) {
 export default function Home() {
   const { language, t: msg } = useI18n();
   const t = copy[language];
-  const practiceIcons = [PenLine, BookOpen, Headphones];
+  const practiceIcons = [PenLine, BookOpen, Headphones, MessageSquareText];
   const heroPoints = [
     msg("home.hero.point.taskFeedback", "Task 1 and Task 2 specific feedback"),
     msg("home.hero.point.rewrite", "Original → Improved → Why"),
@@ -639,7 +654,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="mt-10 grid gap-4 md:grid-cols-3">
+            <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
               {t.practiceCards.map((card, index) => {
                 const Icon = practiceIcons[index] ?? BookOpen;
                 const isFeatured = index === 0;

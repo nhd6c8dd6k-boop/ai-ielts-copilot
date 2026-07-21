@@ -87,13 +87,16 @@ export default async function PracticePage() {
       title: "Speaking Preparation",
       titleKey: "practice.speaking.title",
       description:
-        "Study IELTS-style Speaking questions with sample answers, useful phrases, vocabulary, and common mistakes.",
+        "Practice IELTS-style Part 1, Part 2, and Part 3 questions with Band 6-8 sample answers and useful language.",
       descriptionKey: "practice.speaking.description",
       count: stats.speakingCount,
       countLabelKey: "speaking.topicsAvailable",
       countLabel: "topics available",
+      secondaryCount: stats.speakingQuestionCount,
+      secondaryCountLabelKey: "speaking.questions",
+      secondaryCountLabel: "questions",
       href: "/practice/speaking",
-      cta: "View Speaking Library",
+      cta: "Start Speaking Practice",
       ctaKey: "practice.speaking.cta",
       icon: MessageSquareText,
       badge: "Preparation library",
@@ -160,6 +163,18 @@ export default async function PracticePage() {
                           />
                         </Badge>
                       )}
+                      {"secondaryCount" in card &&
+                      card.secondaryCount !== null &&
+                      card.secondaryCountLabelKey &&
+                      card.secondaryCountLabel ? (
+                        <Badge className="bg-white">
+                          {card.secondaryCount}{" "}
+                          <LocalizedText
+                            k={card.secondaryCountLabelKey}
+                            fallback={card.secondaryCountLabel}
+                          />
+                        </Badge>
+                      ) : null}
                       {card.badge ? (
                         <Badge className="bg-white">
                           <LocalizedText

@@ -69,6 +69,12 @@ export type SpeakingTopicDetail = SpeakingTopicSummary & {
   questions: SpeakingQuestion[];
 };
 
+export type SpeakingLibraryCounts = {
+  topicCount: number;
+  questionCount: number;
+  partCounts: Record<SpeakingPart, number>;
+};
+
 type SpeakingTopicRow = {
   id: string;
   slug: string;
@@ -174,16 +180,58 @@ export const getPublishedSpeakingTopicBySlug = cache(async (slug: string) => {
 });
 
 export const getSpeakingLibraryStats = cache(async () => {
-  const topics = await getPublishedSpeakingTopicSummaries();
+  return getSpeakingLibraryCounts();
+});
+
+export const getSpeakingLibraryCounts = cache(async () => {
+  if (!isSupabaseConfigured()) {
+    return {
+      topicCount: 0,
+      questionCount: 0,
+      partCounts: {
+        1: 0,
+        2: 0,
+        3: 0,
+      },
+    } satisfies SpeakingLibraryCounts;
+  }
+
+  const admin = createSupabaseAdminClient();
+  const { data: topics, error } = await admin
+    .from("speaking_topics")
+    .select("id,part")
+    .eq("status", "published");
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const topicRows = (topics ?? []) as Pick<SpeakingTopicRow, "id" | "part">[];
+  const questionCounts = await getQuestionCounts(topicRows.map((topic) => topic.id));
+  const partCounts = topicRows.reduce(
+    (counts, topic) => {
+      const part = parseSpeakingPart(topic.part);
+
+      return {
+        ...counts,
+        [part]: counts[part] + 1,
+      };
+    },
+    {
+      1: 0,
+      2: 0,
+      3: 0,
+    } as Record<SpeakingPart, number>,
+  );
 
   return {
-    topicCount: topics.length,
-    partCounts: {
-      1: topics.filter((topic) => topic.part === 1).length,
-      2: topics.filter((topic) => topic.part === 2).length,
-      3: topics.filter((topic) => topic.part === 3).length,
-    },
-  };
+    topicCount: topicRows.length,
+    questionCount: Array.from(questionCounts.values()).reduce(
+      (total, count) => total + count,
+      0,
+    ),
+    partCounts,
+  } satisfies SpeakingLibraryCounts;
 });
 
 export const getPublishedSpeakingSitemapEntries = cache(async () => {

@@ -10,6 +10,7 @@ import {
   Headphones,
   LineChart as LineChartIcon,
   Loader2,
+  MessageSquareText,
   PencilLine,
   Target,
 } from "lucide-react";
@@ -81,6 +82,12 @@ const syncLabels = {
 
 const writingDraftStoragePrefix = "ai-ielts-writing-draft-";
 
+type DashboardSpeakingStats = {
+  topicCount: number;
+  questionCount: number;
+  partCounts: Record<"1" | "2" | "3", number>;
+};
+
 export default function DashboardPage() {
   const { t } = useI18n();
   const { history, syncMode } = useSyncedPracticeHistory();
@@ -90,6 +97,9 @@ export default function DashboardPage() {
     null,
   );
   const [dashboardNow, setDashboardNow] = useState<Date | null>(null);
+  const [speakingStats, setSpeakingStats] =
+    useState<DashboardSpeakingStats | null>(null);
+  const [isSpeakingStatsLoading, setIsSpeakingStatsLoading] = useState(true);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -98,6 +108,44 @@ export default function DashboardPage() {
     }, 0);
 
     return () => window.clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function loadSpeakingStats() {
+      try {
+        const response = await fetch("/api/practice/library-stats", {
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to load speaking stats");
+        }
+
+        const payload = (await response.json()) as {
+          speaking?: DashboardSpeakingStats | null;
+        };
+
+        if (isActive) {
+          setSpeakingStats(payload.speaking ?? null);
+        }
+      } catch {
+        if (isActive) {
+          setSpeakingStats(null);
+        }
+      } finally {
+        if (isActive) {
+          setIsSpeakingStatsLoading(false);
+        }
+      }
+    }
+
+    void loadSpeakingStats();
+
+    return () => {
+      isActive = false;
+    };
   }, []);
 
   const totalCompletedAttempts = history.length;
@@ -226,7 +274,14 @@ export default function DashboardPage() {
           )}
         />
       ) : shouldShowOnboarding ? (
-        <NewUserOnboarding writingDraft={writingDraft} t={t} />
+        <>
+          <NewUserOnboarding writingDraft={writingDraft} t={t} />
+          <DashboardSpeakingPreparationCard
+            stats={speakingStats}
+            isLoading={isSpeakingStatsLoading}
+            t={t}
+          />
+        </>
       ) : (
         <>
           {nextAction ? (
@@ -236,6 +291,12 @@ export default function DashboardPage() {
           {weeklyProgress ? (
             <DashboardWeeklyProgressCard progress={weeklyProgress} t={t} />
           ) : null}
+
+          <DashboardSpeakingPreparationCard
+            stats={speakingStats}
+            isLoading={isSpeakingStatsLoading}
+            t={t}
+          />
 
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {stats.map((stat) => {
@@ -606,6 +667,120 @@ function NewUserOnboarding({
         })}
       </div>
     </div>
+  );
+}
+
+function DashboardSpeakingPreparationCard({
+  stats,
+  isLoading,
+  t,
+}: {
+  stats: DashboardSpeakingStats | null;
+  isLoading: boolean;
+  t: (key: string, fallback?: string) => string;
+}) {
+  const partItems = [
+    {
+      label: t("dashboard.speakingPreparation.part1", "Part 1"),
+      count: stats?.partCounts["1"],
+    },
+    {
+      label: t("dashboard.speakingPreparation.part2", "Part 2"),
+      count: stats?.partCounts["2"],
+    },
+    {
+      label: t("dashboard.speakingPreparation.part3", "Part 3"),
+      count: stats?.partCounts["3"],
+    },
+  ];
+
+  return (
+    <Card className="mb-6 overflow-hidden border-slate-300">
+      <CardContent
+        className="grid gap-5 p-6 lg:grid-cols-[1fr_auto] lg:items-center"
+        aria-busy={isLoading}
+      >
+        <div className="flex min-w-0 gap-4">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-slate-950 text-white">
+            <MessageSquareText className="h-5 w-5" aria-hidden="true" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              {t(
+                "dashboard.speakingPreparation.eyebrow",
+                "Speaking preparation",
+              )}
+            </p>
+            <h2 className="mt-2 text-xl font-semibold leading-tight text-slate-950">
+              {t(
+                "dashboard.speakingPreparation.title",
+                "Build your Speaking answer bank",
+              )}
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+              {t(
+                "dashboard.speakingPreparation.description",
+                "Practise IELTS-style Part 1, Part 2, and Part 3 questions with Band 6-8 sample answers and useful language.",
+              )}
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {isLoading ? (
+                <Badge className="border-slate-200 bg-slate-50 text-slate-600">
+                  {t("dashboard.speakingPreparation.loading", "Loading library")}
+                </Badge>
+              ) : stats ? (
+                <>
+                  <Badge className="border-slate-200 bg-white text-slate-700">
+                    {formatMessage(
+                      t(
+                        "dashboard.speakingPreparation.topicCount",
+                        "{count} topics",
+                      ),
+                      { count: `${stats.topicCount}` },
+                    )}
+                  </Badge>
+                  <Badge className="border-slate-200 bg-white text-slate-700">
+                    {formatMessage(
+                      t(
+                        "dashboard.speakingPreparation.questionCount",
+                        "{count} questions",
+                      ),
+                      { count: `${stats.questionCount}` },
+                    )}
+                  </Badge>
+                </>
+              ) : (
+                <Badge className="border-slate-200 bg-white text-slate-700">
+                  {t(
+                    "dashboard.speakingPreparation.libraryAvailable",
+                    "Preparation library",
+                  )}
+                </Badge>
+              )}
+              {partItems.map((item) => (
+                <Badge
+                  key={item.label}
+                  className="border-slate-200 bg-slate-50 text-slate-700"
+                >
+                  {typeof item.count === "number"
+                    ? `${item.label}: ${item.count}`
+                    : item.label}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        </div>
+        <Button asChild className="w-full lg:w-auto">
+          <Link href="/practice/speaking">
+            {t(
+              "dashboard.speakingPreparation.cta",
+              "Start Speaking Practice",
+            )}
+            <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </Link>
+        </Button>
+      </CardContent>
+    </Card>
   );
 }
 
