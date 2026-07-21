@@ -1,0 +1,19 @@
+import type { Metadata } from "next";
+
+import { absoluteUrl } from "@/lib/seo";
+import { SpeakingPartPage } from "../speaking-part-page";
+
+export const metadata: Metadata = {
+  title: "IELTS Speaking Part 2 Cue Cards | AI IELTS Copilot",
+  description:
+    "Practise IELTS-style Speaking Part 2 cue cards with structure, preparation ideas, and band-level sample answers.",
+  alternates: {
+    canonical: absoluteUrl("/practice/speaking/part-2"),
+  },
+};
+
+export const dynamic = "force-dynamic";
+
+export default function SpeakingPart2Page() {
+  return <SpeakingPartPage part={2} />;
+}

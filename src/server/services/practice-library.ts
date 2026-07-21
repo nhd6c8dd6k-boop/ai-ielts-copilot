@@ -8,6 +8,7 @@ export type PracticeLibraryStats = {
   readingCount: number;
   listeningCount: number;
   writingCount: number;
+  speakingCount: number;
   pendingListeningCount: number;
 };
 
@@ -17,6 +18,7 @@ export const getPracticeLibraryStats = cache(async () => {
       readingCount: 0,
       listeningCount: 0,
       writingCount: 0,
+      speakingCount: 0,
       pendingListeningCount: 0,
     } satisfies PracticeLibraryStats;
   }
@@ -26,6 +28,7 @@ export const getPracticeLibraryStats = cache(async () => {
     readingResult,
     listeningResult,
     writingResult,
+    speakingResult,
     pendingListeningResult,
   ] = await Promise.all([
     admin
@@ -43,6 +46,10 @@ export const getPracticeLibraryStats = cache(async () => {
       .select("id", { count: "exact", head: true })
       .eq("status", "published"),
     admin
+      .from("speaking_topics")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "published"),
+    admin
       .from("listening_sets")
       .select("id", { count: "exact", head: true })
       .eq("status", "published")
@@ -53,6 +60,7 @@ export const getPracticeLibraryStats = cache(async () => {
     readingResult,
     listeningResult,
     writingResult,
+    speakingResult,
     pendingListeningResult,
   ]) {
     if (result.error) {
@@ -66,6 +74,7 @@ export const getPracticeLibraryStats = cache(async () => {
       hasUsableAudioUrl(set.audio_url),
     ).length,
     writingCount: writingResult.count ?? 0,
+    speakingCount: speakingResult.count ?? 0,
     pendingListeningCount: pendingListeningResult.count ?? 0,
   } satisfies PracticeLibraryStats;
 });

@@ -1,6 +1,12 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { BookOpen, Headphones, PenLine, Timer } from "lucide-react";
+import {
+  BookOpen,
+  Headphones,
+  MessageSquareText,
+  PenLine,
+  Timer,
+} from "lucide-react";
 
 import { LocalizedText } from "@/components/i18n/localized-text";
 import { AppShell } from "@/components/layout/app-shell";
@@ -78,6 +84,22 @@ export default async function PracticePage() {
       badgeKey: "practice.aiFeedbackAvailable",
     },
     {
+      title: "Speaking Preparation",
+      titleKey: "practice.speaking.title",
+      description:
+        "Study IELTS-style Speaking questions with sample answers, useful phrases, vocabulary, and common mistakes.",
+      descriptionKey: "practice.speaking.description",
+      count: stats.speakingCount,
+      countLabelKey: "speaking.topicsAvailable",
+      countLabel: "topics available",
+      href: "/practice/speaking",
+      cta: "View Speaking Library",
+      ctaKey: "practice.speaking.cta",
+      icon: MessageSquareText,
+      badge: "Preparation library",
+      badgeKey: "speaking.preparationLibrary",
+    },
+    {
       title: "Full Exam",
       titleKey: "practice.fullExam.title",
       description:
@@ -113,7 +135,7 @@ export default async function PracticePage() {
         />
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-4">
+      <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-5">
         {cards.map((card) => {
           const Icon = card.icon;
 
