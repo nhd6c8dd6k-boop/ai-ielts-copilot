@@ -47,6 +47,16 @@ export function parseSpeakingTopicPayload(
   return payload.topic;
 }
 
+export function parseSpeakingQuestionPayload(
+  payload: unknown,
+): AdminSpeakingQuestion {
+  if (!isRecord(payload) || !isAdminSpeakingQuestion(payload.question)) {
+    throw new Error("Speaking question response was malformed.");
+  }
+
+  return payload.question;
+}
+
 function isAdminSpeakingTopicDetail(
   value: unknown,
 ): value is AdminSpeakingTopicDetail {

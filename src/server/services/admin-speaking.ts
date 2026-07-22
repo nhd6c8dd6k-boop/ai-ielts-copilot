@@ -37,6 +37,22 @@ export type AdminSpeakingTopicMetadataInput = {
   status: AdminSpeakingStatus;
 };
 
+export type AdminSpeakingQuestionInput = {
+  questionOrder?: number;
+  question: string;
+  answerTip: string | null;
+  cueCardPoints: string[];
+  preparationIdeas: string[];
+  suggestedStructure: string[];
+  directAnswer: string | null;
+  mainReason: string | null;
+  example: string | null;
+  alternativePerspective: string | null;
+  sampleBand6: string;
+  sampleBand7: string;
+  sampleBand8: string;
+};
+
 export type AdminSpeakingTopicSummary = {
   id: string;
   slug: string;
@@ -318,6 +334,186 @@ export async function updateAdminSpeakingTopicMetadata({
   return topic;
 }
 
+export async function createAdminSpeakingQuestion({
+  topicId,
+  input,
+  adminUserId,
+}: {
+  topicId: string;
+  input: AdminSpeakingQuestionInput;
+  adminUserId: string;
+}) {
+  const admin = createSupabaseAdminClient();
+  const topic = await getTopicRowById(topicId);
+
+  if (!topic) {
+    return null;
+  }
+
+  const topicPart = parseSpeakingPart(topic.part);
+  const questionOrder =
+    input.questionOrder ?? (await getNextQuestionOrder(topicId));
+
+  const { data, error } = await admin
+    .from("speaking_questions")
+    .insert({
+      topic_id: topicId,
+      question_order: questionOrder,
+      ...toQuestionMutationRow(input, topicPart, { includeIrrelevant: true }),
+    })
+    .select(questionDetailSelect)
+    .single();
+
+  if (error) {
+    if (isUniqueViolation(error)) {
+      throw createSafeServiceError(
+        "Another question already uses this display order. Choose a different order and try again.",
+        409,
+      );
+    }
+
+    throw new Error(error.message);
+  }
+
+  const question = mapQuestion(data as AdminSpeakingQuestionRow);
+
+  await writeAdminSpeakingLog({
+    adminUserId,
+    action: "speaking_question_created",
+    targetType: "speaking_question",
+    targetId: question.id,
+    metadata: {
+      topicId,
+      questionId: question.id,
+      questionOrder: question.questionOrder,
+    },
+  });
+
+  return question;
+}
+
+export async function updateAdminSpeakingQuestion({
+  topicId,
+  questionId,
+  input,
+  adminUserId,
+}: {
+  topicId: string;
+  questionId: string;
+  input: AdminSpeakingQuestionInput;
+  adminUserId: string;
+}) {
+  const admin = createSupabaseAdminClient();
+  const topic = await getTopicRowById(topicId);
+
+  if (!topic) {
+    return null;
+  }
+
+  const { data: existing, error: existingError } = await admin
+    .from("speaking_questions")
+    .select("id,topic_id,question_order")
+    .eq("id", questionId)
+    .eq("topic_id", topicId)
+    .maybeSingle();
+
+  if (existingError) {
+    throw new Error(existingError.message);
+  }
+
+  if (!existing) {
+    return null;
+  }
+
+  const topicPart = parseSpeakingPart(topic.part);
+  const { data, error } = await admin
+    .from("speaking_questions")
+    .update({
+      question_order: input.questionOrder,
+      ...toQuestionMutationRow(input, topicPart, { includeIrrelevant: false }),
+    })
+    .eq("id", questionId)
+    .eq("topic_id", topicId)
+    .select(questionDetailSelect)
+    .single();
+
+  if (error) {
+    if (isUniqueViolation(error)) {
+      throw createSafeServiceError(
+        "Another question already uses this display order. Choose a different order and try again.",
+        409,
+      );
+    }
+
+    throw new Error(error.message);
+  }
+
+  const question = mapQuestion(data as AdminSpeakingQuestionRow);
+
+  await writeAdminSpeakingLog({
+    adminUserId,
+    action: "speaking_question_updated",
+    targetType: "speaking_question",
+    targetId: question.id,
+    metadata: {
+      topicId,
+      questionId: question.id,
+      previousQuestionOrder: (existing as { question_order: number })
+        .question_order,
+      questionOrder: question.questionOrder,
+    },
+  });
+
+  return question;
+}
+
+export async function deleteAdminSpeakingQuestion({
+  topicId,
+  questionId,
+  adminUserId,
+}: {
+  topicId: string;
+  questionId: string;
+  adminUserId: string;
+}) {
+  const admin = createSupabaseAdminClient();
+  const topic = await getTopicRowById(topicId);
+
+  if (!topic) {
+    return null;
+  }
+
+  const { data, error } = await admin
+    .from("speaking_questions")
+    .delete()
+    .eq("id", questionId)
+    .eq("topic_id", topicId)
+    .select("id,topic_id,question_order")
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  await writeAdminSpeakingLog({
+    adminUserId,
+    action: "speaking_question_deleted",
+    targetType: "speaking_question",
+    targetId: questionId,
+    metadata: {
+      topicId,
+      questionId,
+      questionOrder: (data as { question_order: number }).question_order,
+    },
+  });
+
+  return true;
+}
+
 async function getQuestionCounts(topicIds: string[]) {
   if (!topicIds.length) {
     return new Map<string, number>();
@@ -340,6 +536,82 @@ async function getQuestionCounts(topicIds: string[]) {
   });
 
   return counts;
+}
+
+async function getTopicRowById(id: string) {
+  const admin = createSupabaseAdminClient();
+  const { data, error } = await admin
+    .from("speaking_topics")
+    .select(topicSummarySelect)
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data as AdminSpeakingTopicRow | null;
+}
+
+async function getNextQuestionOrder(topicId: string) {
+  const admin = createSupabaseAdminClient();
+  const { data, error } = await admin
+    .from("speaking_questions")
+    .select("question_order")
+    .eq("topic_id", topicId)
+    .order("question_order", { ascending: false })
+    .limit(1);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const latestOrder = data?.[0]?.question_order;
+
+  return typeof latestOrder === "number" ? latestOrder + 1 : 1;
+}
+
+function toQuestionMutationRow(
+  input: AdminSpeakingQuestionInput,
+  topicPart: SpeakingPart,
+  { includeIrrelevant }: { includeIrrelevant: boolean },
+) {
+  const row: {
+    question: string;
+    answer_tip: string | null;
+    sample_band_6: string;
+    sample_band_7: string;
+    sample_band_8: string;
+    cue_card_points?: string[];
+    preparation_ideas?: string[];
+    suggested_structure?: string[];
+    direct_answer?: string | null;
+    main_reason?: string | null;
+    example?: string | null;
+    alternative_perspective?: string | null;
+  } = {
+    question: input.question,
+    answer_tip: input.answerTip,
+    sample_band_6: input.sampleBand6,
+    sample_band_7: input.sampleBand7,
+    sample_band_8: input.sampleBand8,
+  };
+
+  if (topicPart === 2 || includeIrrelevant) {
+    row.cue_card_points = topicPart === 2 ? input.cueCardPoints : [];
+    row.preparation_ideas = topicPart === 2 ? input.preparationIdeas : [];
+    row.suggested_structure = topicPart === 2 ? input.suggestedStructure : [];
+  }
+
+  if (topicPart !== 2 || includeIrrelevant) {
+    row.direct_answer = topicPart !== 2 ? input.directAnswer : null;
+    row.main_reason = topicPart !== 2 ? input.mainReason : null;
+    row.example = topicPart !== 2 ? input.example : null;
+    row.alternative_perspective =
+      topicPart !== 2 ? input.alternativePerspective : null;
+  }
+
+  return row;
 }
 
 async function mapTopicSummaryWithQuestionCount(topic: AdminSpeakingTopicRow) {
@@ -407,11 +679,13 @@ function isUniqueViolation(error: unknown) {
 async function writeAdminSpeakingLog({
   adminUserId,
   action,
+  targetType = "speaking_topic",
   targetId,
   metadata,
 }: {
   adminUserId: string;
   action: string;
+  targetType?: string;
   targetId: string;
   metadata: Record<string, unknown>;
 }) {
@@ -420,7 +694,7 @@ async function writeAdminSpeakingLog({
   await admin.from("admin_logs").insert({
     admin_user_id: adminUserId,
     action,
-    target_type: "speaking_topic",
+    target_type: targetType,
     target_id: targetId,
     metadata,
   });

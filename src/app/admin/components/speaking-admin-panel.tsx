@@ -2,13 +2,14 @@
 
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Eye, Loader2, X } from "lucide-react";
+import { Eye, Loader2, Pencil, Plus, Trash2, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 import {
   parseSpeakingDetailPayload,
+  parseSpeakingQuestionPayload,
   parseSpeakingTopicPayload,
   parseSpeakingTopicsPayload,
   readJsonResponse,
@@ -42,6 +43,34 @@ type SpeakingTopicMetadataDraft = {
 
 type SpeakingTopicMetadataErrors = Partial<
   Record<keyof SpeakingTopicMetadataDraft, string>
+>;
+
+type SpeakingQuestionEditorState =
+  | { mode: "create"; topic: AdminSpeakingTopicDetail }
+  | {
+      mode: "edit";
+      topic: AdminSpeakingTopicDetail;
+      question: AdminSpeakingQuestion;
+    };
+
+type SpeakingQuestionDraft = {
+  questionOrder: string;
+  question: string;
+  answerTip: string;
+  cueCardPoints: string;
+  preparationIdeas: string;
+  suggestedStructure: string;
+  directAnswer: string;
+  mainReason: string;
+  example: string;
+  alternativePerspective: string;
+  sampleBand6: string;
+  sampleBand7: string;
+  sampleBand8: string;
+};
+
+type SpeakingQuestionDraftErrors = Partial<
+  Record<keyof SpeakingQuestionDraft, string>
 >;
 
 const targetBandOptions = ["5", "5.5", "6", "6.5", "7", "7.5", "8", "8.5", "9"];
@@ -82,10 +111,33 @@ export function SpeakingAdminPanel({
     useState<SpeakingTopicMetadataErrors>({});
   const [metadataSaveError, setMetadataSaveError] = useState<string | null>(null);
   const [isMetadataSaving, setIsMetadataSaving] = useState(false);
+  const [questionEditorState, setQuestionEditorState] =
+    useState<SpeakingQuestionEditorState | null>(null);
+  const [questionDraft, setQuestionDraft] =
+    useState<SpeakingQuestionDraft>(createEmptyQuestionDraft);
+  const [questionInitialDraft, setQuestionInitialDraft] =
+    useState<SpeakingQuestionDraft>(createEmptyQuestionDraft);
+  const [questionErrors, setQuestionErrors] =
+    useState<SpeakingQuestionDraftErrors>({});
+  const [questionSaveError, setQuestionSaveError] = useState<string | null>(null);
+  const [isQuestionSaving, setIsQuestionSaving] = useState(false);
+  const [deletingQuestionId, setDeletingQuestionId] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const topicsRequestIdRef = useRef(0);
   const detailRequestIdRef = useRef(0);
+  const questionMutationRequestIdRef = useRef(0);
   const detailControllerRef = useRef<AbortController | null>(null);
+  const questionMutationControllerRef = useRef<AbortController | null>(null);
+  const isMountedRef = useRef(false);
+  const isActiveRef = useRef(isActive);
+  const toastTimerRef = useRef<number | null>(null);
   const hasReportedTopicCountRef = useRef(false);
+
+  const abortQuestionMutation = useCallback(() => {
+    questionMutationControllerRef.current?.abort();
+    questionMutationControllerRef.current = null;
+    questionMutationRequestIdRef.current += 1;
+  }, []);
 
   const abortDetailRequest = useCallback(() => {
     detailControllerRef.current?.abort();
@@ -98,20 +150,70 @@ export function SpeakingAdminPanel({
     setTopicDetail(null);
     setDetailError(null);
     setIsDetailLoading(false);
+    setQuestionEditorState(null);
+    setQuestionSaveError(null);
+    setQuestionErrors({});
+    setIsQuestionSaving(false);
+    setDeletingQuestionId(null);
   }, []);
 
+  const canUseQuestionMutationResponse = useCallback(
+    (requestId: number, controller: AbortController) =>
+      isMountedRef.current &&
+      isActiveRef.current &&
+      questionMutationRequestIdRef.current === requestId &&
+      !controller.signal.aborted,
+    [],
+  );
+
   useEffect(() => {
+    isActiveRef.current = isActive;
+
     if (isActive) {
       return;
     }
 
+    abortQuestionMutation();
     abortDetailRequest();
-    const resetTimer = window.setTimeout(resetDetailState, 0);
+    const resetTimer = window.setTimeout(() => {
+      setToastMessage(null);
+      resetDetailState();
+    }, 0);
 
     return () => window.clearTimeout(resetTimer);
-  }, [abortDetailRequest, isActive, resetDetailState]);
+  }, [abortDetailRequest, abortQuestionMutation, isActive, resetDetailState]);
 
-  useEffect(() => () => abortDetailRequest(), [abortDetailRequest]);
+  useEffect(() => {
+    isMountedRef.current = true;
+
+    return () => {
+      isMountedRef.current = false;
+      abortQuestionMutation();
+      abortDetailRequest();
+    };
+  }, [abortDetailRequest, abortQuestionMutation]);
+
+  useEffect(
+    () => () => {
+      if (toastTimerRef.current !== null) {
+        window.clearTimeout(toastTimerRef.current);
+      }
+    },
+    [],
+  );
+
+  const showToast = useCallback((message: string) => {
+    setToastMessage(message);
+
+    if (toastTimerRef.current !== null) {
+      window.clearTimeout(toastTimerRef.current);
+    }
+
+    toastTimerRef.current = window.setTimeout(() => {
+      setToastMessage(null);
+      toastTimerRef.current = null;
+    }, 3000);
+  }, []);
 
   useEffect(() => {
     if (!isActive) {
@@ -276,6 +378,44 @@ export function SpeakingAdminPanel({
     setMetadataSaveError(null);
   };
 
+  const openCreateQuestion = (topic: AdminSpeakingTopicDetail) => {
+    abortQuestionMutation();
+    const draft = createEmptyQuestionDraft(topic);
+    setQuestionEditorState({ mode: "create", topic });
+    setQuestionDraft(draft);
+    setQuestionInitialDraft(draft);
+    setQuestionErrors({});
+    setQuestionSaveError(null);
+  };
+
+  const openEditQuestion = (
+    topic: AdminSpeakingTopicDetail,
+    question: AdminSpeakingQuestion,
+  ) => {
+    abortQuestionMutation();
+    const draft = createQuestionDraft(question);
+    setQuestionEditorState({ mode: "edit", topic, question });
+    setQuestionDraft(draft);
+    setQuestionInitialDraft(draft);
+    setQuestionErrors({});
+    setQuestionSaveError(null);
+  };
+
+  const closeQuestionEditor = () => {
+    if (
+      isQuestionDraftDirty(questionDraft, questionInitialDraft) &&
+      !window.confirm("Discard changes?")
+    ) {
+      return;
+    }
+
+    abortQuestionMutation();
+    setQuestionEditorState(null);
+    setQuestionErrors({});
+    setQuestionSaveError(null);
+    setIsQuestionSaving(false);
+  };
+
   const saveMetadata = async () => {
     if (!editorState) {
       return;
@@ -346,6 +486,154 @@ export function SpeakingAdminPanel({
     }
   };
 
+  const saveQuestion = async () => {
+    if (!questionEditorState) {
+      return;
+    }
+
+    const topic = questionEditorState.topic;
+    const validation = validateQuestionDraft(questionDraft, topic.part);
+
+    if (Object.keys(validation).length) {
+      setQuestionErrors(validation);
+      return;
+    }
+
+    if (mode !== "admin") {
+      setQuestionSaveError("Speaking question editing is available after admin login.");
+      return;
+    }
+
+    abortQuestionMutation();
+    const controller = new AbortController();
+    questionMutationControllerRef.current = controller;
+    const requestId = questionMutationRequestIdRef.current + 1;
+    questionMutationRequestIdRef.current = requestId;
+
+    setIsQuestionSaving(true);
+    setQuestionErrors({});
+    setQuestionSaveError(null);
+
+    try {
+      const response = await fetch(
+        questionEditorState.mode === "create"
+          ? `/api/admin/speaking/topics/${topic.id}/questions`
+          : `/api/admin/speaking/topics/${topic.id}/questions/${questionEditorState.question.id}`,
+        {
+          method: questionEditorState.mode === "create" ? "POST" : "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          cache: "no-store",
+          signal: controller.signal,
+          body: JSON.stringify(toQuestionPayload(questionDraft, topic.part)),
+        },
+      );
+      const payload = await readJsonResponse(response);
+
+      if (!response.ok) {
+        throw new Error(
+          readApiError(payload) ?? "Failed to save Speaking question.",
+        );
+      }
+
+      parseSpeakingQuestionPayload(payload);
+
+      if (canUseQuestionMutationResponse(requestId, controller)) {
+        setQuestionEditorState(null);
+        setQuestionInitialDraft(questionDraft);
+        showToast(
+          questionEditorState.mode === "create"
+            ? "Speaking question created."
+            : "Speaking question updated.",
+        );
+        setRetryKey((key) => key + 1);
+        await viewTopic(topic);
+      }
+    } catch (saveError) {
+      if (isAbortError(saveError)) {
+        return;
+      }
+
+      if (canUseQuestionMutationResponse(requestId, controller)) {
+        setQuestionSaveError(
+          saveError instanceof Error
+            ? saveError.message
+            : "Failed to save Speaking question.",
+        );
+      }
+    } finally {
+      if (canUseQuestionMutationResponse(requestId, controller)) {
+        questionMutationControllerRef.current = null;
+        setIsQuestionSaving(false);
+      }
+    }
+  };
+
+  const deleteQuestion = async (
+    topic: AdminSpeakingTopicDetail,
+    question: AdminSpeakingQuestion,
+  ) => {
+    if (!window.confirm("Delete this question? This action cannot be undone.")) {
+      return;
+    }
+
+    if (mode !== "admin") {
+      setDetailError("Speaking question editing is available after admin login.");
+      return;
+    }
+
+    abortQuestionMutation();
+    const controller = new AbortController();
+    questionMutationControllerRef.current = controller;
+    const requestId = questionMutationRequestIdRef.current + 1;
+    questionMutationRequestIdRef.current = requestId;
+
+    setDeletingQuestionId(question.id);
+    setDetailError(null);
+
+    try {
+      const response = await fetch(
+        `/api/admin/speaking/topics/${topic.id}/questions/${question.id}`,
+        {
+          method: "DELETE",
+          cache: "no-store",
+          signal: controller.signal,
+        },
+      );
+      const payload = await readJsonResponse(response);
+
+      if (!response.ok) {
+        throw new Error(
+          readApiError(payload) ?? "Failed to delete Speaking question.",
+        );
+      }
+
+      if (canUseQuestionMutationResponse(requestId, controller)) {
+        showToast("Speaking question deleted.");
+        setRetryKey((key) => key + 1);
+        await viewTopic(topic);
+      }
+    } catch (deleteError) {
+      if (isAbortError(deleteError)) {
+        return;
+      }
+
+      if (canUseQuestionMutationResponse(requestId, controller)) {
+        setDetailError(
+          deleteError instanceof Error
+            ? deleteError.message
+            : "Failed to delete Speaking question.",
+        );
+      }
+    } finally {
+      if (canUseQuestionMutationResponse(requestId, controller)) {
+        questionMutationControllerRef.current = null;
+        setDeletingQuestionId(null);
+      }
+    }
+  };
+
   if (!isActive) {
     return null;
   }
@@ -374,6 +662,10 @@ export function SpeakingAdminPanel({
           error={detailError}
           isLoading={isDetailLoading}
           onEdit={openEditTopic}
+          onCreateQuestion={openCreateQuestion}
+          onEditQuestion={openEditQuestion}
+          onDeleteQuestion={deleteQuestion}
+          deletingQuestionId={deletingQuestionId}
           onClose={closeDetail}
         />
       ) : null}
@@ -389,6 +681,26 @@ export function SpeakingAdminPanel({
           onCancel={closeMetadataEditor}
           onSave={saveMetadata}
         />
+      ) : null}
+
+      {questionEditorState ? (
+        <SpeakingQuestionMetadataModal
+          mode={questionEditorState.mode}
+          topicPart={questionEditorState.topic.part}
+          draft={questionDraft}
+          errors={questionErrors}
+          saveError={questionSaveError}
+          isSaving={isQuestionSaving}
+          onChange={setQuestionDraft}
+          onCancel={closeQuestionEditor}
+          onSave={saveQuestion}
+        />
+      ) : null}
+
+      {toastMessage ? (
+        <div className="fixed right-4 top-4 z-[80] max-w-sm rounded-md border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-lg">
+          {toastMessage}
+        </div>
       ) : null}
     </>
   );
@@ -739,12 +1051,203 @@ function SpeakingTopicMetadataModal({
   );
 }
 
+function SpeakingQuestionMetadataModal({
+  mode,
+  topicPart,
+  draft,
+  errors,
+  saveError,
+  isSaving,
+  onChange,
+  onCancel,
+  onSave,
+}: {
+  mode: "create" | "edit";
+  topicPart: 1 | 2 | 3;
+  draft: SpeakingQuestionDraft;
+  errors: SpeakingQuestionDraftErrors;
+  saveError: string | null;
+  isSaving: boolean;
+  onChange: (draft: SpeakingQuestionDraft) => void;
+  onCancel: () => void;
+  onSave: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-[70] bg-slate-950/40 p-4">
+      <div className="mx-auto flex max-h-[calc(100vh-2rem)] max-w-4xl flex-col overflow-hidden rounded-md border border-slate-200 bg-white shadow-2xl">
+        <div className="flex flex-col gap-4 border-b border-slate-200 p-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <Badge>Speaking Question</Badge>
+            <h2 className="mt-3 text-lg font-semibold text-slate-950">
+              {mode === "create" ? "New Question" : "Edit Question"}
+            </h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Edit question text and sample answers only. Teaching fields remain
+              unchanged.
+            </p>
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            disabled={isSaving}
+            onClick={onCancel}
+          >
+            <X className="h-4 w-4" aria-hidden="true" />
+            Close
+          </Button>
+        </div>
+
+        <div className="overflow-y-auto p-4">
+          {saveError ? (
+            <div className="mb-4 rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+              {saveError}
+            </div>
+          ) : null}
+
+          <div className="space-y-5">
+            <div className="grid gap-4 md:grid-cols-[160px_1fr]">
+              <SpeakingTextInput
+                label="Display order"
+                value={draft.questionOrder}
+                error={errors.questionOrder}
+                onChange={(questionOrder) =>
+                  onChange({ ...draft, questionOrder })
+                }
+              />
+              <SpeakingTextarea
+                label="Question Text"
+                value={draft.question}
+                error={errors.question}
+                onChange={(question) => onChange({ ...draft, question })}
+              />
+            </div>
+
+            <SpeakingTextarea
+              label="Answer Tip / Guidance"
+              value={draft.answerTip}
+              error={errors.answerTip}
+              onChange={(answerTip) => onChange({ ...draft, answerTip })}
+              helper="Optional. Keep this short and directly useful."
+            />
+
+            {topicPart === 2 ? (
+              <div className="grid gap-4 lg:grid-cols-3">
+                <SpeakingTextarea
+                  label="Cue Card Points"
+                  value={draft.cueCardPoints}
+                  error={errors.cueCardPoints}
+                  onChange={(cueCardPoints) =>
+                    onChange({ ...draft, cueCardPoints })
+                  }
+                  helper="One point per line."
+                />
+                <SpeakingTextarea
+                  label="Preparation Ideas"
+                  value={draft.preparationIdeas}
+                  error={errors.preparationIdeas}
+                  onChange={(preparationIdeas) =>
+                    onChange({ ...draft, preparationIdeas })
+                  }
+                  helper="One idea per line."
+                />
+                <SpeakingTextarea
+                  label="Suggested Structure"
+                  value={draft.suggestedStructure}
+                  error={errors.suggestedStructure}
+                  onChange={(suggestedStructure) =>
+                    onChange({ ...draft, suggestedStructure })
+                  }
+                  helper="One step per line."
+                />
+              </div>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2">
+                <SpeakingTextarea
+                  label="Direct Answer"
+                  value={draft.directAnswer}
+                  error={errors.directAnswer}
+                  onChange={(directAnswer) =>
+                    onChange({ ...draft, directAnswer })
+                  }
+                />
+                <SpeakingTextarea
+                  label="Main Reason"
+                  value={draft.mainReason}
+                  error={errors.mainReason}
+                  onChange={(mainReason) => onChange({ ...draft, mainReason })}
+                />
+                <SpeakingTextarea
+                  label="Example"
+                  value={draft.example}
+                  error={errors.example}
+                  onChange={(example) => onChange({ ...draft, example })}
+                />
+                <SpeakingTextarea
+                  label="Alternative Perspective"
+                  value={draft.alternativePerspective}
+                  error={errors.alternativePerspective}
+                  onChange={(alternativePerspective) =>
+                    onChange({ ...draft, alternativePerspective })
+                  }
+                />
+              </div>
+            )}
+
+            <div className="grid gap-4 lg:grid-cols-3">
+              <SpeakingTextarea
+                label="Band 6 Sample Answer"
+                value={draft.sampleBand6}
+                error={errors.sampleBand6}
+                onChange={(sampleBand6) => onChange({ ...draft, sampleBand6 })}
+              />
+              <SpeakingTextarea
+                label="Band 7 Sample Answer"
+                value={draft.sampleBand7}
+                error={errors.sampleBand7}
+                onChange={(sampleBand7) => onChange({ ...draft, sampleBand7 })}
+              />
+              <SpeakingTextarea
+                label="Band 8 Sample Answer"
+                value={draft.sampleBand8}
+                error={errors.sampleBand8}
+                onChange={(sampleBand8) => onChange({ ...draft, sampleBand8 })}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-col-reverse gap-2 border-t border-slate-200 p-4 sm:flex-row sm:justify-end">
+          <Button
+            type="button"
+            variant="outline"
+            disabled={isSaving}
+            onClick={onCancel}
+          >
+            Cancel
+          </Button>
+          <Button type="button" disabled={isSaving} onClick={onSave}>
+            {isSaving ? (
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+            ) : null}
+            Save Question
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SpeakingTopicDetailModal({
   summary,
   detail,
   error,
   isLoading,
   onEdit,
+  onCreateQuestion,
+  onEditQuestion,
+  onDeleteQuestion,
+  deletingQuestionId,
   onClose,
 }: {
   summary: AdminSpeakingTopicSummary;
@@ -752,6 +1255,16 @@ function SpeakingTopicDetailModal({
   error: string | null;
   isLoading: boolean;
   onEdit: (topic: AdminSpeakingTopicSummary) => void;
+  onCreateQuestion: (topic: AdminSpeakingTopicDetail) => void;
+  onEditQuestion: (
+    topic: AdminSpeakingTopicDetail,
+    question: AdminSpeakingQuestion,
+  ) => void;
+  onDeleteQuestion: (
+    topic: AdminSpeakingTopicDetail,
+    question: AdminSpeakingQuestion,
+  ) => void;
+  deletingQuestionId: string | null;
   onClose: () => void;
 }) {
   const topic = detail ?? summary;
@@ -778,6 +1291,18 @@ function SpeakingTopicDetailModal({
           </div>
 
           <div className="flex flex-wrap gap-2">
+            {detail ? (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={isLoading}
+                onClick={() => onCreateQuestion(detail)}
+              >
+                <Plus className="h-4 w-4" aria-hidden="true" />
+                New Question
+              </Button>
+            ) : null}
             <Button
               type="button"
               size="sm"
@@ -854,7 +1379,11 @@ function SpeakingTopicDetailModal({
                     {detail.questions.map((question) => (
                       <SpeakingQuestionDetail
                         key={question.id}
+                        topic={detail}
                         question={question}
+                        isDeleting={deletingQuestionId === question.id}
+                        onEdit={onEditQuestion}
+                        onDelete={onDeleteQuestion}
                       />
                     ))}
                   </div>
@@ -873,14 +1402,57 @@ function SpeakingTopicDetailModal({
 }
 
 function SpeakingQuestionDetail({
+  topic,
   question,
+  isDeleting,
+  onEdit,
+  onDelete,
 }: {
+  topic: AdminSpeakingTopicDetail;
   question: AdminSpeakingQuestion;
+  isDeleting: boolean;
+  onEdit: (
+    topic: AdminSpeakingTopicDetail,
+    question: AdminSpeakingQuestion,
+  ) => void;
+  onDelete: (
+    topic: AdminSpeakingTopicDetail,
+    question: AdminSpeakingQuestion,
+  ) => void;
 }) {
   return (
     <article className="rounded-md border border-slate-200 bg-white p-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <Badge>Question {question.questionOrder}</Badge>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge>Question {question.questionOrder}</Badge>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={isDeleting}
+            onClick={() => onEdit(topic, question)}
+          >
+            <Pencil className="h-4 w-4" aria-hidden="true" />
+            Edit
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={isDeleting}
+            onClick={() => onDelete(topic, question)}
+          >
+            {isDeleting ? (
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <Trash2 className="h-4 w-4" aria-hidden="true" />
+            )}
+            Delete
+          </Button>
+        </div>
       </div>
 
       <div className="mt-4 space-y-4">
@@ -1339,9 +1911,62 @@ function createTopicDraft(
   };
 }
 
+function createEmptyQuestionDraft(
+  topic?: AdminSpeakingTopicDetail,
+): SpeakingQuestionDraft {
+  const nextOrder =
+    topic == null
+      ? 1
+      : Math.max(0, ...topic.questions.map((question) => question.questionOrder)) +
+        1;
+
+  return {
+    questionOrder: String(nextOrder),
+    question: "",
+    answerTip: "",
+    cueCardPoints: "",
+    preparationIdeas: "",
+    suggestedStructure: "",
+    directAnswer: "",
+    mainReason: "",
+    example: "",
+    alternativePerspective: "",
+    sampleBand6: "",
+    sampleBand7: "",
+    sampleBand8: "",
+  };
+}
+
+function createQuestionDraft(
+  question: AdminSpeakingQuestion,
+): SpeakingQuestionDraft {
+  return {
+    questionOrder: String(question.questionOrder),
+    question: question.question,
+    answerTip: question.answerTip ?? "",
+    cueCardPoints: question.cueCardPoints.join("\n"),
+    preparationIdeas: question.preparationIdeas.join("\n"),
+    suggestedStructure: question.suggestedStructure.join("\n"),
+    directAnswer: question.directAnswer ?? "",
+    mainReason: question.mainReason ?? "",
+    example: question.example ?? "",
+    alternativePerspective: question.alternativePerspective ?? "",
+    sampleBand6: question.sampleBand6,
+    sampleBand7: question.sampleBand7,
+    sampleBand8: question.sampleBand8,
+  };
+}
+
 function isTopicDraftDirty(
   draft: SpeakingTopicMetadataDraft,
   initialDraft: SpeakingTopicMetadataDraft,
+) {
+  return JSON.stringify(draft) !== JSON.stringify(initialDraft);
+}
+
+function isQuestionDraftDirty(
+  draft: SpeakingQuestionDraft,
+  initialDraft: SpeakingQuestionDraft,
 ) {
   return JSON.stringify(draft) !== JSON.stringify(initialDraft);
 }
@@ -1394,6 +2019,42 @@ function validateTopicDraft(
   return errors;
 }
 
+function validateQuestionDraft(
+  draft: SpeakingQuestionDraft,
+  topicPart: 1 | 2 | 3,
+): SpeakingQuestionDraftErrors {
+  const errors: SpeakingQuestionDraftErrors = {};
+  const questionOrder = Number(draft.questionOrder);
+
+  if (!Number.isInteger(questionOrder) || questionOrder < 1 || questionOrder > 200) {
+    errors.questionOrder = "Use a whole number from 1 to 200.";
+  }
+
+  validateRequiredText(errors, "question", draft.question, 1000);
+  validateOptionalText(errors, "answerTip", draft.answerTip, 1000);
+  validateRequiredText(errors, "sampleBand6", draft.sampleBand6, 3000);
+  validateRequiredText(errors, "sampleBand7", draft.sampleBand7, 3000);
+  validateRequiredText(errors, "sampleBand8", draft.sampleBand8, 3000);
+
+  if (topicPart === 2) {
+    validateStringList(errors, "cueCardPoints", draft.cueCardPoints);
+    validateStringList(errors, "preparationIdeas", draft.preparationIdeas);
+    validateStringList(errors, "suggestedStructure", draft.suggestedStructure);
+  } else {
+    validateOptionalText(errors, "directAnswer", draft.directAnswer, 1000);
+    validateOptionalText(errors, "mainReason", draft.mainReason, 1000);
+    validateOptionalText(errors, "example", draft.example, 1000);
+    validateOptionalText(
+      errors,
+      "alternativePerspective",
+      draft.alternativePerspective,
+      1000,
+    );
+  }
+
+  return errors;
+}
+
 function toTopicMetadataPayload(draft: SpeakingTopicMetadataDraft) {
   return {
     title: draft.title.trim(),
@@ -1406,6 +2067,81 @@ function toTopicMetadataPayload(draft: SpeakingTopicMetadataDraft) {
   };
 }
 
+function toQuestionPayload(draft: SpeakingQuestionDraft, topicPart: 1 | 2 | 3) {
+  return {
+    questionOrder: Number(draft.questionOrder),
+    question: draft.question.trim(),
+    answerTip: toNullableText(draft.answerTip),
+    cueCardPoints: topicPart === 2 ? toStringList(draft.cueCardPoints) : [],
+    preparationIdeas: topicPart === 2 ? toStringList(draft.preparationIdeas) : [],
+    suggestedStructure:
+      topicPart === 2 ? toStringList(draft.suggestedStructure) : [],
+    directAnswer: topicPart === 2 ? null : toNullableText(draft.directAnswer),
+    mainReason: topicPart === 2 ? null : toNullableText(draft.mainReason),
+    example: topicPart === 2 ? null : toNullableText(draft.example),
+    alternativePerspective:
+      topicPart === 2 ? null : toNullableText(draft.alternativePerspective),
+    sampleBand6: draft.sampleBand6.trim(),
+    sampleBand7: draft.sampleBand7.trim(),
+    sampleBand8: draft.sampleBand8.trim(),
+  };
+}
+
+function validateRequiredText(
+  errors: SpeakingQuestionDraftErrors,
+  field: keyof SpeakingQuestionDraft,
+  value: string,
+  maxLength: number,
+) {
+  const trimmed = value.trim();
+
+  if (!trimmed) {
+    errors[field] = "This field is required.";
+  } else if (trimmed.length > maxLength) {
+    errors[field] = `Use ${maxLength} characters or fewer.`;
+  }
+}
+
+function validateOptionalText(
+  errors: SpeakingQuestionDraftErrors,
+  field: keyof SpeakingQuestionDraft,
+  value: string,
+  maxLength: number,
+) {
+  if (value.trim().length > maxLength) {
+    errors[field] = `Use ${maxLength} characters or fewer.`;
+  }
+}
+
+function validateStringList(
+  errors: SpeakingQuestionDraftErrors,
+  field: keyof SpeakingQuestionDraft,
+  value: string,
+) {
+  const items = toStringList(value);
+  const hasTooManyItems = items.length > 12;
+  const hasLongItem = items.some((item) => item.length > 300);
+
+  if (hasTooManyItems) {
+    errors[field] = "Use 12 items or fewer.";
+  } else if (hasLongItem) {
+    errors[field] = "Each item must be 300 characters or fewer.";
+  }
+}
+
+function toNullableText(value: string) {
+  const trimmed = value.trim();
+
+  return trimmed ? trimmed : null;
+}
+
+function toStringList(value: string) {
+  return value
+    .split(/\r?\n/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
 function readApiError(payload: unknown) {
   return payload &&
     typeof payload === "object" &&
@@ -1413,4 +2149,8 @@ function readApiError(payload: unknown) {
     typeof (payload as { error?: unknown }).error === "string"
     ? (payload as { error: string }).error
     : null;
+}
+
+function isAbortError(error: unknown) {
+  return error instanceof DOMException && error.name === "AbortError";
 }
