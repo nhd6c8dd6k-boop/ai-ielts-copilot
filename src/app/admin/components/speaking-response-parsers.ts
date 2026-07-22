@@ -37,6 +37,16 @@ export function parseSpeakingDetailPayload(
   return payload.topic;
 }
 
+export function parseSpeakingTopicPayload(
+  payload: unknown,
+): AdminSpeakingTopicSummary {
+  if (!isRecord(payload) || !isAdminSpeakingTopicSummary(payload.topic)) {
+    throw new Error("Speaking topic response was malformed.");
+  }
+
+  return payload.topic;
+}
+
 function isAdminSpeakingTopicDetail(
   value: unknown,
 ): value is AdminSpeakingTopicDetail {
@@ -65,7 +75,7 @@ function isAdminSpeakingTopicSummary(
     typeof value.description === "string" &&
     isSpeakingStatus(value.status) &&
     (typeof value.targetBand === "number" || value.targetBand === null) &&
-    typeof value.sourceType === "string" &&
+    isSpeakingSourceType(value.sourceType) &&
     (typeof value.publishedAt === "string" || value.publishedAt === null) &&
     typeof value.createdAt === "string" &&
     typeof value.updatedAt === "string" &&
@@ -162,4 +172,8 @@ function isSpeakingStatus(value: unknown): value is AdminSpeakingStatus {
     value === "published" ||
     value === "archived"
   );
+}
+
+function isSpeakingSourceType(value: unknown) {
+  return value === "manual" || value === "ai";
 }

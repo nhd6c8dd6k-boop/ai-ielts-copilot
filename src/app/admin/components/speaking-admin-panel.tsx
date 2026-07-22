@@ -9,12 +9,14 @@ import { Button } from "@/components/ui/button";
 
 import {
   parseSpeakingDetailPayload,
+  parseSpeakingTopicPayload,
   parseSpeakingTopicsPayload,
   readJsonResponse,
 } from "./speaking-response-parsers";
 import type {
   AdminSpeakingPartFilter,
   AdminSpeakingQuestion,
+  AdminSpeakingSourceType,
   AdminSpeakingStatus,
   AdminSpeakingStatusFilter,
   AdminSpeakingTopicCountState,
@@ -23,6 +25,26 @@ import type {
 } from "./speaking-types";
 
 type SpeakingLoadState = "idle" | "loading" | "success" | "error";
+
+type SpeakingTopicEditorState =
+  | { mode: "create" }
+  | { mode: "edit"; topic: AdminSpeakingTopicSummary };
+
+type SpeakingTopicMetadataDraft = {
+  title: string;
+  slug: string;
+  part: "1" | "2" | "3";
+  description: string;
+  targetBand: string;
+  sourceType: AdminSpeakingSourceType;
+  status: AdminSpeakingStatus;
+};
+
+type SpeakingTopicMetadataErrors = Partial<
+  Record<keyof SpeakingTopicMetadataDraft, string>
+>;
+
+const targetBandOptions = ["5", "5.5", "6", "6.5", "7", "7.5", "8", "8.5", "9"];
 
 type SpeakingAdminPanelProps = {
   isActive: boolean;
@@ -49,6 +71,17 @@ export function SpeakingAdminPanel({
     useState<AdminSpeakingTopicDetail | null>(null);
   const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
+  const [editorState, setEditorState] = useState<SpeakingTopicEditorState | null>(
+    null,
+  );
+  const [metadataDraft, setMetadataDraft] =
+    useState<SpeakingTopicMetadataDraft>(createEmptyTopicDraft);
+  const [metadataInitialDraft, setMetadataInitialDraft] =
+    useState<SpeakingTopicMetadataDraft>(createEmptyTopicDraft);
+  const [metadataErrors, setMetadataErrors] =
+    useState<SpeakingTopicMetadataErrors>({});
+  const [metadataSaveError, setMetadataSaveError] = useState<string | null>(null);
+  const [isMetadataSaving, setIsMetadataSaving] = useState(false);
   const topicsRequestIdRef = useRef(0);
   const detailRequestIdRef = useRef(0);
   const detailControllerRef = useRef<AbortController | null>(null);
@@ -212,6 +245,107 @@ export function SpeakingAdminPanel({
     resetDetailState();
   };
 
+  const openCreateTopic = () => {
+    const draft = createEmptyTopicDraft();
+    setEditorState({ mode: "create" });
+    setMetadataDraft(draft);
+    setMetadataInitialDraft(draft);
+    setMetadataErrors({});
+    setMetadataSaveError(null);
+  };
+
+  const openEditTopic = (topic: AdminSpeakingTopicSummary) => {
+    const draft = createTopicDraft(topic);
+    setEditorState({ mode: "edit", topic });
+    setMetadataDraft(draft);
+    setMetadataInitialDraft(draft);
+    setMetadataErrors({});
+    setMetadataSaveError(null);
+  };
+
+  const closeMetadataEditor = () => {
+    if (
+      isTopicDraftDirty(metadataDraft, metadataInitialDraft) &&
+      !window.confirm("Discard changes?")
+    ) {
+      return;
+    }
+
+    setEditorState(null);
+    setMetadataErrors({});
+    setMetadataSaveError(null);
+  };
+
+  const saveMetadata = async () => {
+    if (!editorState) {
+      return;
+    }
+
+    const validation = validateTopicDraft(metadataDraft);
+
+    if (Object.keys(validation).length) {
+      setMetadataErrors(validation);
+      return;
+    }
+
+    if (mode !== "admin") {
+      setMetadataSaveError("Speaking topic editing is available after admin login.");
+      return;
+    }
+
+    setIsMetadataSaving(true);
+    setMetadataErrors({});
+    setMetadataSaveError(null);
+
+    try {
+      const response = await fetch(
+        editorState.mode === "create"
+          ? "/api/admin/speaking/topics"
+          : `/api/admin/speaking/topics/${editorState.topic.id}`,
+        {
+          method: editorState.mode === "create" ? "POST" : "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          cache: "no-store",
+          body: JSON.stringify(toTopicMetadataPayload(metadataDraft)),
+        },
+      );
+      const payload = await readJsonResponse(response);
+
+      if (!response.ok) {
+        throw new Error(readApiError(payload) ?? "Failed to save Speaking topic.");
+      }
+
+      const savedTopic = parseSpeakingTopicPayload(payload);
+
+      setSelectedTopic((current) =>
+        current?.id === savedTopic.id ? savedTopic : current,
+      );
+      setTopicDetail((current) =>
+        current?.id === savedTopic.id
+          ? {
+              ...current,
+              ...savedTopic,
+              questions: current.questions,
+              questionCount: current.questions.length,
+            }
+          : current,
+      );
+      setEditorState(null);
+      setMetadataInitialDraft(metadataDraft);
+      setRetryKey((key) => key + 1);
+    } catch (saveError) {
+      setMetadataSaveError(
+        saveError instanceof Error
+          ? saveError.message
+          : "Failed to save Speaking topic.",
+      );
+    } finally {
+      setIsMetadataSaving(false);
+    }
+  };
+
   if (!isActive) {
     return null;
   }
@@ -228,6 +362,7 @@ export function SpeakingAdminPanel({
         isDetailLoadingId={isDetailLoading ? selectedTopic?.id ?? null : null}
         onPartFilterChange={setPartFilter}
         onStatusFilterChange={setStatusFilter}
+        onCreate={openCreateTopic}
         onRetry={() => setRetryKey((key) => key + 1)}
         onView={viewTopic}
       />
@@ -238,7 +373,21 @@ export function SpeakingAdminPanel({
           detail={topicDetail}
           error={detailError}
           isLoading={isDetailLoading}
+          onEdit={openEditTopic}
           onClose={closeDetail}
+        />
+      ) : null}
+
+      {editorState ? (
+        <SpeakingTopicMetadataModal
+          mode={editorState.mode}
+          draft={metadataDraft}
+          errors={metadataErrors}
+          saveError={metadataSaveError}
+          isSaving={isMetadataSaving}
+          onChange={setMetadataDraft}
+          onCancel={closeMetadataEditor}
+          onSave={saveMetadata}
         />
       ) : null}
     </>
@@ -255,6 +404,7 @@ function SpeakingTopicsTable({
   isDetailLoadingId,
   onPartFilterChange,
   onStatusFilterChange,
+  onCreate,
   onRetry,
   onView,
 }: {
@@ -267,6 +417,7 @@ function SpeakingTopicsTable({
   isDetailLoadingId: string | null;
   onPartFilterChange: (value: AdminSpeakingPartFilter) => void;
   onStatusFilterChange: (value: AdminSpeakingStatusFilter) => void;
+  onCreate: () => void;
   onRetry: () => void;
   onView: (topic: AdminSpeakingTopicSummary) => void;
 }) {
@@ -275,34 +426,39 @@ function SpeakingTopicsTable({
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-3 md:grid-cols-2 lg:max-w-xl">
-        <SpeakingSelect
-          label="Part"
-          value={partFilter}
-          onChange={(value) =>
-            onPartFilterChange(value as AdminSpeakingPartFilter)
-          }
-          options={[
-            { value: "all", label: "All Parts" },
-            { value: "1", label: "Part 1" },
-            { value: "2", label: "Part 2" },
-            { value: "3", label: "Part 3" },
-          ]}
-        />
-        <SpeakingSelect
-          label="Status"
-          value={statusFilter}
-          onChange={(value) =>
-            onStatusFilterChange(value as AdminSpeakingStatusFilter)
-          }
-          options={[
-            { value: "all", label: "All Statuses" },
-            { value: "draft", label: "Draft" },
-            { value: "review", label: "Review" },
-            { value: "published", label: "Published" },
-            { value: "archived", label: "Archived" },
-          ]}
-        />
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+        <div className="grid gap-3 md:grid-cols-2 lg:max-w-xl lg:flex-1">
+          <SpeakingSelect
+            label="Part"
+            value={partFilter}
+            onChange={(value) =>
+              onPartFilterChange(value as AdminSpeakingPartFilter)
+            }
+            options={[
+              { value: "all", label: "All Parts" },
+              { value: "1", label: "Part 1" },
+              { value: "2", label: "Part 2" },
+              { value: "3", label: "Part 3" },
+            ]}
+          />
+          <SpeakingSelect
+            label="Status"
+            value={statusFilter}
+            onChange={(value) =>
+              onStatusFilterChange(value as AdminSpeakingStatusFilter)
+            }
+            options={[
+              { value: "all", label: "All Statuses" },
+              { value: "draft", label: "Draft" },
+              { value: "review", label: "Review" },
+              { value: "published", label: "Published" },
+              { value: "archived", label: "Archived" },
+            ]}
+          />
+        </div>
+        <Button type="button" size="sm" onClick={onCreate}>
+          New Topic
+        </Button>
       </div>
 
       {loadState === "loading" && hasLoaded ? (
@@ -427,17 +583,175 @@ function SpeakingTopicsTable({
   );
 }
 
+function SpeakingTopicMetadataModal({
+  mode,
+  draft,
+  errors,
+  saveError,
+  isSaving,
+  onChange,
+  onCancel,
+  onSave,
+}: {
+  mode: "create" | "edit";
+  draft: SpeakingTopicMetadataDraft;
+  errors: SpeakingTopicMetadataErrors;
+  saveError: string | null;
+  isSaving: boolean;
+  onChange: (draft: SpeakingTopicMetadataDraft) => void;
+  onCancel: () => void;
+  onSave: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-[60] bg-slate-950/40 p-4">
+      <div className="mx-auto flex max-h-[calc(100vh-2rem)] max-w-3xl flex-col overflow-hidden rounded-md border border-slate-200 bg-white shadow-2xl">
+        <div className="flex flex-col gap-4 border-b border-slate-200 p-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <Badge>Speaking Topic</Badge>
+            <h2 className="mt-3 text-lg font-semibold text-slate-950">
+              {mode === "create" ? "New Topic" : "Edit Topic Metadata"}
+            </h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Edit topic metadata only. Questions and teaching fields are not
+              changed here.
+            </p>
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            disabled={isSaving}
+            onClick={onCancel}
+          >
+            <X className="h-4 w-4" aria-hidden="true" />
+            Close
+          </Button>
+        </div>
+
+        <div className="overflow-y-auto p-4">
+          {saveError ? (
+            <div className="mb-4 rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+              {saveError}
+            </div>
+          ) : null}
+
+          <div className="space-y-4">
+            <SpeakingTextInput
+              label="Title"
+              value={draft.title}
+              error={errors.title}
+              onChange={(title) => onChange({ ...draft, title })}
+            />
+            <SpeakingTextInput
+              label="Slug"
+              value={draft.slug}
+              error={errors.slug}
+              onChange={(slug) =>
+                onChange({ ...draft, slug: slug.trim().toLowerCase() })
+              }
+              helper="Lowercase letters, numbers, and hyphens only."
+            />
+            <div className="grid gap-4 md:grid-cols-2">
+              <SpeakingSelect
+                label="Part"
+                value={draft.part}
+                onChange={(part) =>
+                  onChange({
+                    ...draft,
+                    part: part as SpeakingTopicMetadataDraft["part"],
+                  })
+                }
+                options={[
+                  { value: "1", label: "Part 1" },
+                  { value: "2", label: "Part 2" },
+                  { value: "3", label: "Part 3" },
+                ]}
+                error={errors.part}
+              />
+              <SpeakingSelect
+                label="Target Band"
+                value={draft.targetBand}
+                onChange={(targetBand) => onChange({ ...draft, targetBand })}
+                options={targetBandOptions.map((value) => ({
+                  value,
+                  label: value,
+                }))}
+                error={errors.targetBand}
+              />
+              <SpeakingSelect
+                label="Source Type"
+                value={draft.sourceType}
+                onChange={(sourceType) =>
+                  onChange({
+                    ...draft,
+                    sourceType: sourceType as AdminSpeakingSourceType,
+                  })
+                }
+                options={[
+                  { value: "manual", label: "Manual" },
+                  { value: "ai", label: "AI" },
+                ]}
+                error={errors.sourceType}
+              />
+              <SpeakingSelect
+                label="Status"
+                value={draft.status}
+                onChange={(status) =>
+                  onChange({ ...draft, status: status as AdminSpeakingStatus })
+                }
+                options={[
+                  { value: "draft", label: "Draft" },
+                  { value: "review", label: "Review" },
+                  { value: "published", label: "Published" },
+                  { value: "archived", label: "Archived" },
+                ]}
+                error={errors.status}
+              />
+            </div>
+            <SpeakingTextarea
+              label="Description"
+              value={draft.description}
+              error={errors.description}
+              onChange={(description) => onChange({ ...draft, description })}
+              helper="Optional. Maximum 600 characters."
+            />
+          </div>
+        </div>
+
+        <div className="flex flex-col-reverse gap-2 border-t border-slate-200 p-4 sm:flex-row sm:justify-end">
+          <Button
+            type="button"
+            variant="outline"
+            disabled={isSaving}
+            onClick={onCancel}
+          >
+            Cancel
+          </Button>
+          <Button type="button" disabled={isSaving} onClick={onSave}>
+            {isSaving ? (
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+            ) : null}
+            Save
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SpeakingTopicDetailModal({
   summary,
   detail,
   error,
   isLoading,
+  onEdit,
   onClose,
 }: {
   summary: AdminSpeakingTopicSummary;
   detail: AdminSpeakingTopicDetail | null;
   error: string | null;
   isLoading: boolean;
+  onEdit: (topic: AdminSpeakingTopicSummary) => void;
   onClose: () => void;
 }) {
   const topic = detail ?? summary;
@@ -463,10 +777,21 @@ function SpeakingTopicDetailModal({
             </p>
           </div>
 
-          <Button type="button" size="sm" variant="ghost" onClick={onClose}>
-            <X className="h-4 w-4" aria-hidden="true" />
-            Close
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={isLoading}
+              onClick={() => onEdit(topic)}
+            >
+              Edit Topic
+            </Button>
+            <Button type="button" size="sm" variant="ghost" onClick={onClose}>
+              <X className="h-4 w-4" aria-hidden="true" />
+              Close
+            </Button>
+          </div>
         </div>
 
         <div className="overflow-y-auto p-4">
@@ -810,11 +1135,13 @@ function SpeakingSelect({
   label,
   value,
   options,
+  error,
   onChange,
 }: {
   label: string;
   value: string;
   options: Array<{ value: string; label: string }>;
+  error?: string;
   onChange: (value: string) => void;
 }) {
   return (
@@ -831,6 +1158,61 @@ function SpeakingSelect({
           </option>
         ))}
       </select>
+      {error ? <span className="text-xs text-rose-600">{error}</span> : null}
+    </label>
+  );
+}
+
+function SpeakingTextInput({
+  label,
+  value,
+  error,
+  helper,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  error?: string;
+  helper?: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
+      {label}
+      <input
+        className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+      />
+      {helper ? <span className="text-xs text-slate-500">{helper}</span> : null}
+      {error ? <span className="text-xs text-rose-600">{error}</span> : null}
+    </label>
+  );
+}
+
+function SpeakingTextarea({
+  label,
+  value,
+  error,
+  helper,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  error?: string;
+  helper?: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
+      {label}
+      <textarea
+        className="min-h-28 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm leading-6 text-slate-900 shadow-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+      />
+      {helper ? <span className="text-xs text-slate-500">{helper}</span> : null}
+      {error ? <span className="text-xs text-rose-600">{error}</span> : null}
     </label>
   );
 }
@@ -913,6 +1295,14 @@ function formatContentStatus(status: string) {
 }
 
 function formatSpeakingSourceType(value: string) {
+  if (value === "manual") {
+    return "Manual";
+  }
+
+  if (value === "ai") {
+    return "AI";
+  }
+
   return value
     .split("_")
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
@@ -921,4 +1311,106 @@ function formatSpeakingSourceType(value: string) {
 
 function hasSpeakingText(value: unknown) {
   return typeof value === "string" && value.trim().length > 0;
+}
+
+function createEmptyTopicDraft(): SpeakingTopicMetadataDraft {
+  return {
+    title: "",
+    slug: "",
+    part: "1",
+    description: "",
+    targetBand: "7",
+    sourceType: "manual",
+    status: "draft",
+  };
+}
+
+function createTopicDraft(
+  topic: AdminSpeakingTopicSummary,
+): SpeakingTopicMetadataDraft {
+  return {
+    title: topic.title,
+    slug: topic.slug,
+    part: String(topic.part) as SpeakingTopicMetadataDraft["part"],
+    description: topic.description,
+    targetBand: topic.targetBand == null ? "7" : String(topic.targetBand),
+    sourceType: topic.sourceType,
+    status: topic.status,
+  };
+}
+
+function isTopicDraftDirty(
+  draft: SpeakingTopicMetadataDraft,
+  initialDraft: SpeakingTopicMetadataDraft,
+) {
+  return JSON.stringify(draft) !== JSON.stringify(initialDraft);
+}
+
+function validateTopicDraft(
+  draft: SpeakingTopicMetadataDraft,
+): SpeakingTopicMetadataErrors {
+  const errors: SpeakingTopicMetadataErrors = {};
+  const title = draft.title.trim();
+  const slug = draft.slug.trim();
+
+  if (!title) {
+    errors.title = "Title is required.";
+  } else if (title.length > 160) {
+    errors.title = "Title must be 160 characters or fewer.";
+  }
+
+  if (!slug) {
+    errors.slug = "Slug is required.";
+  } else if (slug.length < 3 || slug.length > 120) {
+    errors.slug = "Slug must be 3 to 120 characters.";
+  } else if (!/^[a-z0-9-]+$/.test(slug)) {
+    errors.slug = "Use lowercase letters, numbers, and hyphens only.";
+  } else if (slug.includes("--")) {
+    errors.slug = "Slug cannot contain consecutive hyphens.";
+  } else if (slug.startsWith("-") || slug.endsWith("-")) {
+    errors.slug = "Slug cannot start or end with a hyphen.";
+  }
+
+  if (!["1", "2", "3"].includes(draft.part)) {
+    errors.part = "Choose a valid Speaking part.";
+  }
+
+  if (!targetBandOptions.includes(draft.targetBand)) {
+    errors.targetBand = "Choose a valid target band.";
+  }
+
+  if (!["manual", "ai"].includes(draft.sourceType)) {
+    errors.sourceType = "Choose a valid source type.";
+  }
+
+  if (!["draft", "review", "published", "archived"].includes(draft.status)) {
+    errors.status = "Choose a valid status.";
+  }
+
+  if (draft.description.trim().length > 600) {
+    errors.description = "Description must be 600 characters or fewer.";
+  }
+
+  return errors;
+}
+
+function toTopicMetadataPayload(draft: SpeakingTopicMetadataDraft) {
+  return {
+    title: draft.title.trim(),
+    slug: draft.slug.trim(),
+    part: Number(draft.part),
+    description: draft.description.trim(),
+    targetBand: Number(draft.targetBand),
+    sourceType: draft.sourceType,
+    status: draft.status,
+  };
+}
+
+function readApiError(payload: unknown) {
+  return payload &&
+    typeof payload === "object" &&
+    "error" in payload &&
+    typeof (payload as { error?: unknown }).error === "string"
+    ? (payload as { error: string }).error
+    : null;
 }

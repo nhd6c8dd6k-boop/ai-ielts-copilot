@@ -20,9 +20,21 @@ export type AdminSpeakingStatus =
   | "published"
   | "archived";
 
+export type AdminSpeakingSourceType = "manual" | "ai";
+
 export type AdminSpeakingTopicFilters = {
   part?: SpeakingPart;
   status?: AdminSpeakingStatus;
+};
+
+export type AdminSpeakingTopicMetadataInput = {
+  title: string;
+  slug: string;
+  part: SpeakingPart;
+  description: string;
+  targetBand: number;
+  sourceType: AdminSpeakingSourceType;
+  status: AdminSpeakingStatus;
 };
 
 export type AdminSpeakingTopicSummary = {
@@ -33,7 +45,7 @@ export type AdminSpeakingTopicSummary = {
   description: string;
   status: AdminSpeakingStatus;
   targetBand: number | null;
-  sourceType: string;
+  sourceType: AdminSpeakingSourceType;
   publishedAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -178,6 +190,134 @@ export async function getAdminSpeakingTopicDetailById(id: string) {
   } satisfies AdminSpeakingTopicDetail;
 }
 
+export async function createAdminSpeakingTopicMetadata({
+  input,
+  adminUserId,
+}: {
+  input: AdminSpeakingTopicMetadataInput;
+  adminUserId: string;
+}) {
+  const admin = createSupabaseAdminClient();
+  const publishedAt = input.status === "published" ? new Date().toISOString() : null;
+
+  const { data, error } = await admin
+    .from("speaking_topics")
+    .insert({
+      title: input.title,
+      slug: input.slug,
+      part: input.part,
+      description: input.description,
+      target_band: input.targetBand,
+      source_type: toDatabaseSourceType(input.sourceType),
+      status: input.status,
+      published_at: publishedAt,
+      created_by: adminUserId,
+    })
+    .select(topicSummarySelect)
+    .single();
+
+  if (error) {
+    if (isUniqueViolation(error)) {
+      throw createSafeServiceError("Speaking topic slug already exists.", 409);
+    }
+
+    throw new Error(error.message);
+  }
+
+  const topic = await mapTopicSummaryWithQuestionCount(
+    data as AdminSpeakingTopicRow,
+  );
+
+  await writeAdminSpeakingLog({
+    adminUserId,
+    action: "speaking_topic_created",
+    targetId: topic.id,
+    metadata: {
+      slug: topic.slug,
+      part: topic.part,
+      status: topic.status,
+      sourceType: topic.sourceType,
+    },
+  });
+
+  return topic;
+}
+
+export async function updateAdminSpeakingTopicMetadata({
+  id,
+  input,
+  adminUserId,
+}: {
+  id: string;
+  input: AdminSpeakingTopicMetadataInput;
+  adminUserId: string;
+}) {
+  const admin = createSupabaseAdminClient();
+
+  const { data: existing, error: existingError } = await admin
+    .from("speaking_topics")
+    .select(topicSummarySelect)
+    .eq("id", id)
+    .maybeSingle();
+
+  if (existingError) {
+    throw new Error(existingError.message);
+  }
+
+  if (!existing) {
+    return null;
+  }
+
+  const existingTopic = existing as AdminSpeakingTopicRow;
+  const publishedAt =
+    input.status === "published"
+      ? existingTopic.published_at ?? new Date().toISOString()
+      : null;
+
+  const { data, error } = await admin
+    .from("speaking_topics")
+    .update({
+      title: input.title,
+      slug: input.slug,
+      part: input.part,
+      description: input.description,
+      target_band: input.targetBand,
+      source_type: toDatabaseSourceType(input.sourceType),
+      status: input.status,
+      published_at: publishedAt,
+    })
+    .eq("id", id)
+    .select(topicSummarySelect)
+    .single();
+
+  if (error) {
+    if (isUniqueViolation(error)) {
+      throw createSafeServiceError("Speaking topic slug already exists.", 409);
+    }
+
+    throw new Error(error.message);
+  }
+
+  const topic = await mapTopicSummaryWithQuestionCount(
+    data as AdminSpeakingTopicRow,
+  );
+
+  await writeAdminSpeakingLog({
+    adminUserId,
+    action: "speaking_topic_updated",
+    targetId: topic.id,
+    metadata: {
+      previousSlug: existingTopic.slug,
+      slug: topic.slug,
+      part: topic.part,
+      status: topic.status,
+      sourceType: topic.sourceType,
+    },
+  });
+
+  return topic;
+}
+
 async function getQuestionCounts(topicIds: string[]) {
   if (!topicIds.length) {
     return new Map<string, number>();
@@ -202,6 +342,12 @@ async function getQuestionCounts(topicIds: string[]) {
   return counts;
 }
 
+async function mapTopicSummaryWithQuestionCount(topic: AdminSpeakingTopicRow) {
+  const questionCounts = await getQuestionCounts([topic.id]);
+
+  return mapTopicSummary(topic, questionCounts.get(topic.id) ?? 0);
+}
+
 function mapTopicSummary(
   topic: AdminSpeakingTopicRow,
   questionCount: number,
@@ -214,12 +360,70 @@ function mapTopicSummary(
     description: topic.description,
     status: parseStatus(topic.status),
     targetBand: parseOptionalNumber(topic.target_band),
-    sourceType: topic.source_type,
+    sourceType: fromDatabaseSourceType(topic.source_type),
     publishedAt: topic.published_at,
     createdAt: topic.created_at,
     updatedAt: topic.updated_at,
     questionCount,
   };
+}
+
+function toDatabaseSourceType(sourceType: AdminSpeakingSourceType) {
+  if (sourceType === "ai") {
+    return "ai_generated";
+  }
+
+  return "admin_original";
+}
+
+function fromDatabaseSourceType(sourceType: string): AdminSpeakingSourceType {
+  if (sourceType === "ai_generated") {
+    return "ai";
+  }
+
+  return "manual";
+}
+
+function createSafeServiceError(message: string, status: number) {
+  const error = new Error(message) as Error & {
+    safeMessage: string;
+    status: number;
+  };
+  error.safeMessage = message;
+  error.status = status;
+  return error;
+}
+
+function isUniqueViolation(error: unknown) {
+  if (!error || typeof error !== "object" || !("code" in error)) {
+    return false;
+  }
+
+  return (
+    (error as { code?: unknown }).code === "23505"
+  );
+}
+
+async function writeAdminSpeakingLog({
+  adminUserId,
+  action,
+  targetId,
+  metadata,
+}: {
+  adminUserId: string;
+  action: string;
+  targetId: string;
+  metadata: Record<string, unknown>;
+}) {
+  const admin = createSupabaseAdminClient();
+
+  await admin.from("admin_logs").insert({
+    admin_user_id: adminUserId,
+    action,
+    target_type: "speaking_topic",
+    target_id: targetId,
+    metadata,
+  });
 }
 
 function mapQuestion(question: AdminSpeakingQuestionRow): AdminSpeakingQuestion {

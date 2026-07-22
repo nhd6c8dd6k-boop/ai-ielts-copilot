@@ -1,5 +1,7 @@
 export type AdminSpeakingStatus = "draft" | "review" | "published" | "archived";
 
+export type AdminSpeakingSourceType = "manual" | "ai";
+
 export type AdminSpeakingPartFilter = "all" | "1" | "2" | "3";
 
 export type AdminSpeakingStatusFilter = "all" | AdminSpeakingStatus;
@@ -17,7 +19,7 @@ export type AdminSpeakingTopicSummary = {
   description: string;
   status: AdminSpeakingStatus;
   targetBand: number | null;
-  sourceType: string;
+  sourceType: AdminSpeakingSourceType;
   publishedAt: string | null;
   createdAt: string;
   updatedAt: string;
