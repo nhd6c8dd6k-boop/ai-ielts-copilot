@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Eye, Loader2, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +17,7 @@ import type {
   AdminSpeakingQuestion,
   AdminSpeakingStatus,
   AdminSpeakingStatusFilter,
+  AdminSpeakingTopicCountState,
   AdminSpeakingTopicDetail,
   AdminSpeakingTopicSummary,
 } from "./speaking-types";
@@ -26,7 +27,7 @@ type SpeakingLoadState = "idle" | "loading" | "success" | "error";
 type SpeakingAdminPanelProps = {
   isActive: boolean;
   mode: "demo" | "admin";
-  onTopicCountChange?: (count: number | null) => void;
+  onTopicCountChange?: (state: AdminSpeakingTopicCountState) => void;
 };
 
 export function SpeakingAdminPanel({
@@ -51,6 +52,33 @@ export function SpeakingAdminPanel({
   const topicsRequestIdRef = useRef(0);
   const detailRequestIdRef = useRef(0);
   const detailControllerRef = useRef<AbortController | null>(null);
+  const hasReportedTopicCountRef = useRef(false);
+
+  const abortDetailRequest = useCallback(() => {
+    detailControllerRef.current?.abort();
+    detailControllerRef.current = null;
+    detailRequestIdRef.current += 1;
+  }, []);
+
+  const resetDetailState = useCallback(() => {
+    setSelectedTopic(null);
+    setTopicDetail(null);
+    setDetailError(null);
+    setIsDetailLoading(false);
+  }, []);
+
+  useEffect(() => {
+    if (isActive) {
+      return;
+    }
+
+    abortDetailRequest();
+    const resetTimer = window.setTimeout(resetDetailState, 0);
+
+    return () => window.clearTimeout(resetTimer);
+  }, [abortDetailRequest, isActive, resetDetailState]);
+
+  useEffect(() => () => abortDetailRequest(), [abortDetailRequest]);
 
   useEffect(() => {
     if (!isActive) {
@@ -89,7 +117,11 @@ export function SpeakingAdminPanel({
           setTopics(nextTopics);
           setHasLoadedTopics(true);
           setLoadState("success");
-          onTopicCountChange?.(nextTopics.length);
+          hasReportedTopicCountRef.current = true;
+          onTopicCountChange?.({
+            status: "success",
+            count: nextTopics.length,
+          });
         }
       } catch (loadError) {
         if (controller.signal.aborted) {
@@ -104,6 +136,10 @@ export function SpeakingAdminPanel({
           );
           setHasLoadedTopics(true);
           setLoadState("error");
+
+          if (!hasReportedTopicCountRef.current) {
+            onTopicCountChange?.({ status: "error" });
+          }
         }
       }
     };
@@ -172,13 +208,8 @@ export function SpeakingAdminPanel({
   };
 
   const closeDetail = () => {
-    detailControllerRef.current?.abort();
-    detailControllerRef.current = null;
-    detailRequestIdRef.current += 1;
-    setSelectedTopic(null);
-    setTopicDetail(null);
-    setDetailError(null);
-    setIsDetailLoading(false);
+    abortDetailRequest();
+    resetDetailState();
   };
 
   if (!isActive) {

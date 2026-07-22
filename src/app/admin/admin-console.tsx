@@ -28,6 +28,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { WritingTaskVisual } from "@/components/writing/writing-task-visual";
 import { SpeakingAdminPanel } from "./components/speaking-admin-panel";
+import type { AdminSpeakingTopicCountState } from "./components/speaking-types";
 import type {
   AdminContentItem,
   AdminContentStatus,
@@ -72,6 +73,18 @@ const contentTypeTabs: Array<{
   { type: "writing", label: "Writing" },
   { type: "speaking", label: "Speaking" },
 ];
+
+function formatSpeakingTopicCount(state: AdminSpeakingTopicCountState) {
+  if (state.status === "idle") {
+    return "...";
+  }
+
+  if (state.status === "error") {
+    return "!";
+  }
+
+  return state.count;
+}
 
 type GenerateApiResponse = {
   results: Array<{
@@ -368,9 +381,8 @@ export function AdminConsole({
   const [isMembershipSaving, setIsMembershipSaving] = useState(false);
   const [activeContentType, setActiveContentType] =
     useState<AdminContentTabType>("reading");
-  const [speakingTopicCount, setSpeakingTopicCount] = useState<number | null>(
-    null,
-  );
+  const [speakingTopicCount, setSpeakingTopicCount] =
+    useState<AdminSpeakingTopicCountState>({ status: "idle" });
   const [logs, setLogs] = useState<string[]>(data.logs);
   const [isMutatingId, setIsMutatingId] = useState<string | null>(null);
   const [isAudioGeneratingId, setIsAudioGeneratingId] = useState<string | null>(
@@ -422,9 +434,11 @@ export function AdminConsole({
       contentTypeTabs.reduce(
         (result, tab) => ({
           ...result,
-          [tab.type]:
-            tab.type === "speaking"
-              ? speakingTopicCount ?? 0
+            [tab.type]:
+              tab.type === "speaking"
+              ? speakingTopicCount.status === "success"
+                ? speakingTopicCount.count
+                : 0
               : content.filter((item) => item.type === tab.type).length,
         }),
         {} as Record<AdminContentTabType, number>,
@@ -1064,8 +1078,8 @@ export function AdminConsole({
                   {contentTypeTabs.map((tab) => {
                     const isActive = activeContentType === tab.type;
                     const countLabel =
-                      tab.type === "speaking" && speakingTopicCount === null
-                        ? "..."
+                      tab.type === "speaking"
+                        ? formatSpeakingTopicCount(speakingTopicCount)
                         : contentTypeCounts[tab.type];
 
                     return (

@@ -4,6 +4,11 @@ export type AdminSpeakingPartFilter = "all" | "1" | "2" | "3";
 
 export type AdminSpeakingStatusFilter = "all" | AdminSpeakingStatus;
 
+export type AdminSpeakingTopicCountState =
+  | { status: "idle" }
+  | { status: "success"; count: number }
+  | { status: "error" };
+
 export type AdminSpeakingTopicSummary = {
   id: string;
   slug: string;
