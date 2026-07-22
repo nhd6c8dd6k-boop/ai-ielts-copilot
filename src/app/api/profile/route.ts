@@ -14,7 +14,7 @@ const profileInputSchema = z.object({
   examDate: z.string().optional(),
   country: z.string().optional(),
   timezone: z.string().optional(),
-});
+}).strict();
 
 export async function GET() {
   if (!isSupabaseConfigured()) {

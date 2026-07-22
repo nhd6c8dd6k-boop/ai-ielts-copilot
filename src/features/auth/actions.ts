@@ -7,6 +7,7 @@ import {
   getSafeRedirectPath,
 } from "@/lib/auth/redirect";
 import { env, isSupabaseConfigured } from "@/lib/env";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function signInAction(formData: FormData) {
@@ -29,7 +30,7 @@ export async function signInAction(formData: FormData) {
 
   const supabase = await createSupabaseServerClient();
 
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
@@ -38,10 +39,12 @@ export async function signInAction(formData: FormData) {
     redirect(`/login?error=invalid_credentials&${redirectParam}`);
   }
 
-  await supabase
-    .from("users")
-    .update({ last_login_at: new Date().toISOString() })
-    .eq("email", email);
+  if (data.user?.id && env.supabaseServiceRoleKey) {
+    await createSupabaseAdminClient()
+      .from("users")
+      .update({ last_login_at: new Date().toISOString() })
+      .eq("id", data.user.id);
+  }
 
   redirect(redirectTo);
 }
