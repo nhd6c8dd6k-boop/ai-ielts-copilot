@@ -1,6 +1,3 @@
-import { cache } from "react";
-
-import { isSupabaseConfigured } from "@/lib/env";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import {
   parseOptionalNumber,
@@ -17,28 +14,36 @@ import {
   type VocabularyUpgrade,
 } from "@/server/services/speaking-content-parser";
 
-export type {
-  CommonMistake,
-  SentencePattern,
-  SpeakingPart,
-  UsefulPhrase,
-  VocabularyUpgrade,
-} from "@/server/services/speaking-content-parser";
+export type AdminSpeakingStatus =
+  | "draft"
+  | "review"
+  | "published"
+  | "archived";
 
-export type SpeakingTopicSummary = {
+export type AdminSpeakingTopicFilters = {
+  part?: SpeakingPart;
+  status?: AdminSpeakingStatus;
+};
+
+export type AdminSpeakingTopicSummary = {
   id: string;
   slug: string;
   part: SpeakingPart;
   title: string;
   description: string;
+  status: AdminSpeakingStatus;
   targetBand: number | null;
-  questionCount: number;
+  sourceType: string;
+  publishedAt: string | null;
   createdAt: string;
+  updatedAt: string;
+  questionCount: number;
 };
 
-export type SpeakingQuestion = {
+export type AdminSpeakingQuestion = {
   id: string;
-  order: number;
+  topicId: string;
+  questionOrder: number;
   question: string;
   answerTip: string | null;
   cueCardPoints: string[];
@@ -48,38 +53,36 @@ export type SpeakingQuestion = {
   mainReason: string | null;
   example: string | null;
   alternativePerspective: string | null;
-  samples: {
-    band6: string;
-    band7: string;
-    band8: string;
-  };
+  sampleBand6: string;
+  sampleBand7: string;
+  sampleBand8: string;
   usefulPhrases: UsefulPhrase[];
   vocabulary: VocabularyUpgrade[];
   sentencePatterns: SentencePattern[];
   commonMistakes: CommonMistake[];
+  createdAt: string;
+  updatedAt: string;
 };
 
-export type SpeakingTopicDetail = SpeakingTopicSummary & {
-  questions: SpeakingQuestion[];
+export type AdminSpeakingTopicDetail = AdminSpeakingTopicSummary & {
+  questions: AdminSpeakingQuestion[];
 };
 
-export type SpeakingLibraryCounts = {
-  topicCount: number;
-  questionCount: number;
-  partCounts: Record<SpeakingPart, number>;
-};
-
-type SpeakingTopicRow = {
+type AdminSpeakingTopicRow = {
   id: string;
   slug: string;
   part: number;
   title: string;
   description: string;
+  status: string;
   target_band: number | string | null;
+  source_type: string;
+  published_at: string | null;
   created_at: string;
+  updated_at: string;
 };
 
-type SpeakingQuestionRow = {
+type AdminSpeakingQuestionRow = {
   id: string;
   topic_id: string;
   question_order: number;
@@ -99,52 +102,54 @@ type SpeakingQuestionRow = {
   vocabulary: unknown;
   sentence_patterns: unknown;
   common_mistakes: unknown;
+  created_at: string;
+  updated_at: string;
 };
 
-export const getPublishedSpeakingTopicSummaries = cache(async () => {
-  if (!isSupabaseConfigured()) {
-    return [];
-  }
+const topicSummarySelect =
+  "id,slug,part,title,description,status,target_band,source_type,published_at,created_at,updated_at";
 
+const questionDetailSelect =
+  "id,topic_id,question_order,question,answer_tip,cue_card_points,preparation_ideas,suggested_structure,direct_answer,main_reason,example,alternative_perspective,sample_band_6,sample_band_7,sample_band_8,useful_phrases,vocabulary,sentence_patterns,common_mistakes,created_at,updated_at";
+
+export async function getAdminSpeakingTopicSummaries(
+  filters: AdminSpeakingTopicFilters = {},
+) {
   const admin = createSupabaseAdminClient();
-  const { data: topics, error } = await admin
+  let query = admin
     .from("speaking_topics")
-    .select("id,slug,part,title,description,target_band,created_at")
-    .eq("status", "published")
+    .select(topicSummarySelect)
     .order("part", { ascending: true })
     .order("title", { ascending: true });
+
+  if (filters.part) {
+    query = query.eq("part", filters.part);
+  }
+
+  if (filters.status) {
+    query = query.eq("status", filters.status);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     throw new Error(error.message);
   }
 
-  const topicRows = (topics ?? []) as SpeakingTopicRow[];
+  const topicRows = (data ?? []) as AdminSpeakingTopicRow[];
   const questionCounts = await getQuestionCounts(topicRows.map((topic) => topic.id));
 
   return topicRows.map((topic) =>
     mapTopicSummary(topic, questionCounts.get(topic.id) ?? 0),
   );
-});
+}
 
-export const getPublishedSpeakingTopicsByPart = cache(
-  async (part: SpeakingPart) => {
-    const topics = await getPublishedSpeakingTopicSummaries();
-
-    return topics.filter((topic) => topic.part === part);
-  },
-);
-
-export const getPublishedSpeakingTopicBySlug = cache(async (slug: string) => {
-  if (!isSupabaseConfigured()) {
-    return null;
-  }
-
+export async function getAdminSpeakingTopicDetailById(id: string) {
   const admin = createSupabaseAdminClient();
   const { data: topic, error } = await admin
     .from("speaking_topics")
-    .select("id,slug,part,title,description,target_band,created_at")
-    .eq("slug", slug)
-    .eq("status", "published")
+    .select(topicSummarySelect)
+    .eq("id", id)
     .maybeSingle();
 
   if (error) {
@@ -157,85 +162,21 @@ export const getPublishedSpeakingTopicBySlug = cache(async (slug: string) => {
 
   const { data: questions, error: questionError } = await admin
     .from("speaking_questions")
-    .select(
-      "id,topic_id,question_order,question,answer_tip,cue_card_points,preparation_ideas,suggested_structure,direct_answer,main_reason,example,alternative_perspective,sample_band_6,sample_band_7,sample_band_8,useful_phrases,vocabulary,sentence_patterns,common_mistakes",
-    )
-    .eq("topic_id", topic.id)
+    .select(questionDetailSelect)
+    .eq("topic_id", id)
     .order("question_order", { ascending: true });
 
   if (questionError) {
     throw new Error(questionError.message);
   }
 
-  return {
-    ...mapTopicSummary(topic as SpeakingTopicRow, (questions ?? []).length),
-    questions: ((questions ?? []) as SpeakingQuestionRow[]).map(mapQuestion),
-  } satisfies SpeakingTopicDetail;
-});
-
-export const getSpeakingLibraryStats = cache(async () => {
-  return getSpeakingLibraryCounts();
-});
-
-export const getSpeakingLibraryCounts = cache(async () => {
-  if (!isSupabaseConfigured()) {
-    return {
-      topicCount: 0,
-      questionCount: 0,
-      partCounts: {
-        1: 0,
-        2: 0,
-        3: 0,
-      },
-    } satisfies SpeakingLibraryCounts;
-  }
-
-  const admin = createSupabaseAdminClient();
-  const { data: topics, error } = await admin
-    .from("speaking_topics")
-    .select("id,part")
-    .eq("status", "published");
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  const topicRows = (topics ?? []) as Pick<SpeakingTopicRow, "id" | "part">[];
-  const questionCounts = await getQuestionCounts(topicRows.map((topic) => topic.id));
-  const partCounts = topicRows.reduce(
-    (counts, topic) => {
-      const part = parseSpeakingPart(topic.part);
-
-      return {
-        ...counts,
-        [part]: counts[part] + 1,
-      };
-    },
-    {
-      1: 0,
-      2: 0,
-      3: 0,
-    } as Record<SpeakingPart, number>,
-  );
+  const questionRows = (questions ?? []) as AdminSpeakingQuestionRow[];
 
   return {
-    topicCount: topicRows.length,
-    questionCount: Array.from(questionCounts.values()).reduce(
-      (total, count) => total + count,
-      0,
-    ),
-    partCounts,
-  } satisfies SpeakingLibraryCounts;
-});
-
-export const getPublishedSpeakingSitemapEntries = cache(async () => {
-  const topics = await getPublishedSpeakingTopicSummaries();
-
-  return topics.map((topic) => ({
-    slug: topic.slug,
-    createdAt: topic.createdAt,
-  }));
-});
+    ...mapTopicSummary(topic as AdminSpeakingTopicRow, questionRows.length),
+    questions: questionRows.map(mapQuestion),
+  } satisfies AdminSpeakingTopicDetail;
+}
 
 async function getQuestionCounts(topicIds: string[]) {
   if (!topicIds.length) {
@@ -243,7 +184,7 @@ async function getQuestionCounts(topicIds: string[]) {
   }
 
   const admin = createSupabaseAdminClient();
-  const { data: questions, error } = await admin
+  const { data, error } = await admin
     .from("speaking_questions")
     .select("topic_id")
     .in("topic_id", topicIds);
@@ -254,7 +195,7 @@ async function getQuestionCounts(topicIds: string[]) {
 
   const counts = new Map<string, number>();
 
-  (questions ?? []).forEach((question) => {
+  (data ?? []).forEach((question) => {
     counts.set(question.topic_id, (counts.get(question.topic_id) ?? 0) + 1);
   });
 
@@ -262,25 +203,30 @@ async function getQuestionCounts(topicIds: string[]) {
 }
 
 function mapTopicSummary(
-  topic: SpeakingTopicRow,
+  topic: AdminSpeakingTopicRow,
   questionCount: number,
-): SpeakingTopicSummary {
+): AdminSpeakingTopicSummary {
   return {
     id: topic.id,
     slug: topic.slug,
     part: parseSpeakingPart(topic.part),
     title: topic.title,
     description: topic.description,
+    status: parseStatus(topic.status),
     targetBand: parseOptionalNumber(topic.target_band),
-    questionCount,
+    sourceType: topic.source_type,
+    publishedAt: topic.published_at,
     createdAt: topic.created_at,
+    updatedAt: topic.updated_at,
+    questionCount,
   };
 }
 
-function mapQuestion(question: SpeakingQuestionRow): SpeakingQuestion {
+function mapQuestion(question: AdminSpeakingQuestionRow): AdminSpeakingQuestion {
   return {
     id: question.id,
-    order: question.question_order,
+    topicId: question.topic_id,
+    questionOrder: question.question_order,
     question: question.question,
     answerTip: question.answer_tip,
     cueCardPoints: readStringArray(question.cue_card_points),
@@ -290,14 +236,22 @@ function mapQuestion(question: SpeakingQuestionRow): SpeakingQuestion {
     mainReason: question.main_reason,
     example: question.example,
     alternativePerspective: question.alternative_perspective,
-    samples: {
-      band6: question.sample_band_6,
-      band7: question.sample_band_7,
-      band8: question.sample_band_8,
-    },
+    sampleBand6: question.sample_band_6,
+    sampleBand7: question.sample_band_7,
+    sampleBand8: question.sample_band_8,
     usefulPhrases: readUsefulPhrases(question.useful_phrases),
     vocabulary: readVocabularyUpgrades(question.vocabulary),
     sentencePatterns: readSentencePatterns(question.sentence_patterns),
     commonMistakes: readCommonMistakes(question.common_mistakes),
+    createdAt: question.created_at,
+    updatedAt: question.updated_at,
   };
+}
+
+function parseStatus(status: string): AdminSpeakingStatus {
+  return status === "review" ||
+    status === "published" ||
+    status === "archived"
+    ? status
+    : "draft";
 }
