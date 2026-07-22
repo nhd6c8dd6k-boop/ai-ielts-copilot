@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Activity,
   Crown,
@@ -27,6 +27,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { WritingTaskVisual } from "@/components/writing/writing-task-visual";
+import { SpeakingAdminPanel } from "./components/speaking-admin-panel";
 import type {
   AdminContentItem,
   AdminContentStatus,
@@ -71,71 +72,6 @@ const contentTypeTabs: Array<{
   { type: "writing", label: "Writing" },
   { type: "speaking", label: "Speaking" },
 ];
-
-type AdminSpeakingStatus = "draft" | "review" | "published" | "archived";
-type AdminSpeakingPartFilter = "all" | "1" | "2" | "3";
-type AdminSpeakingStatusFilter = "all" | AdminSpeakingStatus;
-
-type AdminSpeakingTopicSummary = {
-  id: string;
-  slug: string;
-  part: 1 | 2 | 3;
-  title: string;
-  description: string;
-  status: AdminSpeakingStatus;
-  targetBand: number | null;
-  sourceType: string;
-  publishedAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-  questionCount: number;
-};
-
-type AdminSpeakingQuestion = {
-  id: string;
-  topicId: string;
-  questionOrder: number;
-  question: string;
-  answerTip: string | null;
-  cueCardPoints: string[];
-  preparationIdeas: string[];
-  suggestedStructure: string[];
-  directAnswer: string | null;
-  mainReason: string | null;
-  example: string | null;
-  alternativePerspective: string | null;
-  sampleBand6: string;
-  sampleBand7: string;
-  sampleBand8: string;
-  usefulPhrases: Array<{
-    phrase: string;
-    meaning: string;
-    example: string;
-  }>;
-  vocabulary: Array<{
-    insteadOf: string;
-    try: string[];
-    meaning: string;
-    example: string;
-    context: string;
-  }>;
-  sentencePatterns: Array<{
-    pattern: string;
-    example: string;
-    suitableUse: string;
-  }>;
-  commonMistakes: Array<{
-    incorrect: string;
-    better: string;
-    why: string;
-  }>;
-  createdAt: string;
-  updatedAt: string;
-};
-
-type AdminSpeakingTopicDetail = AdminSpeakingTopicSummary & {
-  questions: AdminSpeakingQuestion[];
-};
 
 type GenerateApiResponse = {
   results: Array<{
@@ -432,27 +368,9 @@ export function AdminConsole({
   const [isMembershipSaving, setIsMembershipSaving] = useState(false);
   const [activeContentType, setActiveContentType] =
     useState<AdminContentTabType>("reading");
-  const [speakingPartFilter, setSpeakingPartFilter] =
-    useState<AdminSpeakingPartFilter>("all");
-  const [speakingStatusFilter, setSpeakingStatusFilter] =
-    useState<AdminSpeakingStatusFilter>("all");
-  const [speakingRetryKey, setSpeakingRetryKey] = useState(0);
-  const [speakingTopics, setSpeakingTopics] = useState<
-    AdminSpeakingTopicSummary[]
-  >([]);
-  const [hasLoadedSpeakingTopics, setHasLoadedSpeakingTopics] = useState(false);
-  const [isSpeakingLoading, setIsSpeakingLoading] = useState(false);
-  const [speakingError, setSpeakingError] = useState<string | null>(null);
-  const [selectedSpeakingTopic, setSelectedSpeakingTopic] =
-    useState<AdminSpeakingTopicSummary | null>(null);
-  const [speakingDetail, setSpeakingDetail] =
-    useState<AdminSpeakingTopicDetail | null>(null);
-  const [isSpeakingDetailLoading, setIsSpeakingDetailLoading] = useState(false);
-  const [speakingDetailError, setSpeakingDetailError] = useState<string | null>(
+  const [speakingTopicCount, setSpeakingTopicCount] = useState<number | null>(
     null,
   );
-  const speakingRequestIdRef = useRef(0);
-  const speakingDetailRequestIdRef = useRef(0);
   const [logs, setLogs] = useState<string[]>(data.logs);
   const [isMutatingId, setIsMutatingId] = useState<string | null>(null);
   const [isAudioGeneratingId, setIsAudioGeneratingId] = useState<string | null>(
@@ -506,12 +424,12 @@ export function AdminConsole({
           ...result,
           [tab.type]:
             tab.type === "speaking"
-              ? speakingTopics.length
+              ? speakingTopicCount ?? 0
               : content.filter((item) => item.type === tab.type).length,
         }),
         {} as Record<AdminContentTabType, number>,
       ),
-    [content, speakingTopics.length],
+    [content, speakingTopicCount],
   );
   const filteredContent = useMemo(
     () =>
@@ -531,81 +449,6 @@ export function AdminConsole({
       membership.email.toLowerCase().includes(normalizedSearch),
     );
   }, [membershipSearch, memberships]);
-
-  useEffect(() => {
-    if (activeTab !== "content" || activeContentType !== "speaking") {
-      return;
-    }
-
-    const requestId = speakingRequestIdRef.current + 1;
-    speakingRequestIdRef.current = requestId;
-    const controller = new AbortController();
-
-    const loadTopics = async () => {
-      try {
-        await Promise.resolve();
-
-        if (controller.signal.aborted) {
-          return;
-        }
-
-        setIsSpeakingLoading(true);
-        setSpeakingError(null);
-
-        if (mode !== "admin") {
-          throw new Error("Speaking topics are available after admin login.");
-        }
-
-        const response = await fetch(
-          buildSpeakingTopicsUrl(speakingPartFilter, speakingStatusFilter),
-          {
-            cache: "no-store",
-            signal: controller.signal,
-          },
-        );
-        const payload = await readJsonResponse(response);
-
-        if (!response.ok) {
-          throw new Error("Failed to load Speaking topics.");
-        }
-
-        const topics = parseSpeakingTopicsPayload(payload);
-
-        if (speakingRequestIdRef.current === requestId) {
-          setSpeakingTopics(topics);
-          setHasLoadedSpeakingTopics(true);
-        }
-      } catch (loadError) {
-        if (controller.signal.aborted) {
-          return;
-        }
-
-        if (speakingRequestIdRef.current === requestId) {
-          setSpeakingError(
-            loadError instanceof Error
-              ? loadError.message
-              : "Failed to load Speaking topics.",
-          );
-          setHasLoadedSpeakingTopics(true);
-        }
-      } finally {
-        if (speakingRequestIdRef.current === requestId) {
-          setIsSpeakingLoading(false);
-        }
-      }
-    };
-
-    void loadTopics();
-
-    return () => controller.abort();
-  }, [
-    activeContentType,
-    activeTab,
-    mode,
-    speakingPartFilter,
-    speakingRetryKey,
-    speakingStatusFilter,
-  ]);
 
   const updateContentStatus = async (
     item: AdminContentItem,
@@ -759,55 +602,6 @@ export function AdminConsole({
       );
     } finally {
       setIsDetailLoadingId(null);
-    }
-  };
-
-  const viewSpeakingTopic = async (topic: AdminSpeakingTopicSummary) => {
-    setSelectedSpeakingTopic(topic);
-    setSpeakingDetail(null);
-    setSpeakingDetailError(null);
-    setIsSpeakingDetailLoading(true);
-
-    if (mode !== "admin") {
-      setIsSpeakingDetailLoading(false);
-      setSpeakingDetailError("Speaking topic detail is available after admin login.");
-      return;
-    }
-
-    const requestId = speakingDetailRequestIdRef.current + 1;
-    speakingDetailRequestIdRef.current = requestId;
-
-    try {
-      const response = await fetch(`/api/admin/speaking/topics/${topic.id}`, {
-        cache: "no-store",
-      });
-      const payload = await readJsonResponse(response);
-
-      if (response.status === 404) {
-        throw new Error("Topic not found.");
-      }
-
-      if (!response.ok) {
-        throw new Error("Failed to load Speaking topic.");
-      }
-
-      const detail = parseSpeakingDetailPayload(payload);
-
-      if (speakingDetailRequestIdRef.current === requestId) {
-        setSpeakingDetail(detail);
-      }
-    } catch (viewError) {
-      if (speakingDetailRequestIdRef.current === requestId) {
-        setSpeakingDetailError(
-          viewError instanceof Error
-            ? viewError.message
-            : "Failed to load Speaking topic.",
-        );
-      }
-    } finally {
-      if (speakingDetailRequestIdRef.current === requestId) {
-        setIsSpeakingDetailLoading(false);
-      }
     }
   };
 
@@ -1270,7 +1064,7 @@ export function AdminConsole({
                   {contentTypeTabs.map((tab) => {
                     const isActive = activeContentType === tab.type;
                     const countLabel =
-                      tab.type === "speaking" && !hasLoadedSpeakingTopics
+                      tab.type === "speaking" && speakingTopicCount === null
                         ? "..."
                         : contentTypeCounts[tab.type];
 
@@ -1293,23 +1087,12 @@ export function AdminConsole({
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
-              {activeContentType === "speaking" ? (
-                <AdminSpeakingTopicsPanel
-                  topics={speakingTopics}
-                  partFilter={speakingPartFilter}
-                  statusFilter={speakingStatusFilter}
-                  isLoading={isSpeakingLoading}
-                  hasLoaded={hasLoadedSpeakingTopics}
-                  error={speakingError}
-                  onPartFilterChange={setSpeakingPartFilter}
-                  onStatusFilterChange={setSpeakingStatusFilter}
-                  onRetry={() => setSpeakingRetryKey((key) => key + 1)}
-                  onView={viewSpeakingTopic}
-                  isDetailLoadingId={
-                    isSpeakingDetailLoading ? selectedSpeakingTopic?.id ?? null : null
-                  }
-                />
-              ) : filteredContent.length ? (
+              <SpeakingAdminPanel
+                isActive={activeContentType === "speaking"}
+                mode={mode}
+                onTopicCountChange={setSpeakingTopicCount}
+              />
+              {activeContentType !== "speaking" && filteredContent.length ? (
                 filteredContent.map((item) => (
                   <div
                     key={item.id}
@@ -1442,7 +1225,7 @@ export function AdminConsole({
                     </div>
                   </div>
                 ))
-              ) : (
+              ) : activeContentType !== "speaking" ? (
                 <div className="rounded-md border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
                   <p className="text-sm font-medium text-slate-950">
                     No{" "}
@@ -1458,7 +1241,7 @@ export function AdminConsole({
                     category.
                   </p>
                 </div>
-              )}
+              ) : null}
             </CardContent>
           </Card>
         ) : null}
@@ -1558,22 +1341,6 @@ export function AdminConsole({
         />
       ) : null}
 
-      {selectedSpeakingTopic ? (
-        <AdminSpeakingTopicDetailModal
-          summary={selectedSpeakingTopic}
-          detail={speakingDetail}
-          error={speakingDetailError}
-          isLoading={isSpeakingDetailLoading}
-          onClose={() => {
-            speakingDetailRequestIdRef.current += 1;
-            setSelectedSpeakingTopic(null);
-            setSpeakingDetail(null);
-            setSpeakingDetailError(null);
-            setIsSpeakingDetailLoading(false);
-          }}
-        />
-      ) : null}
-
       {membershipModal ? (
         <MembershipActionModal
           state={membershipModal}
@@ -1583,554 +1350,6 @@ export function AdminConsole({
         />
       ) : null}
     </AppShell>
-  );
-}
-
-function AdminSpeakingTopicsPanel({
-  topics,
-  partFilter,
-  statusFilter,
-  isLoading,
-  hasLoaded,
-  error,
-  isDetailLoadingId,
-  onPartFilterChange,
-  onStatusFilterChange,
-  onRetry,
-  onView,
-}: {
-  topics: AdminSpeakingTopicSummary[];
-  partFilter: AdminSpeakingPartFilter;
-  statusFilter: AdminSpeakingStatusFilter;
-  isLoading: boolean;
-  hasLoaded: boolean;
-  error: string | null;
-  isDetailLoadingId: string | null;
-  onPartFilterChange: (value: AdminSpeakingPartFilter) => void;
-  onStatusFilterChange: (value: AdminSpeakingStatusFilter) => void;
-  onRetry: () => void;
-  onView: (topic: AdminSpeakingTopicSummary) => void;
-}) {
-  const hasActiveFilter = partFilter !== "all" || statusFilter !== "all";
-
-  return (
-    <div className="space-y-4">
-      <div className="grid gap-3 md:grid-cols-2 lg:max-w-xl">
-        <AdminSelect
-          label="Part"
-          value={partFilter}
-          onChange={(value) =>
-            onPartFilterChange(value as AdminSpeakingPartFilter)
-          }
-          options={[
-            { value: "all", label: "All Parts" },
-            { value: "1", label: "Part 1" },
-            { value: "2", label: "Part 2" },
-            { value: "3", label: "Part 3" },
-          ]}
-        />
-        <AdminSelect
-          label="Status"
-          value={statusFilter}
-          onChange={(value) =>
-            onStatusFilterChange(value as AdminSpeakingStatusFilter)
-          }
-          options={[
-            { value: "all", label: "All Statuses" },
-            { value: "draft", label: "Draft" },
-            { value: "review", label: "Review" },
-            { value: "published", label: "Published" },
-            { value: "archived", label: "Archived" },
-          ]}
-        />
-      </div>
-
-      {isLoading && hasLoaded ? (
-        <div
-          className="flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600"
-          aria-live="polite"
-        >
-          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-          Refreshing Speaking topics...
-        </div>
-      ) : null}
-
-      {isLoading && !hasLoaded ? (
-        <div className="space-y-3" aria-busy="true">
-          <div className="h-10 rounded-md bg-slate-100" />
-          <div className="h-20 rounded-md bg-slate-100" />
-          <div className="h-20 rounded-md bg-slate-100" />
-        </div>
-      ) : null}
-
-      {error ? (
-        <div className="rounded-md border border-rose-200 bg-rose-50 p-4">
-          <p className="text-sm font-medium text-rose-800">
-            Speaking topics could not be loaded.
-          </p>
-          <p className="mt-1 text-sm text-rose-700">{error}</p>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            className="mt-3 bg-white"
-            onClick={onRetry}
-          >
-            Retry
-          </Button>
-        </div>
-      ) : null}
-
-      {!isLoading && !error && !topics.length ? (
-        <div className="rounded-md border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
-          <p className="text-sm font-medium text-slate-950">
-            {hasActiveFilter
-              ? "No Speaking topics match these filters."
-              : "No Speaking topics yet."}
-          </p>
-          <p className="mt-2 text-sm text-slate-500">
-            {hasActiveFilter
-              ? "Try another Part or Status filter."
-              : "Speaking topics will appear here after they are added."}
-          </p>
-        </div>
-      ) : null}
-
-      {!error && topics.length ? (
-        <div className="overflow-x-auto rounded-md border border-slate-200">
-          <table className="min-w-[900px] w-full text-left text-sm">
-            <thead className="bg-slate-50 text-slate-500">
-              <tr>
-                <th className="px-4 py-3 font-medium">Part</th>
-                <th className="px-4 py-3 font-medium">Title</th>
-                <th className="px-4 py-3 font-medium">Slug</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium">Questions</th>
-                <th className="px-4 py-3 font-medium">Source</th>
-                <th className="px-4 py-3 font-medium">Updated</th>
-                <th className="px-4 py-3 font-medium">View</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200 bg-white">
-              {topics.map((topic) => (
-                <tr key={topic.id}>
-                  <td className="whitespace-nowrap px-4 py-3 text-slate-700">
-                    Part {topic.part}
-                  </td>
-                  <td className="max-w-[260px] px-4 py-3">
-                    <p className="font-medium text-slate-950">{topic.title}</p>
-                    <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-500">
-                      {topic.description}
-                    </p>
-                  </td>
-                  <td className="max-w-[220px] break-all px-4 py-3 text-slate-600">
-                    {topic.slug}
-                  </td>
-                  <td className="px-4 py-3">
-                    <SpeakingStatusBadge status={topic.status} />
-                  </td>
-                  <td className="px-4 py-3 text-slate-700">
-                    {topic.questionCount}
-                  </td>
-                  <td className="px-4 py-3 text-slate-700">
-                    {formatSpeakingSourceType(topic.sourceType)}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-slate-600">
-                    {formatDateTime(topic.updatedAt)}
-                  </td>
-                  <td className="px-4 py-3">
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      disabled={isDetailLoadingId === topic.id}
-                      onClick={() => onView(topic)}
-                    >
-                      {isDetailLoadingId === topic.id ? (
-                        <Loader2
-                          className="h-4 w-4 animate-spin"
-                          aria-hidden="true"
-                        />
-                      ) : (
-                        <Eye className="h-4 w-4" aria-hidden="true" />
-                      )}
-                      View
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-function AdminSpeakingTopicDetailModal({
-  summary,
-  detail,
-  error,
-  isLoading,
-  onClose,
-}: {
-  summary: AdminSpeakingTopicSummary;
-  detail: AdminSpeakingTopicDetail | null;
-  error: string | null;
-  isLoading: boolean;
-  onClose: () => void;
-}) {
-  const topic = detail ?? summary;
-
-  return (
-    <div className="fixed inset-0 z-50 bg-slate-950/40 p-4">
-      <div className="mx-auto flex max-h-[calc(100vh-2rem)] max-w-6xl flex-col overflow-hidden rounded-md border border-slate-200 bg-white shadow-2xl">
-        <div className="flex flex-col gap-4 border-b border-slate-200 p-4 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge>Speaking</Badge>
-              <Badge className="bg-white">Part {topic.part}</Badge>
-              <Badge className="bg-white">
-                {formatSpeakingSourceType(topic.sourceType)}
-              </Badge>
-              <SpeakingStatusBadge status={topic.status} />
-            </div>
-            <h2 className="mt-3 text-lg font-semibold text-slate-950">
-              {topic.title}
-            </h2>
-            <p className="mt-1 break-all text-sm text-slate-500">
-              Admin Speaking topic detail · {topic.slug}
-            </p>
-          </div>
-
-          <Button type="button" size="sm" variant="ghost" onClick={onClose}>
-            <X className="h-4 w-4" aria-hidden="true" />
-            Close
-          </Button>
-        </div>
-
-        <div className="overflow-y-auto p-4">
-          {isLoading ? (
-            <div className="space-y-3" aria-busy="true">
-              <div className="h-6 w-48 rounded-md bg-slate-100" />
-              <div className="h-28 rounded-md bg-slate-100" />
-              <div className="h-28 rounded-md bg-slate-100" />
-            </div>
-          ) : null}
-
-          {error ? (
-            <div className="rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-              {error}
-            </div>
-          ) : null}
-
-          {!isLoading && !error && detail ? (
-            <div className="space-y-6">
-              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                <Metric label="Status" value={formatContentStatus(detail.status)} />
-                <Metric label="Part" value={`Part ${detail.part}`} />
-                <Metric
-                  label="Target Band"
-                  value={
-                    detail.targetBand == null ? "-" : `Band ${detail.targetBand}`
-                  }
-                />
-                <Metric label="Questions" value={`${detail.questionCount}`} />
-                <Metric
-                  label="Source"
-                  value={formatSpeakingSourceType(detail.sourceType)}
-                />
-                <Metric
-                  label="Published"
-                  value={
-                    detail.publishedAt ? formatDateTime(detail.publishedAt) : "-"
-                  }
-                />
-                <Metric label="Created" value={formatDateTime(detail.createdAt)} />
-                <Metric label="Updated" value={formatDateTime(detail.updatedAt)} />
-              </div>
-
-              <ReviewSection title="Topic description">
-                <TextBlock value={detail.description} />
-              </ReviewSection>
-
-              <ReviewSection title={`Questions (${detail.questions.length})`}>
-                {detail.questions.length ? (
-                  <div className="space-y-5">
-                    {detail.questions.map((question) => (
-                      <SpeakingQuestionDetail
-                        key={question.id}
-                        question={question}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="rounded-md border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-sm text-slate-500">
-                    No questions found for this topic.
-                  </div>
-                )}
-              </ReviewSection>
-            </div>
-          ) : null}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function SpeakingQuestionDetail({
-  question,
-}: {
-  question: AdminSpeakingQuestion;
-}) {
-  return (
-    <article className="rounded-md border border-slate-200 bg-white p-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <Badge>Question {question.questionOrder}</Badge>
-      </div>
-
-      <div className="mt-4 space-y-4">
-        <DetailRow label="Question text" value={question.question} />
-        {hasAdminText(question.answerTip) ? (
-          <DetailRow label="Answer tip" value={question.answerTip ?? ""} />
-        ) : null}
-
-        <div className="grid gap-4 lg:grid-cols-3">
-          <ReviewSection title="Band 6 sample">
-            <TextBlock value={question.sampleBand6} />
-          </ReviewSection>
-          <ReviewSection title="Band 7 sample">
-            <TextBlock value={question.sampleBand7} />
-          </ReviewSection>
-          <ReviewSection title="Band 8 sample">
-            <TextBlock value={question.sampleBand8} />
-          </ReviewSection>
-        </div>
-
-        <SpeakingStringListSection
-          title="Cue Card Points"
-          items={question.cueCardPoints}
-        />
-        <SpeakingStringListSection
-          title="Preparation Ideas"
-          items={question.preparationIdeas}
-        />
-        <SpeakingStringListSection
-          title="Suggested Structure"
-          items={question.suggestedStructure}
-        />
-
-        <SpeakingOptionalTextFields
-          fields={[
-            ["Direct Answer", question.directAnswer],
-            ["Main Reason", question.mainReason],
-            ["Example", question.example],
-            ["Alternative Perspective", question.alternativePerspective],
-          ]}
-        />
-
-        <SpeakingUsefulPhrases items={question.usefulPhrases} />
-        <SpeakingVocabulary items={question.vocabulary} />
-        <SpeakingSentencePatterns items={question.sentencePatterns} />
-        <SpeakingCommonMistakes items={question.commonMistakes} />
-      </div>
-    </article>
-  );
-}
-
-function SpeakingStringListSection({
-  title,
-  items,
-}: {
-  title: string;
-  items: string[];
-}) {
-  if (!items.length) {
-    return null;
-  }
-
-  return (
-    <ReviewSection title={title}>
-      <ul className="list-disc space-y-2 rounded-md border border-slate-200 bg-slate-50 p-4 pl-6 text-sm leading-6 text-slate-700">
-        {items.map((item, index) => (
-          <li key={`${title}-${index}`}>{item}</li>
-        ))}
-      </ul>
-    </ReviewSection>
-  );
-}
-
-function SpeakingOptionalTextFields({
-  fields,
-}: {
-  fields: Array<[string, string | null]>;
-}) {
-  const visibleFields = fields.filter(([, value]) => hasAdminText(value));
-
-  if (!visibleFields.length) {
-    return null;
-  }
-
-  return (
-    <div className="grid gap-3 md:grid-cols-2">
-      {visibleFields.map(([label, value]) => (
-        <div
-          key={label}
-          className="rounded-md border border-slate-200 bg-slate-50 p-3"
-        >
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-            {label}
-          </p>
-          <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-700">
-            {value}
-          </p>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function SpeakingUsefulPhrases({
-  items,
-}: {
-  items: AdminSpeakingQuestion["usefulPhrases"];
-}) {
-  if (!items.length) {
-    return null;
-  }
-
-  return (
-    <ReviewSection title="Useful Phrases">
-      <div className="grid gap-3 md:grid-cols-2">
-        {items.map((item, index) => (
-          <TeachingCard key={`${item.phrase}-${index}`} title={item.phrase}>
-            <DetailRow label="Meaning" value={item.meaning} />
-            <DetailRow label="Example" value={item.example} />
-          </TeachingCard>
-        ))}
-      </div>
-    </ReviewSection>
-  );
-}
-
-function SpeakingVocabulary({
-  items,
-}: {
-  items: AdminSpeakingQuestion["vocabulary"];
-}) {
-  if (!items.length) {
-    return null;
-  }
-
-  return (
-    <ReviewSection title="Vocabulary">
-      <div className="grid gap-3 md:grid-cols-2">
-        {items.map((item, index) => (
-          <TeachingCard key={`${item.insteadOf}-${index}`} title={item.insteadOf}>
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                Try
-              </p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {item.try.length ? (
-                  item.try.map((candidate) => (
-                    <Badge key={candidate} className="bg-white">
-                      {candidate}
-                    </Badge>
-                  ))
-                ) : (
-                  <span className="text-sm text-slate-500">Not provided</span>
-                )}
-              </div>
-            </div>
-            <DetailRow label="Meaning" value={item.meaning} />
-            <DetailRow label="Example" value={item.example} />
-            <DetailRow label="Context" value={item.context} />
-          </TeachingCard>
-        ))}
-      </div>
-    </ReviewSection>
-  );
-}
-
-function SpeakingSentencePatterns({
-  items,
-}: {
-  items: AdminSpeakingQuestion["sentencePatterns"];
-}) {
-  if (!items.length) {
-    return null;
-  }
-
-  return (
-    <ReviewSection title="Sentence Patterns">
-      <div className="grid gap-3 md:grid-cols-2">
-        {items.map((item, index) => (
-          <TeachingCard key={`${item.pattern}-${index}`} title={item.pattern}>
-            <DetailRow label="Example" value={item.example} />
-            <DetailRow label="Suitable Use" value={item.suitableUse} />
-          </TeachingCard>
-        ))}
-      </div>
-    </ReviewSection>
-  );
-}
-
-function SpeakingCommonMistakes({
-  items,
-}: {
-  items: AdminSpeakingQuestion["commonMistakes"];
-}) {
-  if (!items.length) {
-    return null;
-  }
-
-  return (
-    <ReviewSection title="Common Mistakes">
-      <div className="grid gap-3 md:grid-cols-2">
-        {items.map((item, index) => (
-          <TeachingCard key={`${item.incorrect}-${index}`} title={item.incorrect}>
-            <DetailRow label="Better" value={item.better} />
-            <DetailRow label="Why" value={item.why} />
-          </TeachingCard>
-        ))}
-      </div>
-    </ReviewSection>
-  );
-}
-
-function TeachingCard({
-  title,
-  children,
-}: {
-  title: string;
-  children: ReactNode;
-}) {
-  return (
-    <div className="space-y-3 rounded-md border border-slate-200 bg-slate-50 p-4">
-      <p className="whitespace-pre-wrap text-sm font-medium leading-6 text-slate-950">
-        {title}
-      </p>
-      {children}
-    </div>
-  );
-}
-
-function SpeakingStatusBadge({ status }: { status: AdminSpeakingStatus }) {
-  return (
-    <Badge
-      className={
-        status === "published"
-          ? "bg-teal-50 text-teal-800"
-          : status === "archived"
-            ? "bg-slate-100 text-slate-500"
-            : status === "draft"
-              ? "bg-white text-slate-700"
-              : "bg-amber-50 text-amber-800"
-      }
-    >
-      {formatContentStatus(status)}
-    </Badge>
   );
 }
 
@@ -2845,194 +2064,6 @@ function formatList(value: unknown[]) {
       return JSON.stringify(item);
     })
     .join("; ");
-}
-
-function buildSpeakingTopicsUrl(
-  partFilter: AdminSpeakingPartFilter,
-  statusFilter: AdminSpeakingStatusFilter,
-) {
-  const params = new URLSearchParams();
-
-  if (partFilter !== "all") {
-    params.set("part", partFilter);
-  }
-
-  if (statusFilter !== "all") {
-    params.set("status", statusFilter);
-  }
-
-  const query = params.toString();
-
-  return query
-    ? `/api/admin/speaking/topics?${query}`
-    : "/api/admin/speaking/topics";
-}
-
-async function readJsonResponse(response: Response): Promise<unknown> {
-  try {
-    return await response.json();
-  } catch {
-    return null;
-  }
-}
-
-function parseSpeakingTopicsPayload(
-  payload: unknown,
-): AdminSpeakingTopicSummary[] {
-  if (!isRecord(payload) || !Array.isArray(payload.topics)) {
-    throw new Error("Speaking topics response was malformed.");
-  }
-
-  if (!payload.topics.every(isAdminSpeakingTopicSummary)) {
-    throw new Error("Speaking topics response was malformed.");
-  }
-
-  return payload.topics;
-}
-
-function parseSpeakingDetailPayload(payload: unknown): AdminSpeakingTopicDetail {
-  if (
-    !isRecord(payload) ||
-    !isAdminSpeakingTopicDetail(payload.topic)
-  ) {
-    throw new Error("Speaking topic response was malformed.");
-  }
-
-  return payload.topic;
-}
-
-function isAdminSpeakingTopicDetail(
-  value: unknown,
-): value is AdminSpeakingTopicDetail {
-  if (!isRecord(value)) {
-    return false;
-  }
-
-  const questions = value.questions;
-
-  return (
-    isAdminSpeakingTopicSummary(value) &&
-    Array.isArray(questions) &&
-    questions.every(isAdminSpeakingQuestion)
-  );
-}
-
-function isAdminSpeakingTopicSummary(
-  value: unknown,
-): value is AdminSpeakingTopicSummary {
-  return (
-    isRecord(value) &&
-    typeof value.id === "string" &&
-    typeof value.slug === "string" &&
-    isSpeakingPart(value.part) &&
-    typeof value.title === "string" &&
-    typeof value.description === "string" &&
-    isSpeakingStatus(value.status) &&
-    (typeof value.targetBand === "number" || value.targetBand === null) &&
-    typeof value.sourceType === "string" &&
-    (typeof value.publishedAt === "string" || value.publishedAt === null) &&
-    typeof value.createdAt === "string" &&
-    typeof value.updatedAt === "string" &&
-    typeof value.questionCount === "number"
-  );
-}
-
-function isAdminSpeakingQuestion(value: unknown): value is AdminSpeakingQuestion {
-  return (
-    isRecord(value) &&
-    typeof value.id === "string" &&
-    typeof value.topicId === "string" &&
-    typeof value.questionOrder === "number" &&
-    typeof value.question === "string" &&
-    (typeof value.answerTip === "string" || value.answerTip === null) &&
-    isStringArray(value.cueCardPoints) &&
-    isStringArray(value.preparationIdeas) &&
-    isStringArray(value.suggestedStructure) &&
-    (typeof value.directAnswer === "string" || value.directAnswer === null) &&
-    (typeof value.mainReason === "string" || value.mainReason === null) &&
-    (typeof value.example === "string" || value.example === null) &&
-    (typeof value.alternativePerspective === "string" ||
-      value.alternativePerspective === null) &&
-    typeof value.sampleBand6 === "string" &&
-    typeof value.sampleBand7 === "string" &&
-    typeof value.sampleBand8 === "string" &&
-    Array.isArray(value.usefulPhrases) &&
-    value.usefulPhrases.every(isAdminUsefulPhrase) &&
-    Array.isArray(value.vocabulary) &&
-    value.vocabulary.every(isAdminVocabulary) &&
-    Array.isArray(value.sentencePatterns) &&
-    value.sentencePatterns.every(isAdminSentencePattern) &&
-    Array.isArray(value.commonMistakes) &&
-    value.commonMistakes.every(isAdminCommonMistake) &&
-    typeof value.createdAt === "string" &&
-    typeof value.updatedAt === "string"
-  );
-}
-
-function isAdminUsefulPhrase(value: unknown) {
-  return (
-    isRecord(value) &&
-    typeof value.phrase === "string" &&
-    typeof value.meaning === "string" &&
-    typeof value.example === "string"
-  );
-}
-
-function isAdminVocabulary(value: unknown) {
-  return (
-    isRecord(value) &&
-    typeof value.insteadOf === "string" &&
-    isStringArray(value.try) &&
-    typeof value.meaning === "string" &&
-    typeof value.example === "string" &&
-    typeof value.context === "string"
-  );
-}
-
-function isAdminSentencePattern(value: unknown) {
-  return (
-    isRecord(value) &&
-    typeof value.pattern === "string" &&
-    typeof value.example === "string" &&
-    typeof value.suitableUse === "string"
-  );
-}
-
-function isAdminCommonMistake(value: unknown) {
-  return (
-    isRecord(value) &&
-    typeof value.incorrect === "string" &&
-    typeof value.better === "string" &&
-    typeof value.why === "string"
-  );
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
-function isStringArray(value: unknown): value is string[] {
-  return Array.isArray(value) && value.every((item) => typeof item === "string");
-}
-
-function isSpeakingPart(value: unknown): value is 1 | 2 | 3 {
-  return value === 1 || value === 2 || value === 3;
-}
-
-function isSpeakingStatus(value: unknown): value is AdminSpeakingStatus {
-  return (
-    value === "draft" ||
-    value === "review" ||
-    value === "published" ||
-    value === "archived"
-  );
-}
-
-function formatSpeakingSourceType(value: string) {
-  return value
-    .split("_")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
 }
 
 function GeneratePanel({
