@@ -752,9 +752,9 @@ export const messages: Record<Language, Record<string, string>> = {
     "result.noItems": "No items returned.",
 
     "pricing.eyebrow": "Free / Pro",
-    "pricing.title": "Free and Pro plans",
+    "pricing.title": "Choose your plan",
     "pricing.description":
-      "Start IELTS practice for free. Pro membership is manually activated using your registered email.",
+      "Get more IELTS practice, higher usage limits, and full access to AI Writing feedback.",
     "pricing.free": "Free",
     "pricing.paidLater": "Pro membership can be manually activated after contact.",
     "pricing.availableNow": "Available now",
@@ -769,29 +769,81 @@ export const messages: Record<Language, Record<string, string>> = {
     "pricing.proInactiveBody":
       "Support the project and receive Pro membership with access to future Pro features. Pro is manually activated after payment confirmation.",
     "pricing.freePlan": "Free",
-    "pricing.freeBody": "Create a free account and start practising Reading, Listening, and Writing.",
+    "pricing.freeBody":
+      "Create a free account and start practising Reading, Listening, Writing, and Speaking preparation.",
     "pricing.freePrice": "free access",
     "pricing.proPlan": "Pro",
     "pricing.proBody":
       "Support the project and receive Pro membership with access to future Pro features. Pro is manually activated after payment confirmation.",
+    "pricing.monthly.badge": "Most flexible",
+    "pricing.monthly.title": "Pro Monthly",
+    "pricing.monthly.body":
+      "Monthly Pro access with manual activation after payment confirmation.",
+    "pricing.monthly.note":
+      "Monthly access. Renewal is handled manually through support.",
+    "pricing.yearly.badge": "Yearly option",
+    "pricing.yearly.title": "Pro Yearly",
+    "pricing.yearly.body":
+      "Yearly Pro access for learners who want a longer practice period.",
+    "pricing.yearly.price": "Contact us for yearly pricing",
+    "pricing.yearly.subPrice":
+      "Final payment details are confirmed in live chat.",
+    "pricing.yearly.note":
+      "Yearly pricing is confirmed manually before payment.",
     "pricing.proPriceCad": "CA$9.99 / month",
     "pricing.proPriceRmb": "Approx. ¥52 / month",
     "pricing.exchangeDisclaimer":
       "The RMB amount is an estimate. The actual amount may vary with the exchange rate at the time of payment.",
     "pricing.contactUpgrade": "Contact to upgrade",
+    "pricing.chatCta.monthly": "Chat to upgrade monthly",
+    "pricing.chatCta.yearly": "Chat to upgrade yearly",
+    "pricing.chatMessage.monthly":
+      "Hi, I’d like to upgrade to the Pro Monthly plan.",
+    "pricing.chatMessage.yearly":
+      "Hi, I’d like to upgrade to the Pro Yearly plan.",
     "pricing.manualActivationNote":
       "After payment is confirmed, Pro will be manually activated using your registered email.",
     "pricing.activationTiming":
-      "Activation is usually completed within a few minutes after payment confirmation.",
+      "We’ll activate your membership as soon as the payment is confirmed.",
+    "pricing.noAutoActivation":
+      "This button opens live chat. It does not automatically activate Pro or start Stripe Checkout.",
+    "pricing.how.title": "How manual Pro activation works",
+    "pricing.how.step.choose": "Choose Monthly or Yearly Pro",
+    "pricing.how.step.chat": "Contact us through live chat",
+    "pricing.how.step.confirm": "Complete payment and send confirmation",
+    "pricing.confirmation.title": "Payment confirmation",
+    "pricing.confirmation.body":
+      "After payment, send your payment screenshot, PayPal transaction ID, e-Transfer sender name, or payment reference in live chat.",
+    "pricing.confirmation.security":
+      "Do not send passwords, card numbers, bank login details, or authentication codes.",
+    "pricing.faq.title": "FAQ",
+    "pricing.faq.pay.q": "How do I pay?",
+    "pricing.faq.pay.a":
+      "Use WeChat Pay, Alipay, PayPal, or Interac e-Transfer. Contact us in live chat for payment details.",
+    "pricing.faq.activate.q": "How is Pro activated?",
+    "pricing.faq.activate.a":
+      "After payment is confirmed, your account is upgraded manually.",
+    "pricing.faq.account.q": "Do I need to create a new account?",
+    "pricing.faq.account.a":
+      "No. Use the same email/account you use on AI IELTS Copilot.",
+    "pricing.faq.cancel.q": "Can I cancel?",
+    "pricing.faq.cancel.a":
+      "Because this is currently a manual payment system, there is no automatic recurring charge unless the current payment method explicitly creates one.",
     "pricing.feature.reading": "Complete any 5 different Reading practice sets",
     "pricing.feature.listening": "Complete any 5 different Listening practice sets",
     "pricing.feature.writing": "1 AI Writing feedback per day",
+    "pricing.feature.speaking":
+      "Speaking Preparation Library with sample answers",
     "pricing.feature.repeat": "Repeat completed sets without using another slot",
     "pricing.feature.dashboard": "Basic practice history",
     "pricing.feature.account": "Free account access",
     "pricing.pro.feature.membership": "Unlimited Reading practice",
     "pricing.pro.feature.support": "Unlimited Listening practice",
+    "pricing.pro.feature.reading": "Unlimited Reading practice",
+    "pricing.pro.feature.listening": "Unlimited Listening practice",
     "pricing.pro.feature.writing": "Up to 10 AI Writing feedbacks per day",
+    "pricing.pro.feature.speaking":
+      "Speaking Preparation Library with Band 6–8 sample answers",
     "pricing.pro.feature.future": "Priority access to future Pro features",
     "pricing.pro.feature.manual": "Manually activated using your registered email",
     "pricing.planned.moreSets": "More published practice sets",
@@ -840,10 +892,20 @@ export const messages: Record<Language, Record<string, string>> = {
     "support.faq.card.a":
       "Online card payments are planned for the future. For now, WeChat Pay, Alipay, and e-Transfer are handled through manual confirmation.",
     "payment.methodsTitle": "Supported payment methods",
+    "payment.detailsInChat":
+      "Contact us in live chat to receive the correct payment details for your selected plan.",
+    "payment.wechatDescription": "Payment details are provided in live chat.",
+    "payment.alipayDescription": "Payment details are provided in live chat.",
+    "payment.paypalDescription":
+      "Contact us in live chat for the correct PayPal details.",
     "payment.etransferDescription":
-      "Contact us first to receive the payment details.",
+      "Contact us in live chat for the correct e-Transfer details.",
     "payment.contactDetails": "Contact for payment details",
     "payment.qrComingSoon": "QR code coming soon",
+    "payment.confirmationReminder":
+      "After payment, send your payment screenshot, transaction ID, sender name, or payment reference in live chat.",
+    "payment.securityReminder":
+      "Do not send passwords, card numbers, bank login details, or authentication codes.",
     "payment.domainReminder":
       "Before paying, make sure the page domain is aiieltscopilot.com. Keep your payment confirmation after payment.",
     "payment.emailNoteReminder":
@@ -1540,8 +1602,9 @@ export const messages: Record<Language, Record<string, string>> = {
     "result.noItems": "暂无返回内容。",
 
     "pricing.eyebrow": "Free / Pro",
-    "pricing.title": "免费版与 Pro 会员",
-    "pricing.description": "免费开始 IELTS 练习。Pro 会员通过注册邮箱人工开通。",
+    "pricing.title": "选择适合你的方案",
+    "pricing.description":
+      "获得更多 IELTS 练习额度、更高使用限制，以及完整 AI Writing feedback。",
     "pricing.free": "免费版",
     "pricing.paidLater": "Pro 会员可联系人工开通。",
     "pricing.availableNow": "当前可用",
@@ -1554,27 +1617,69 @@ export const messages: Record<Language, Record<string, string>> = {
     "pricing.proInactive": "Pro",
     "pricing.proInactiveBody": "支持项目并获得 Pro 会员身份与未来 Pro 功能。确认付款后会根据注册邮箱人工开通。",
     "pricing.freePlan": "免费版",
-    "pricing.freeBody": "创建免费账户后即可开始练习 Reading、Listening 和 Writing。",
+    "pricing.freeBody":
+      "创建免费账户后即可开始练习 Reading、Listening、Writing 和 Speaking preparation。",
     "pricing.freePrice": "免费使用",
     "pricing.proPlan": "Pro",
     "pricing.proBody": "支持项目并获得 Pro 会员身份与未来 Pro 功能。确认付款后会根据注册邮箱人工开通。",
+    "pricing.monthly.badge": "更灵活",
+    "pricing.monthly.title": "Pro 月付",
+    "pricing.monthly.body": "月付 Pro。付款确认后，管理员会人工开通。",
+    "pricing.monthly.note": "月付访问权限。续费通过客服人工处理。",
+    "pricing.yearly.badge": "年度选项",
+    "pricing.yearly.title": "Pro 年付",
+    "pricing.yearly.body": "适合希望较长周期练习的用户。付款确认后人工开通。",
+    "pricing.yearly.price": "联系确认年付价格",
+    "pricing.yearly.subPrice": "最终付款信息会在在线客服中确认。",
+    "pricing.yearly.note": "年付价格会在付款前由客服确认。",
     "pricing.proPriceCad": "CA$9.99 / 月",
     "pricing.proPriceRmb": "约 ¥52 / 月",
     "pricing.exchangeDisclaimer":
       "人民币金额仅供参考，实际金额以付款时汇率为准。",
     "pricing.contactUpgrade": "联系开通 Pro",
+    "pricing.chatCta.monthly": "联系客服开通月付",
+    "pricing.chatCta.yearly": "联系客服开通年付",
+    "pricing.chatMessage.monthly": "你好，我想开通 Pro 月付。",
+    "pricing.chatMessage.yearly": "你好，我想开通 Pro 年付。",
     "pricing.manualActivationNote":
       "付款确认后，管理员会使用你的注册邮箱手动开通 Pro。",
-    "pricing.activationTiming": "通常会在确认付款后的几分钟内完成。",
+    "pricing.activationTiming": "我们会在确认付款后尽快为你开通会员。",
+    "pricing.noAutoActivation":
+      "这个按钮会打开在线客服，不会自动开通 Pro，也不会启动 Stripe Checkout。",
+    "pricing.how.title": "人工开通 Pro 的流程",
+    "pricing.how.step.choose": "选择 Pro 月付或年付",
+    "pricing.how.step.chat": "通过在线客服联系",
+    "pricing.how.step.confirm": "完成付款并发送付款确认",
+    "pricing.confirmation.title": "付款确认",
+    "pricing.confirmation.body":
+      "付款后，请在在线客服中发送付款截图、PayPal transaction ID、e-Transfer 付款人姓名或付款参考信息。",
+    "pricing.confirmation.security":
+      "不要发送密码、银行卡号、网银登录信息或验证码。",
+    "pricing.faq.title": "常见问题",
+    "pricing.faq.pay.q": "如何付款？",
+    "pricing.faq.pay.a":
+      "支持 WeChat Pay、Alipay、PayPal 和 Interac e-Transfer。请通过在线客服获取正确付款信息。",
+    "pricing.faq.activate.q": "Pro 如何开通？",
+    "pricing.faq.activate.a": "付款确认后，管理员会手动将你的账号升级为 Pro。",
+    "pricing.faq.account.q": "需要重新注册账号吗？",
+    "pricing.faq.account.a": "不需要。请使用你在 AI IELTS Copilot 的同一个邮箱/账号。",
+    "pricing.faq.cancel.q": "可以取消吗？",
+    "pricing.faq.cancel.a":
+      "当前是人工付款流程，除非付款方式本身明确创建了自动扣款，否则不会自动续费。",
     "pricing.feature.reading": "任意完成 5 套不同 Reading 练习",
     "pricing.feature.listening": "任意完成 5 套不同 Listening 练习",
     "pricing.feature.writing": "每天 1 次 AI Writing feedback",
+    "pricing.feature.speaking": "Speaking Preparation Library 示例答案",
     "pricing.feature.repeat": "已完成题目可重复练习",
     "pricing.feature.dashboard": "基础练习记录",
     "pricing.feature.account": "免费账号访问",
     "pricing.pro.feature.membership": "Reading 无限练习",
     "pricing.pro.feature.support": "Listening 无限练习",
+    "pricing.pro.feature.reading": "Reading 无限练习",
+    "pricing.pro.feature.listening": "Listening 无限练习",
     "pricing.pro.feature.writing": "每天最多 10 次 AI Writing feedback",
+    "pricing.pro.feature.speaking":
+      "Speaking Preparation Library，包含 Band 6–8 示例答案",
     "pricing.pro.feature.future": "优先体验后续 Pro 功能",
     "pricing.pro.feature.manual": "使用注册邮箱人工开通",
     "pricing.planned.moreSets": "更多已发布练习内容",
@@ -1616,9 +1721,16 @@ export const messages: Record<Language, Record<string, string>> = {
     "support.faq.card.a":
       "未来计划增加在线信用卡支付。目前使用人工确认的 WeChat Pay、Alipay 和 e-Transfer 流程。",
     "payment.methodsTitle": "支持付款方式",
-    "payment.etransferDescription": "请先联系我们获取付款信息。",
+    "payment.detailsInChat": "请通过在线客服获取所选方案的正确付款信息。",
+    "payment.wechatDescription": "付款信息会在在线客服中提供。",
+    "payment.alipayDescription": "付款信息会在在线客服中提供。",
+    "payment.paypalDescription": "请通过在线客服获取正确 PayPal 付款信息。",
+    "payment.etransferDescription": "请通过在线客服获取正确 e-Transfer 付款信息。",
     "payment.contactDetails": "联系获取付款信息",
     "payment.qrComingSoon": "二维码即将上线",
+    "payment.confirmationReminder":
+      "付款后，请在在线客服中发送付款截图、交易号、付款人姓名或付款参考信息。",
+    "payment.securityReminder": "不要发送密码、银行卡号、网银登录信息或验证码。",
     "payment.domainReminder":
       "付款前请确认页面域名为 aiieltscopilot.com。付款后请保留付款凭证。",
     "payment.emailNoteReminder":

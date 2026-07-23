@@ -1,35 +1,48 @@
-import { existsSync } from "node:fs";
-import path from "node:path";
-
-import Image from "next/image";
-import Link from "next/link";
-import { Mail, QrCode, ShieldCheck, WalletCards } from "lucide-react";
+import { Banknote, MessageCircle, ShieldCheck, WalletCards } from "lucide-react";
 
 import { LocalizedText } from "@/components/i18n/localized-text";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { supportEmail } from "@/lib/support";
-
-const manualPaymentQr = {
-  wechat: {
-    src: "/payments/wechat-pay.png",
-  },
-  alipay: {
-    src: "/payments/alipay.png",
-  },
-} as const;
 
 type ManualPaymentMethodsProps = {
   compact?: boolean;
-  hideWechatQr?: boolean;
 };
+
+const paymentMethods = [
+  {
+    key: "wechat",
+    title: "WeChat Pay",
+    descriptionKey: "payment.wechatDescription",
+    fallback: "Payment details are provided in live chat.",
+    icon: WalletCards,
+  },
+  {
+    key: "alipay",
+    title: "Alipay",
+    descriptionKey: "payment.alipayDescription",
+    fallback: "Payment details are provided in live chat.",
+    icon: WalletCards,
+  },
+  {
+    key: "paypal",
+    title: "PayPal",
+    descriptionKey: "payment.paypalDescription",
+    fallback: "Contact us in live chat for the correct PayPal details.",
+    icon: ShieldCheck,
+  },
+  {
+    key: "etransfer",
+    title: "Interac e-Transfer",
+    descriptionKey: "payment.etransferDescription",
+    fallback: "Contact us in live chat for the correct e-Transfer details.",
+    icon: Banknote,
+  },
+];
 
 export function ManualPaymentMethods({
   compact = false,
-  hideWechatQr = false,
 }: ManualPaymentMethodsProps) {
   return (
-    <section className={compact ? "mt-6" : "mt-8"}>
+    <section id="payment-instructions" className={compact ? "mt-6" : "mt-8"}>
       <div className="flex items-center gap-2 text-sm font-semibold text-slate-950">
         <WalletCards className="h-4 w-4 text-teal-700" aria-hidden="true" />
         <LocalizedText
@@ -38,106 +51,66 @@ export function ManualPaymentMethods({
         />
       </div>
 
-      <div className={compact ? "mt-3 grid gap-3" : "mt-4 grid gap-4 md:grid-cols-3"}>
-        <PaymentQrCard
-          title="WeChat Pay"
-          src={hideWechatQr ? undefined : manualPaymentQr.wechat.src}
-          alt="WeChat Pay QR code"
+      <p className="mt-3 text-sm leading-6 text-slate-600">
+        <LocalizedText
+          k="payment.detailsInChat"
+          fallback="Contact us in live chat to receive the correct payment details for your selected plan."
         />
-        <PaymentQrCard
-          title="Alipay"
-          src={manualPaymentQr.alipay.src}
-          alt="Alipay QR code"
-        />
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-teal-50 text-teal-800">
-              <Mail className="h-4 w-4" aria-hidden="true" />
-            </div>
-            <CardTitle className="text-base">e-Transfer</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm leading-6 text-slate-600">
-              <LocalizedText
-                k="payment.etransferDescription"
-                fallback="Contact us first to receive the payment details."
-              />
-            </p>
-            <Button asChild size="sm" variant="outline" className="mt-4">
-              <Link href={`mailto:${supportEmail}`}>
-                <LocalizedText
-                  k="payment.contactDetails"
-                  fallback="Contact for payment details"
-                />
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
+      </p>
+
+      <div
+        className={
+          compact
+            ? "mt-4 grid gap-3"
+            : "mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
+        }
+      >
+        {paymentMethods.map((method) => {
+          const Icon = method.icon;
+
+          return (
+            <Card key={method.key} className="h-full">
+              <CardHeader className="pb-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-md bg-teal-50 text-teal-800">
+                  <Icon className="h-4 w-4" aria-hidden="true" />
+                </div>
+                <CardTitle className="text-base">{method.title}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm leading-6 text-slate-600">
+                  <LocalizedText
+                    k={method.descriptionKey}
+                    fallback={method.fallback}
+                  />
+                </p>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
-        <p>
-          <LocalizedText
-            k="payment.domainReminder"
-            fallback="Before paying, make sure the page domain is aiieltscopilot.com. Keep your payment confirmation after payment."
+        <div className="flex gap-3">
+          <MessageCircle
+            className="mt-0.5 h-4 w-4 shrink-0"
+            aria-hidden="true"
           />
-        </p>
-        <p className="mt-2">
-          <LocalizedText
-            k="payment.emailNoteReminder"
-            fallback="Include your registered email in the payment note when the payment method supports it."
-          />
-        </p>
+          <div>
+            <p>
+              <LocalizedText
+                k="payment.confirmationReminder"
+                fallback="After payment, send your payment screenshot, transaction ID, sender name, or payment reference in live chat."
+              />
+            </p>
+            <p className="mt-2">
+              <LocalizedText
+                k="payment.securityReminder"
+                fallback="Do not send passwords, card numbers, bank login details, or authentication codes."
+              />
+            </p>
+          </div>
+        </div>
       </div>
     </section>
   );
-}
-
-function PaymentQrCard({
-  title,
-  src,
-  alt,
-}: {
-  title: string;
-  src?: string;
-  alt: string;
-}) {
-  const qrSrc = src && publicFileExists(src) ? src : null;
-
-  return (
-    <Card>
-      <CardHeader className="pb-3">
-        <div className="flex h-9 w-9 items-center justify-center rounded-md bg-teal-50 text-teal-800">
-          <QrCode className="h-4 w-4" aria-hidden="true" />
-        </div>
-        <CardTitle className="text-base">{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {qrSrc ? (
-          <div className="rounded-md border border-slate-200 bg-white p-3">
-            <Image
-              src={qrSrc}
-              alt={alt}
-              width={220}
-              height={220}
-              className="aspect-square w-full max-w-[220px] rounded-sm object-contain"
-            />
-          </div>
-        ) : (
-          <div className="flex aspect-square w-full max-w-[220px] flex-col items-center justify-center rounded-md border border-dashed border-slate-300 bg-slate-50 p-4 text-center text-sm text-slate-600">
-            <ShieldCheck className="mb-3 h-6 w-6 text-teal-700" aria-hidden="true" />
-            <LocalizedText
-              k="payment.qrComingSoon"
-              fallback="QR code coming soon"
-            />
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-function publicFileExists(src: string) {
-  const publicRelativePath = src.replace(/^\/+/, "");
-  return existsSync(path.join(process.cwd(), "public", publicRelativePath));
 }

@@ -111,7 +111,7 @@ export default async function RootLayout({
   const initialLanguage =
     normalizeLanguage(cookieStore.get(languageCookieName)?.value) ??
     normalizeLanguage(requestHeaders.get("accept-language")) ??
-    ("zh" satisfies Language);
+    ("en" satisfies Language);
 
   return (
     <html lang={getHtmlLang(initialLanguage)} className="h-full antialiased">
