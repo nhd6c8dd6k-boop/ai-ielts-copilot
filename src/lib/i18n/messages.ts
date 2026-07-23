@@ -33,15 +33,6 @@ export const messages: Record<Language, Record<string, string>> = {
     "footer.privacy": "Privacy Policy",
     "footer.terms": "Terms of Use",
 
-    "betaRewardModal.title": "Early user reward 🎁",
-    "betaRewardModal.body":
-      "The first 10 users who register and complete a practice will receive one month of Pro access. Eligible users will be activated manually.",
-    "betaRewardModal.smallText":
-      "Start with free IELTS practice. Your feedback helps us improve the practice experience.",
-    "betaRewardModal.primary": "Start practicing",
-    "betaRewardModal.secondary": "Maybe later",
-    "betaRewardModal.close": "Close reward modal",
-
     "home.hero.title": "Go beyond the Band score.",
     "home.hero.subtitle":
       "Get criterion scores, task-specific feedback, sentence rewrites, and clear next steps. Try one AI Writing feedback for free each day.",
@@ -496,11 +487,11 @@ export const messages: Record<Language, Record<string, string>> = {
       "We could not load your practice history. Please refresh the page or try again later.",
     "dashboard.onboarding.title": "Start building your IELTS baseline",
     "dashboard.onboarding.description":
-      "Complete one practice in each skill to unlock score trends, skill insights, and personalized recommendations.",
+      "Finish scored tasks in each skill to unlock score trends, skill insights, and personalized recommendations.",
     "dashboard.onboarding.draftTitle":
-      "Complete your first practice to unlock dashboard insights",
+      "Finish a scored task to unlock dashboard insights",
     "dashboard.onboarding.draftDescription":
-      "You have a Writing draft saved in this browser. Finish it or complete one practice to unlock score trends, skill insights, and clearer next-step recommendations.",
+      "You have a Writing draft saved in this browser. Finish it or submit a scored task to unlock score trends, skill insights, and clearer next-step recommendations.",
     "dashboard.onboarding.benefitProgress": "Track your score progress",
     "dashboard.onboarding.benefitCompare": "Compare your IELTS skills",
     "dashboard.onboarding.benefitNextSteps":
@@ -782,8 +773,6 @@ export const messages: Record<Language, Record<string, string>> = {
     "pricing.betaAccess": "Free",
     "pricing.betaBody":
       "Create a free account and start practising Reading, Listening, and Writing.",
-    "pricing.betaReward":
-      "The first 10 users who register and complete a practice will receive one month of Pro access. Eligible users will be activated manually.",
     "pricing.duringBeta": "free access",
     "pricing.startPracticing": "Start practising for free",
     "pricing.proInactive": "Pro",
@@ -876,8 +865,6 @@ export const messages: Record<Language, Record<string, string>> = {
     "support.title": "Support & Pro upgrade",
     "support.description":
       "Contact us if you need help, want to report a bug, or want to upgrade to Pro manually.",
-    "support.betaReward":
-      "The first 10 users who register and complete a practice will receive one month of Pro access. Eligible users will be activated manually.",
     "support.email": "Email:",
     "support.xiaohongshu": "Xiaohongshu:",
     "support.emailHelp":
@@ -961,18 +948,9 @@ export const messages: Record<Language, Record<string, string>> = {
     "footer.privacy": "隐私政策",
     "footer.terms": "使用条款",
 
-    "betaRewardModal.title": "早期用户福利 🎁",
-    "betaRewardModal.body":
-      "前 10 名注册并完成一次练习的用户可获得 1 个月 Pro 体验。符合条件的用户将由管理员人工开通。",
-    "betaRewardModal.smallText":
-      "现在可以免费开始 IELTS 练习。欢迎反馈问题和建议。",
-    "betaRewardModal.primary": "开始练习",
-    "betaRewardModal.secondary": "稍后再看",
-    "betaRewardModal.close": "关闭福利弹窗",
-
     "home.hero.title": "不只给分，告诉你 IELTS Writing 怎么改",
     "home.hero.subtitle":
-      "获得四项评分、Task 1 / Task 2 专项反馈、原句改写和清晰的下一步建议。每天可免费体验一次 AI Writing feedback。",
+      "获得四项评分、Task 1 / Task 2 专项反馈、原句改写和清晰的下一步建议。每天可免费使用一次 AI Writing feedback。",
     "home.hero.freeWriting": "每天免费 1 次 AI Writing feedback",
     "home.hero.point.taskFeedback": "Task 1 / Task 2 专项反馈",
     "home.hero.point.rewrite": "原句 → 修改后 → 为什么这样改",
@@ -1393,10 +1371,10 @@ export const messages: Record<Language, Record<string, string>> = {
     "dashboard.errorDescription": "练习记录加载失败。请刷新页面，或稍后再试。",
     "dashboard.onboarding.title": "开始建立你的雅思能力基线",
     "dashboard.onboarding.description":
-      "完成每项技能的第一次练习，即可解锁成绩趋势、能力分析和更清晰的下一步建议。",
-    "dashboard.onboarding.draftTitle": "完成第一次练习，解锁学习分析",
+      "完成各项技能的评分任务后，即可解锁成绩趋势、能力分析和更清晰的下一步建议。",
+    "dashboard.onboarding.draftTitle": "完成一个评分任务，解锁学习分析",
     "dashboard.onboarding.draftDescription":
-      "当前浏览器里有一篇 Writing 草稿。你可以先完成草稿，或完成任意一次练习来解锁成绩趋势、能力分析和更清晰的下一步建议。",
+      "当前浏览器里有一篇 Writing 草稿。你可以先完成草稿，或提交一个评分任务来解锁成绩趋势、能力分析和更清晰的下一步建议。",
     "dashboard.onboarding.benefitProgress": "追踪成绩变化",
     "dashboard.onboarding.benefitCompare": "比较各项雅思能力",
     "dashboard.onboarding.benefitNextSteps": "获得更清晰的练习建议",
@@ -1653,8 +1631,6 @@ export const messages: Record<Language, Record<string, string>> = {
     "pricing.availableNow": "当前可用",
     "pricing.betaAccess": "免费版",
     "pricing.betaBody": "创建免费账户后即可开始练习 Reading、Listening 和 Writing。",
-    "pricing.betaReward":
-      "前 10 名注册并完成一次练习的用户可获得 1 个月 Pro 体验。符合条件的用户将由管理员人工开通。",
     "pricing.duringBeta": "免费使用",
     "pricing.startPracticing": "开始免费练习",
     "pricing.proInactive": "Pro",
@@ -1735,8 +1711,6 @@ export const messages: Record<Language, Record<string, string>> = {
     "support.title": "支持与 Pro 开通",
     "support.description":
       "如果你需要帮助、想反馈问题，或想人工开通 Pro 会员，欢迎通过邮箱或小红书联系。",
-    "support.betaReward":
-      "前 10 名注册并完成一次练习的用户可获得 1 个月 Pro 体验。符合条件的用户将由管理员人工开通。",
     "support.email": "邮箱：",
     "support.xiaohongshu": "小红书：",
     "support.emailHelp": "适合咨询 Pro 开通、反馈问题、登录问题或较长的建议。",

@@ -586,7 +586,7 @@ function NewUserOnboarding({
             {writingDraft
               ? t(
                   "dashboard.onboarding.draftTitle",
-                  "Complete your first practice to unlock dashboard insights",
+                  "Finish a scored task to unlock dashboard insights",
                 )
               : t(
                   "dashboard.onboarding.title",
@@ -597,11 +597,11 @@ function NewUserOnboarding({
             {writingDraft
               ? t(
                   "dashboard.onboarding.draftDescription",
-                  "You have a Writing draft saved in this browser. Finish it or complete one practice to unlock score trends, skill insights, and clearer next-step recommendations.",
+                  "You have a Writing draft saved in this browser. Finish it or submit a scored task to unlock score trends, skill insights, and clearer next-step recommendations.",
                 )
               : t(
                   "dashboard.onboarding.description",
-                  "Complete one practice in each skill to unlock score trends, skill insights, and personalized recommendations.",
+                  "Finish scored tasks in each skill to unlock score trends, skill insights, and personalized recommendations.",
                 )}
           </CardDescription>
         </CardHeader>

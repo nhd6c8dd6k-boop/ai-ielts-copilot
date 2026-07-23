@@ -312,7 +312,6 @@ const demoUserActivity: AdminUserActivityItem[] = [
     totalAttempts: 2,
     latestAttemptType: "Listening",
     latestAttemptScore: "Band 6.5",
-    betaRewardEligible: true,
   },
   {
     userId: "new-user",
@@ -325,7 +324,6 @@ const demoUserActivity: AdminUserActivityItem[] = [
     totalAttempts: 0,
     latestAttemptType: null,
     latestAttemptScore: null,
-    betaRewardEligible: false,
   },
 ];
 
@@ -3157,14 +3155,9 @@ function UserActivityTable({ rows }: { rows: AdminUserActivityItem[] }) {
           <div>
             <CardTitle>User Activity</CardTitle>
             <p className="mt-2 text-sm leading-6 text-slate-500">
-              Recent beta user activity, sorted by last activity time. Reward
-              eligibility means the user has completed at least one practice
-              session.
+              Recent user activity, sorted by last activity time.
             </p>
           </div>
-          <Badge className="w-fit bg-teal-50 text-teal-800">
-            {rows.filter((row) => row.betaRewardEligible).length} eligible
-          </Badge>
         </div>
       </CardHeader>
       <CardContent>
@@ -3181,7 +3174,6 @@ function UserActivityTable({ rows }: { rows: AdminUserActivityItem[] }) {
                   "Writing",
                   "Total",
                   "Latest",
-                  "Reward",
                 ].map((header) => (
                   <th key={header} className="px-4 py-3 font-medium">
                     {header}
@@ -3230,23 +3222,12 @@ function UserActivityTable({ rows }: { rows: AdminUserActivityItem[] }) {
                         <span className="text-slate-400">No attempts</span>
                       )}
                     </td>
-                    <td className="px-4 py-3">
-                      <Badge
-                        className={
-                          row.betaRewardEligible
-                            ? "bg-teal-50 text-teal-800"
-                            : "bg-slate-100 text-slate-600"
-                        }
-                      >
-                        {row.betaRewardEligible ? "Eligible" : "Not yet"}
-                      </Badge>
-                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
                   <td
-                    colSpan={9}
+                    colSpan={8}
                     className="px-4 py-8 text-center text-sm text-slate-500"
                   >
                     No user activity yet.

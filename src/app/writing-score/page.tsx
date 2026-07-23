@@ -22,7 +22,7 @@ import { supportEmail, xiaohongshuAccount } from "@/lib/support";
 export const metadata: Metadata = {
   title: "免费 IELTS Writing AI 评分",
   description:
-    "免费体验 IELTS Writing Task 1 / Task 2 AI 评分，获得预估分数、四项标准反馈、语法建议和提分方向。",
+    "免费使用 IELTS Writing Task 1 / Task 2 AI 评分，获得预估分数、四项标准反馈、语法建议和提分方向。",
 };
 
 const outcomes = [
@@ -137,15 +137,6 @@ export default function WritingScoreLandingPage() {
                     sizes="(min-width: 1024px) 380px, calc(100vw - 3rem)"
                     className="mx-auto h-auto w-full max-w-[24rem]"
                   />
-                  <div className="mt-5 rounded-md border border-teal-200 bg-teal-50 p-4">
-                    <p className="text-sm font-semibold text-teal-900">
-                      早期用户福利
-                    </p>
-                    <p className="mt-2 text-sm leading-6 text-teal-800">
-                      前 10 名注册并完成一次练习的用户可获得 1 个月 Pro
-                      体验。符合条件的用户将由管理员人工开通。
-                    </p>
-                  </div>
                 </div>
               </div>
             </div>

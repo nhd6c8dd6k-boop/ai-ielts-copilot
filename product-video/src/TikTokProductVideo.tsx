@@ -15,7 +15,9 @@ import {
 const FPS = 30;
 const WIDTH = 1080;
 const HEIGHT = 1920;
-const DURATION = 45 * FPS;
+const secondsToFrames = (seconds: number) => Math.round(seconds * FPS);
+const DURATION = secondsToFrames(56);
+const VOICEOVER_PLAYBACK_RATE = 0.94;
 
 const colors = {
   ink: "#0f172a",
@@ -35,12 +37,22 @@ const colors = {
 
 const sceneStarts = {
   hook: 0,
-  brand: 5 * FPS,
-  feedback: 10 * FPS,
-  rewrite: 17 * FPS,
-  exam: 24 * FPS,
-  dashboard: 31 * FPS,
-  cta: 38 * FPS,
+  brand: secondsToFrames(6),
+  feedback: secondsToFrames(13.2),
+  rewrite: secondsToFrames(22.4),
+  exam: secondsToFrames(29.6),
+  dashboard: secondsToFrames(41),
+  cta: secondsToFrames(47.6),
+};
+
+const sceneDurations = {
+  hook: sceneStarts.brand - sceneStarts.hook,
+  brand: sceneStarts.feedback - sceneStarts.brand,
+  feedback: sceneStarts.rewrite - sceneStarts.feedback,
+  rewrite: sceneStarts.exam - sceneStarts.rewrite,
+  exam: sceneStarts.dashboard - sceneStarts.exam,
+  dashboard: sceneStarts.cta - sceneStarts.dashboard,
+  cta: DURATION - sceneStarts.cta,
 };
 
 export const RemotionRoot = () => {
@@ -62,25 +74,25 @@ export const TikTokProductVideo = () => {
     <AbsoluteFill style={styles.stage}>
       <VoiceoverTracks />
       <AnimatedBackground />
-      <Sequence from={sceneStarts.hook} durationInFrames={5 * FPS}>
+      <Sequence from={sceneStarts.hook} durationInFrames={sceneDurations.hook}>
         <HookScene />
       </Sequence>
-      <Sequence from={sceneStarts.brand} durationInFrames={5 * FPS}>
+      <Sequence from={sceneStarts.brand} durationInFrames={sceneDurations.brand}>
         <BrandScene />
       </Sequence>
-      <Sequence from={sceneStarts.feedback} durationInFrames={7 * FPS}>
+      <Sequence from={sceneStarts.feedback} durationInFrames={sceneDurations.feedback}>
         <FeedbackScene />
       </Sequence>
-      <Sequence from={sceneStarts.rewrite} durationInFrames={7 * FPS}>
+      <Sequence from={sceneStarts.rewrite} durationInFrames={sceneDurations.rewrite}>
         <RewriteScene />
       </Sequence>
-      <Sequence from={sceneStarts.exam} durationInFrames={7 * FPS}>
+      <Sequence from={sceneStarts.exam} durationInFrames={sceneDurations.exam}>
         <ExamScene />
       </Sequence>
-      <Sequence from={sceneStarts.dashboard} durationInFrames={7 * FPS}>
+      <Sequence from={sceneStarts.dashboard} durationInFrames={sceneDurations.dashboard}>
         <DashboardScene />
       </Sequence>
-      <Sequence from={sceneStarts.cta} durationInFrames={7 * FPS}>
+      <Sequence from={sceneStarts.cta} durationInFrames={sceneDurations.cta}>
         <CtaScene />
       </Sequence>
       <TopBrand />
@@ -91,20 +103,29 @@ export const TikTokProductVideo = () => {
 
 function VoiceoverTracks() {
   const tracks = [
-    { from: sceneStarts.hook + 8, src: "voiceover/01-hook.mp3" },
-    { from: sceneStarts.brand + 8, src: "voiceover/02-brand.mp3" },
-    { from: sceneStarts.feedback + 8, src: "voiceover/03-feedback.mp3" },
-    { from: sceneStarts.rewrite + 8, src: "voiceover/04-rewrite.mp3" },
-    { from: sceneStarts.exam + 8, src: "voiceover/05-exam.mp3" },
-    { from: sceneStarts.dashboard + 8, src: "voiceover/06-dashboard.mp3" },
-    { from: sceneStarts.cta + 10, src: "voiceover/07-cta.mp3" },
+    { from: sceneStarts.hook + secondsToFrames(0.5), duration: 3.71, src: "voiceover/01-hook.mp3" },
+    { from: sceneStarts.brand + secondsToFrames(0.5), duration: 5.44, src: "voiceover/02-brand.mp3" },
+    { from: sceneStarts.feedback + secondsToFrames(0.5), duration: 7.53, src: "voiceover/03-feedback.mp3" },
+    { from: sceneStarts.rewrite + secondsToFrames(0.5), duration: 5.28, src: "voiceover/04-rewrite.mp3" },
+    { from: sceneStarts.exam + secondsToFrames(0.5), duration: 8.36, src: "voiceover/05-exam.mp3" },
+    { from: sceneStarts.dashboard + secondsToFrames(0.5), duration: 4.84, src: "voiceover/06-dashboard.mp3" },
+    { from: sceneStarts.cta + secondsToFrames(0.5), duration: 4.84, src: "voiceover/07-cta.mp3" },
   ];
 
   return (
     <>
       {tracks.map((track) => (
-        <Sequence key={track.src} from={track.from} layout="none">
-          <Audio src={staticFile(track.src)} volume={0.98} />
+        <Sequence
+          key={track.src}
+          from={track.from}
+          durationInFrames={secondsToFrames(track.duration / VOICEOVER_PLAYBACK_RATE + 0.15)}
+          layout="none"
+        >
+          <Audio
+            src={staticFile(track.src)}
+            playbackRate={VOICEOVER_PLAYBACK_RATE}
+            volume={0.98}
+          />
         </Sequence>
       ))}
     </>

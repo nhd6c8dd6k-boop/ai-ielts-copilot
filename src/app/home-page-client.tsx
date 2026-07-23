@@ -69,7 +69,6 @@ type HomeCopy = {
   steps: string[][];
   betaFreeTitle: string;
   betaFreeText: string;
-  betaRewardText: string;
   emailLabel: string;
   xiaohongshuLabel: string;
   pillars: Pillar[];
@@ -161,8 +160,6 @@ const copy = {
     betaFreeTitle: "免费开始，Pro 可联系开通",
     betaFreeText:
       "你可以先使用免费账户开始练习 Reading、Listening 和 Writing。需要开通 Pro 会员时，请通过邮箱或小红书联系，我们会根据注册邮箱人工开通。",
-    betaRewardText:
-      "前 10 名注册并完成一次练习的用户可获得 1 个月 Pro 体验。符合条件的用户将由管理员人工开通。",
     emailLabel: "邮箱",
     xiaohongshuLabel: "小红书",
     pillars: [
@@ -293,8 +290,6 @@ const copy = {
     betaFreeTitle: "Start free, upgrade to Pro when ready",
     betaFreeText:
       "You can start with a free account and practise Reading, Listening, and Writing. If you want Pro membership, contact us by email or Xiaohongshu and we will activate it manually using your registered email.",
-    betaRewardText:
-      "The first 10 users who register and complete a practice will receive one month of Pro access. Eligible users will be activated manually.",
     emailLabel: "Email",
     xiaohongshuLabel: "Xiaohongshu",
     pillars: [
@@ -906,9 +901,6 @@ export default function Home() {
                   </h2>
                   <p className="mt-3 text-sm leading-6 text-slate-600">
                     {t.betaFreeText}
-                  </p>
-                  <p className="mt-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
-                    {t.betaRewardText}
                   </p>
                 </div>
                 <div className="space-y-4">

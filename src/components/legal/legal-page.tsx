@@ -55,7 +55,6 @@ const privacyContent: Record<"en" | "zh", LegalContent> = {
           "To generate and display AI Writing feedback when you submit a Writing practice response.",
           "To save your practice history and help you review scores, answers, explanations, and progress.",
           "To improve product quality, investigate bugs, protect the service from abuse, and manage AI usage costs.",
-          "To verify early user reward eligibility, such as whether a registered user has completed one practice session.",
         ],
       },
       {
@@ -127,7 +126,6 @@ const privacyContent: Record<"en" | "zh", LegalContent> = {
           "当你提交 Writing 练习时，生成并展示 AI 写作反馈。",
           "保存练习历史，帮助你查看分数、答案、解析和学习进度。",
           "改进产品质量、排查 bug、保护服务不被滥用，并管理 AI 使用成本。",
-          "核实早期用户福利资格，例如注册用户是否完成过一次练习。",
         ],
       },
       {
@@ -215,12 +213,6 @@ const termsContent: Record<"en" | "zh", LegalContent> = {
         ],
       },
       {
-        title: "Early user reward",
-        paragraphs: [
-          "The first 10 registered users who complete one practice session may receive one month of Pro access. Eligible users are verified and activated manually.",
-        ],
-      },
-      {
         title: "No guarantees",
         bullets: [
           "We do not guarantee any specific IELTS score or exam result.",
@@ -276,12 +268,6 @@ const termsContent: Record<"en" | "zh", LegalContent> = {
           "未经允许，不要大量复制、转售、再分发或公开发布练习内容。",
           "不要提交违法、有害、辱骂性或包含敏感个人信息的内容。",
           "请使用自己的账号信息，并妥善保管登录凭据。",
-        ],
-      },
-      {
-        title: "早期用户福利",
-        paragraphs: [
-          "前 10 名注册并完成一次练习的用户可获得 1 个月 Pro 体验。符合条件的用户将由管理员人工核实并开通。",
         ],
       },
       {

@@ -33,7 +33,6 @@ export type AdminUserActivityItem = {
   totalAttempts: number;
   latestAttemptType: "Reading" | "Listening" | "Writing" | null;
   latestAttemptScore: string | null;
-  betaRewardEligible: boolean;
 };
 
 export type AdminDashboardData = {
@@ -288,7 +287,6 @@ export async function getUserActivity(
         totalAttempts,
         latestAttemptType: activity.latestAttemptType,
         latestAttemptScore: activity.latestAttemptScore,
-        betaRewardEligible: totalAttempts > 0,
       };
     })
     .sort((a, b) => {

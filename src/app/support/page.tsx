@@ -118,12 +118,6 @@ export default function SupportPage() {
               </li>
             ))}
           </ol>
-          <p className="mt-5 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
-            <LocalizedText
-              k="support.betaReward"
-              fallback="The first 10 users who register and complete a practice will receive one month of Pro access. Eligible users will be activated manually."
-            />
-          </p>
           <ManualPaymentMethods />
           <p className="mt-5 text-sm leading-6 text-slate-600">
             <LocalizedText
