@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 
 import { LanguageProvider } from "@/components/i18n/language-provider";
+import { CrispChat } from "@/components/support/crisp-chat";
 import type { Language } from "@/lib/i18n/messages";
 
 export function Providers({
@@ -29,6 +30,7 @@ export function Providers({
     <QueryClientProvider client={queryClient}>
       <LanguageProvider initialLanguage={initialLanguage}>
         {children}
+        <CrispChat />
       </LanguageProvider>
     </QueryClientProvider>
   );
