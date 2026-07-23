@@ -14,6 +14,7 @@ import { ManualPaymentMethods } from "@/components/payments/manual-payment-metho
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { proPricing } from "@/config/pricing";
 import { ContactToUpgradeButton } from "@/features/payments/contact-to-upgrade-button";
 import { absoluteUrl } from "@/lib/seo";
 
@@ -65,6 +66,12 @@ const steps = [
 ];
 
 const faqs = [
+  [
+    "pricing.faq.price.q",
+    "How much is Pro?",
+    "pricing.faq.price.a",
+    "Monthly Pro is CA$9.99/month. Yearly Pro is CA$79.99/year, about CA$6.67/month and 33% less than paying monthly for 12 months.",
+  ],
   [
     "pricing.faq.pay.q",
     "How do I pay?",
@@ -171,10 +178,9 @@ export default function PricingPage() {
             titleFallback="Pro Monthly"
             bodyKey="pricing.monthly.body"
             bodyFallback="Monthly Pro access with manual activation after payment confirmation."
-            priceKey="pricing.proPriceCad"
-            priceFallback="CA$9.99 / month"
+            price={proPricing.monthly.display}
             subPriceKey="pricing.proPriceRmb"
-            subPriceFallback="Approx. ¥52 / month"
+            subPriceFallback={proPricing.monthly.rmbEstimate}
             noteKey="pricing.monthly.note"
             noteFallback="Monthly access. Renewal is handled manually through support."
           />
@@ -187,12 +193,13 @@ export default function PricingPage() {
             titleFallback="Pro Yearly"
             bodyKey="pricing.yearly.body"
             bodyFallback="Yearly Pro access for learners who want a longer practice period."
-            priceKey="pricing.yearly.price"
-            priceFallback="Contact us for yearly pricing"
-            subPriceKey="pricing.yearly.subPrice"
-            subPriceFallback="Final payment details are confirmed in live chat."
+            price={proPricing.yearly.display}
+            subPriceKey="pricing.yearly.monthlyEquivalent"
+            subPriceFallback={proPricing.yearly.monthlyEquivalent}
+            highlightKey="pricing.yearly.save"
+            highlightFallback={proPricing.yearly.savingsPercent}
             noteKey="pricing.yearly.note"
-            noteFallback="Yearly pricing is confirmed manually before payment."
+            noteFallback="Approximate local payment amount will be confirmed in live chat."
           />
         </div>
 
@@ -306,10 +313,11 @@ function ProPlanCard({
   titleFallback,
   bodyKey,
   bodyFallback,
-  priceKey,
-  priceFallback,
+  price,
   subPriceKey,
   subPriceFallback,
+  highlightKey,
+  highlightFallback,
   noteKey,
   noteFallback,
 }: {
@@ -320,10 +328,11 @@ function ProPlanCard({
   titleFallback: string;
   bodyKey: string;
   bodyFallback: string;
-  priceKey: string;
-  priceFallback: string;
+  price: string;
   subPriceKey: string;
   subPriceFallback: string;
+  highlightKey?: string;
+  highlightFallback?: string;
   noteKey: string;
   noteFallback: string;
 }) {
@@ -343,11 +352,21 @@ function ProPlanCard({
       </p>
       <div className="mt-5 rounded-md border border-teal-200 bg-white px-4 py-4">
         <p className="text-3xl font-semibold tracking-tight text-slate-950">
-          <LocalizedText k={priceKey} fallback={priceFallback} />
+          {price}
         </p>
-        <p className="mt-1 text-sm font-medium text-teal-800">
-          <LocalizedText k={subPriceKey} fallback={subPriceFallback} />
-        </p>
+        <div className="mt-1 flex flex-wrap items-center gap-2">
+          <p className="text-sm font-medium text-teal-800">
+            <LocalizedText k={subPriceKey} fallback={subPriceFallback} />
+          </p>
+          {highlightKey ? (
+            <Badge className="border-teal-200 bg-teal-50 text-teal-900">
+              <LocalizedText
+                k={highlightKey}
+                fallback={highlightFallback ?? "Save 33%"}
+              />
+            </Badge>
+          ) : null}
+        </div>
         <p className="mt-2 text-xs leading-5 text-slate-500">
           <LocalizedText k={noteKey} fallback={noteFallback} />
         </p>

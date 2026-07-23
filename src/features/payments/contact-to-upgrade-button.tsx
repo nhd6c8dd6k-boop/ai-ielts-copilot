@@ -5,6 +5,7 @@ import { Crisp } from "crisp-sdk-web";
 
 import { useI18n } from "@/components/i18n/language-provider";
 import { Button } from "@/components/ui/button";
+import { proPricing } from "@/config/pricing";
 
 type ContactToUpgradeButtonProps = {
   plan: "monthly" | "yearly";
@@ -28,11 +29,11 @@ export function ContactToUpgradeButton({
           plan === "monthly"
             ? t(
                 "pricing.chatMessage.monthly",
-                "Hi, I’d like to upgrade to the Pro Monthly plan.",
+                `Hi, I’d like to upgrade to the Pro Monthly plan for ${proPricing.monthly.cad}.`,
               )
             : t(
                 "pricing.chatMessage.yearly",
-                "Hi, I’d like to upgrade to the Pro Yearly plan.",
+                `Hi, I’d like to upgrade to the Pro Yearly plan for ${proPricing.yearly.cad}.`,
               ),
         );
         return;

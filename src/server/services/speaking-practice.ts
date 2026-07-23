@@ -3,6 +3,11 @@ import { cache } from "react";
 import { isSupabaseConfigured } from "@/lib/env";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import {
+  isProSubscription,
+  parseMembershipPlan,
+  type MembershipPlan,
+} from "@/server/services/memberships";
+import {
   parseOptionalNumber,
   parseSpeakingPart,
   readCommonMistakes,
@@ -16,6 +21,10 @@ import {
   type UsefulPhrase,
   type VocabularyUpgrade,
 } from "@/server/services/speaking-content-parser";
+import {
+  FREE_SPEAKING_DAILY_QUESTION_LIMIT,
+  getUsageDayRange,
+} from "@/server/services/usage-limit-rules";
 
 export type {
   CommonMistake,
@@ -59,8 +68,27 @@ export type SpeakingQuestion = {
   commonMistakes: CommonMistake[];
 };
 
+export type SpeakingQuestionSummary = {
+  id: string;
+  order: number;
+};
+
 export type SpeakingTopicDetail = SpeakingTopicSummary & {
-  questions: SpeakingQuestion[];
+  questions: SpeakingQuestionSummary[];
+};
+
+export type SpeakingUsageSummary = {
+  isSignedIn: boolean;
+  isUnlimited: boolean;
+  plan: MembershipPlan;
+  isAdmin: boolean;
+  isPro: boolean;
+  usedToday: number;
+  limitToday: number | null;
+  remainingToday: number | null;
+  resetsAt: string;
+  timezone: "UTC";
+  unlockedQuestionIds: string[];
 };
 
 export type SpeakingLibraryCounts = {
@@ -99,6 +127,15 @@ type SpeakingQuestionRow = {
   vocabulary: unknown;
   sentence_patterns: unknown;
   common_mistakes: unknown;
+};
+
+type SpeakingQuestionSummaryRow = {
+  id: string;
+  question_order: number;
+};
+
+type SpeakingUnlockRow = {
+  question_id: string;
 };
 
 export const getPublishedSpeakingTopicSummaries = cache(async () => {
@@ -157,9 +194,7 @@ export const getPublishedSpeakingTopicBySlug = cache(async (slug: string) => {
 
   const { data: questions, error: questionError } = await admin
     .from("speaking_questions")
-    .select(
-      "id,topic_id,question_order,question,answer_tip,cue_card_points,preparation_ideas,suggested_structure,direct_answer,main_reason,example,alternative_perspective,sample_band_6,sample_band_7,sample_band_8,useful_phrases,vocabulary,sentence_patterns,common_mistakes",
-    )
+    .select("id,question_order")
     .eq("topic_id", topic.id)
     .order("question_order", { ascending: true });
 
@@ -169,9 +204,108 @@ export const getPublishedSpeakingTopicBySlug = cache(async (slug: string) => {
 
   return {
     ...mapTopicSummary(topic as SpeakingTopicRow, (questions ?? []).length),
-    questions: ((questions ?? []) as SpeakingQuestionRow[]).map(mapQuestion),
+    questions: ((questions ?? []) as SpeakingQuestionSummaryRow[]).map(
+      mapQuestionSummary,
+    ),
   } satisfies SpeakingTopicDetail;
 });
+
+export async function getPublishedSpeakingQuestionById(questionId: string) {
+  if (!isSupabaseConfigured()) {
+    return null;
+  }
+
+  const admin = createSupabaseAdminClient();
+  const { data, error } = await admin
+    .from("speaking_questions")
+    .select(
+      "id,topic_id,question_order,question,answer_tip,cue_card_points,preparation_ideas,suggested_structure,direct_answer,main_reason,example,alternative_perspective,sample_band_6,sample_band_7,sample_band_8,useful_phrases,vocabulary,sentence_patterns,common_mistakes,speaking_topics!inner(status)",
+    )
+    .eq("id", questionId)
+    .eq("speaking_topics.status", "published")
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data ? mapQuestion(data as SpeakingQuestionRow) : null;
+}
+
+export async function getSpeakingUsageSummary(
+  userId: string | null,
+): Promise<SpeakingUsageSummary> {
+  const dayRange = getUsageDayRange();
+
+  if (!userId || !isSupabaseConfigured()) {
+    return {
+      isSignedIn: Boolean(userId),
+      isUnlimited: false,
+      plan: "free",
+      isAdmin: false,
+      isPro: false,
+      usedToday: 0,
+      limitToday: FREE_SPEAKING_DAILY_QUESTION_LIMIT,
+      remainingToday: FREE_SPEAKING_DAILY_QUESTION_LIMIT,
+      resetsAt: dayRange.endOfDay.toISOString(),
+      timezone: dayRange.timezone,
+      unlockedQuestionIds: [],
+    };
+  }
+
+  const admin = createSupabaseAdminClient();
+  const [profileResult, subscriptionResult, unlockResult] = await Promise.all([
+    admin.from("profiles").select("role").eq("id", userId).maybeSingle(),
+    admin
+      .from("subscriptions")
+      .select("plan,status,expires_at,current_period_end")
+      .eq("user_id", userId)
+      .maybeSingle(),
+    admin
+      .from("speaking_question_unlocks")
+      .select("question_id")
+      .eq("user_id", userId)
+      .eq("usage_date", dayRange.startOfDay.toISOString().slice(0, 10)),
+  ]);
+
+  if (profileResult.error) {
+    throw new Error(profileResult.error.message);
+  }
+
+  if (subscriptionResult.error) {
+    throw new Error(subscriptionResult.error.message);
+  }
+
+  if (unlockResult.error) {
+    throw new Error(unlockResult.error.message);
+  }
+
+  const subscription = subscriptionResult.data;
+  const isAdmin = profileResult.data?.role === "admin";
+  const isPro = isProSubscription(subscription);
+  const plan = parseMembershipPlan(subscription?.plan);
+  const unlockedQuestionIds = ((unlockResult.data ?? []) as SpeakingUnlockRow[])
+    .map((row) => row.question_id)
+    .filter(Boolean);
+  const usedToday = new Set(unlockedQuestionIds).size;
+  const isUnlimited = isAdmin || isPro;
+
+  return {
+    isSignedIn: true,
+    isUnlimited,
+    plan,
+    isAdmin,
+    isPro,
+    usedToday,
+    limitToday: isUnlimited ? null : FREE_SPEAKING_DAILY_QUESTION_LIMIT,
+    remainingToday: isUnlimited
+      ? null
+      : Math.max(0, FREE_SPEAKING_DAILY_QUESTION_LIMIT - usedToday),
+    resetsAt: dayRange.endOfDay.toISOString(),
+    timezone: dayRange.timezone,
+    unlockedQuestionIds,
+  };
+}
 
 export const getSpeakingLibraryStats = cache(async () => {
   return getSpeakingLibraryCounts();
@@ -274,6 +408,15 @@ function mapTopicSummary(
     targetBand: parseOptionalNumber(topic.target_band),
     questionCount,
     createdAt: topic.created_at,
+  };
+}
+
+function mapQuestionSummary(
+  question: SpeakingQuestionSummaryRow,
+): SpeakingQuestionSummary {
+  return {
+    id: question.id,
+    order: question.question_order,
   };
 }
 

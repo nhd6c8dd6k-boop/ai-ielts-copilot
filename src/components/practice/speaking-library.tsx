@@ -1,18 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import Link from "next/link";
+import { ChevronDown, ChevronUp, Loader2, LockKeyhole } from "lucide-react";
 
 import { useI18n } from "@/components/i18n/language-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ContactToUpgradeButton } from "@/features/payments/contact-to-upgrade-button";
+import {
+  buildLoginRedirectHref,
+  buildRegisterRedirectHref,
+} from "@/lib/auth/redirect";
 import { cn } from "@/lib/utils";
 import type {
   CommonMistake,
   SentencePattern,
   SpeakingPart,
   SpeakingQuestion,
+  SpeakingQuestionSummary,
+  SpeakingUsageSummary,
   UsefulPhrase,
   VocabularyUpgrade,
 } from "@/server/services/speaking-practice";
@@ -24,6 +32,213 @@ const bandTabs: Array<{ value: BandKey; key: string; fallback: string }> = [
   { value: "band7", key: "speaking.band7", fallback: "Band 7" },
   { value: "band8", key: "speaking.band8", fallback: "Band 8" },
 ];
+
+export function SpeakingTopicPractice({
+  questions,
+  part,
+  initialUsage,
+}: {
+  questions: SpeakingQuestionSummary[];
+  part: SpeakingPart;
+  initialUsage: SpeakingUsageSummary;
+}) {
+  const { t } = useI18n();
+  const [usage, setUsage] = useState(initialUsage);
+
+  return (
+    <div className="space-y-5">
+      <Card>
+        <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold text-slate-950">
+              {usage.isUnlimited
+                ? t("speaking.unlimitedPractice", "Unlimited Speaking practice")
+                : t(
+                    "speaking.freeLimitTitle",
+                    "5 free questions per day",
+                  )}
+            </p>
+            <p className="mt-1 text-sm text-slate-600">
+              {usage.isUnlimited
+                ? t(
+                    "speaking.unlimitedPracticeDescription",
+                    "Your Pro or Admin access is not limited by the daily free allowance.",
+                  )
+                : t("speaking.usageSummary", "{used} of {limit} used today")
+                    .replace("{used}", String(usage.usedToday))
+                    .replace("{limit}", String(usage.limitToday ?? 5))}
+            </p>
+          </div>
+          {!usage.isUnlimited ? (
+            <Badge className="w-fit bg-slate-50">
+              {t("speaking.remainingToday", "{count} remaining today").replace(
+                "{count}",
+                String(usage.remainingToday ?? 0),
+              )}
+            </Badge>
+          ) : null}
+        </CardContent>
+      </Card>
+
+      {questions.map((question) => (
+        <SpeakingQuestionAccessCard
+          key={question.id}
+          question={question}
+          part={part}
+          usage={usage}
+          onUsageChange={setUsage}
+        />
+      ))}
+    </div>
+  );
+}
+
+function SpeakingQuestionAccessCard({
+  question,
+  part,
+  usage,
+  onUsageChange,
+}: {
+  question: SpeakingQuestionSummary;
+  part: SpeakingPart;
+  usage: SpeakingUsageSummary;
+  onUsageChange: (usage: SpeakingUsageSummary) => void;
+}) {
+  const { t } = useI18n();
+  const [fullQuestion, setFullQuestion] = useState<SpeakingQuestion | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<"login" | "limit" | "generic" | null>(null);
+  const isUnlocked = usage.unlockedQuestionIds.includes(question.id);
+  const canTryUnlock =
+    usage.isUnlimited || isUnlocked || (usage.remainingToday ?? 0) > 0;
+
+  const loadQuestion = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/practice/speaking/questions/${question.id}`, {
+        headers: {
+          Accept: "application/json",
+        },
+      });
+      const payload = (await response.json()) as {
+        question?: SpeakingQuestion;
+        usage?: SpeakingUsageSummary;
+        error?: string;
+      };
+
+      if (response.status === 401) {
+        setError("login");
+        return;
+      }
+
+      if (response.status === 402) {
+        setError("limit");
+        if (payload.usage) {
+          onUsageChange(payload.usage);
+        }
+        return;
+      }
+
+      if (!response.ok || !payload.question) {
+        setError("generic");
+        return;
+      }
+
+      setFullQuestion(payload.question);
+      if (payload.usage) {
+        onUsageChange(payload.usage);
+      }
+    } catch {
+      setError("generic");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (fullQuestion) {
+    return <SpeakingQuestionCard question={fullQuestion} part={part} />;
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge className="bg-slate-50">
+            {t("speaking.question", "Question")} {question.order}
+          </Badge>
+          <Badge>{t(`speaking.part${part}`, `Part ${part}`)}</Badge>
+          {isUnlocked ? (
+            <Badge className="border-teal-200 bg-teal-50 text-teal-800">
+              {t("speaking.unlockedToday", "Unlocked today")}
+            </Badge>
+          ) : null}
+        </div>
+        <CardTitle className="text-xl leading-8">
+          {t("speaking.lockedQuestionTitle", "Speaking question")}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {error === "login" ? (
+          <SignInSpeakingPrompt />
+        ) : error === "limit" || !canTryUnlock ? (
+          <SpeakingLimitReached />
+        ) : (
+          <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+            <div className="flex gap-3">
+              <LockKeyhole
+                className="mt-0.5 h-4 w-4 shrink-0 text-slate-500"
+                aria-hidden="true"
+              />
+              <div>
+                <p className="text-sm font-medium text-slate-950">
+                  {t(
+                    "speaking.unlockPromptTitle",
+                    "Unlock this Speaking question",
+                  )}
+                </p>
+                <p className="mt-1 text-sm leading-6 text-slate-600">
+                  {usage.isSignedIn
+                    ? t(
+                        "speaking.unlockPromptDescription",
+                        "Opening a new question uses one of your 5 free Speaking questions for today.",
+                      )
+                    : t(
+                        "speaking.signInDescription",
+                        "Create a free account to unlock up to 5 Speaking questions per day.",
+                      )}
+                </p>
+                <Button
+                  type="button"
+                  className="mt-4"
+                  onClick={loadQuestion}
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                  ) : null}
+                  {isUnlocked
+                    ? t("speaking.viewUnlockedQuestion", "View question")
+                    : t("speaking.unlockQuestion", "Unlock question")}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {error === "generic" ? (
+          <p className="mt-4 text-sm text-red-700">
+            {t(
+              "speaking.loadQuestionError",
+              "Unable to load this question. Please try again.",
+            )}
+          </p>
+        ) : null}
+      </CardContent>
+    </Card>
+  );
+}
 
 export function SpeakingQuestionCard({
   question,
@@ -71,6 +286,69 @@ export function SpeakingQuestionCard({
         <CommonMistakeList mistakes={question.commonMistakes} />
       </CardContent>
     </Card>
+  );
+}
+
+function SignInSpeakingPrompt() {
+  const { t } = useI18n();
+  const returnTo =
+    typeof window === "undefined"
+      ? "/practice/speaking"
+      : `${window.location.pathname}${window.location.search}`;
+
+  return (
+    <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+      <p className="text-sm font-medium text-slate-950">
+        {t("speaking.signInTitle", "Sign in to practise Speaking questions.")}
+      </p>
+      <p className="mt-2 text-sm leading-6 text-slate-600">
+        {t(
+          "speaking.signInDescription",
+          "Create a free account to unlock up to 5 Speaking questions per day.",
+        )}
+      </p>
+      <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+        <Button asChild>
+          <Link href={buildLoginRedirectHref(returnTo)}>
+            {t("auth.signIn", "Sign in")}
+          </Link>
+        </Button>
+        <Button asChild variant="outline">
+          <Link href={buildRegisterRedirectHref(returnTo)}>
+            {t("auth.createAccount", "Create account")}
+          </Link>
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function SpeakingLimitReached() {
+  const { t } = useI18n();
+
+  return (
+    <div className="rounded-md border border-amber-200 bg-amber-50 p-4">
+      <p className="text-sm font-semibold text-amber-950">
+        {t(
+          "speaking.limitReachedTitle",
+          "You’ve reached today’s free Speaking limit.",
+        )}
+      </p>
+      <p className="mt-2 text-sm leading-6 text-amber-900">
+        {t(
+          "speaking.limitReachedDescription",
+          "Free members can unlock up to 5 Speaking questions per day. Upgrade to Pro for unlimited Speaking practice.",
+        )}
+      </p>
+      <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+        <Button asChild>
+          <Link href="/pricing">
+            {t("speaking.upgradeToPro", "Upgrade to Pro")}
+          </Link>
+        </Button>
+        <ContactToUpgradeButton plan="monthly" variant="outline" />
+      </div>
+    </div>
   );
 }
 

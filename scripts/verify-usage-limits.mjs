@@ -3,9 +3,11 @@ import assert from "node:assert/strict";
 import {
   FREE_LISTENING_SET_LIMIT,
   FREE_READING_SET_LIMIT,
+  FREE_SPEAKING_DAILY_QUESTION_LIMIT,
   FREE_WRITING_DAILY_LIMIT,
   PRO_WRITING_DAILY_LIMIT,
   getPracticeSetLimitDecision,
+  getSpeakingDailyLimitDecision,
   getUsageDayRange,
   getWritingDailyLimitDecision,
 } from "../src/server/services/usage-limit-rules.ts";
@@ -146,6 +148,61 @@ assert.equal(
   }).allowed,
   true,
   "Admin is exempt from Writing daily limits",
+);
+
+assert.equal(
+  getSpeakingDailyLimitDecision({
+    isAdmin: false,
+    isPro: false,
+    usedToday: FREE_SPEAKING_DAILY_QUESTION_LIMIT - 1,
+    alreadyUnlocked: false,
+  }).allowed,
+  true,
+  "Free Speaking user can unlock the 5th different question today",
+);
+
+assert.equal(
+  getSpeakingDailyLimitDecision({
+    isAdmin: false,
+    isPro: false,
+    usedToday: FREE_SPEAKING_DAILY_QUESTION_LIMIT,
+    alreadyUnlocked: false,
+  }).allowed,
+  false,
+  "Free Speaking user is blocked from unlocking a 6th different question today",
+);
+
+assert.equal(
+  getSpeakingDailyLimitDecision({
+    isAdmin: false,
+    isPro: false,
+    usedToday: FREE_SPEAKING_DAILY_QUESTION_LIMIT,
+    alreadyUnlocked: true,
+  }).allowed,
+  true,
+  "Reopening the same Speaking question does not consume another daily slot",
+);
+
+assert.equal(
+  getSpeakingDailyLimitDecision({
+    isAdmin: false,
+    isPro: true,
+    usedToday: 100,
+    alreadyUnlocked: false,
+  }).allowed,
+  true,
+  "Active Pro is exempt from Speaking daily question limits",
+);
+
+assert.equal(
+  getSpeakingDailyLimitDecision({
+    isAdmin: true,
+    isPro: false,
+    usedToday: 100,
+    alreadyUnlocked: false,
+  }).allowed,
+  true,
+  "Admin is exempt from Speaking daily question limits",
 );
 
 const now = new Date("2026-07-14T20:45:00.000Z");

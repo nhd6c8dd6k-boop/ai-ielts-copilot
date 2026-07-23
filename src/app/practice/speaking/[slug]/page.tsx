@@ -5,12 +5,16 @@ import { notFound } from "next/navigation";
 import { LocalizedText } from "@/components/i18n/localized-text";
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/layout/page-header";
-import { SpeakingQuestionCard } from "@/components/practice/speaking-library";
+import { SpeakingTopicPractice } from "@/components/practice/speaking-library";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { absoluteUrl } from "@/lib/seo";
-import { getPublishedSpeakingTopicBySlug } from "@/server/services/speaking-practice";
+import { getCurrentUserId } from "@/server/services/auth-session";
+import {
+  getPublishedSpeakingTopicBySlug,
+  getSpeakingUsageSummary,
+} from "@/server/services/speaking-practice";
 
 type SpeakingDetailPageProps = {
   params: Promise<{
@@ -45,11 +49,16 @@ export default async function SpeakingTopicDetailPage({
   params,
 }: SpeakingDetailPageProps) {
   const { slug } = await params;
-  const topic = await getPublishedSpeakingTopicBySlug(slug);
+  const [topic, userId] = await Promise.all([
+    getPublishedSpeakingTopicBySlug(slug),
+    getCurrentUserId(),
+  ]);
 
   if (!topic) {
     notFound();
   }
+
+  const usage = await getSpeakingUsageSummary(userId);
 
   return (
     <AppShell>
@@ -91,15 +100,11 @@ export default async function SpeakingTopicDetailPage({
       </div>
 
       {topic.questions.length ? (
-        <div className="space-y-5">
-          {topic.questions.map((question) => (
-            <SpeakingQuestionCard
-              key={question.id}
-              question={question}
-              part={topic.part}
-            />
-          ))}
-        </div>
+        <SpeakingTopicPractice
+          questions={topic.questions}
+          part={topic.part}
+          initialUsage={usage}
+        />
       ) : (
         <Card>
           <CardContent className="flex min-h-[320px] items-center justify-center">

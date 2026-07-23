@@ -2,8 +2,9 @@ export const FREE_READING_SET_LIMIT = 5;
 export const FREE_LISTENING_SET_LIMIT = 5;
 export const FREE_WRITING_DAILY_LIMIT = 1;
 export const PRO_WRITING_DAILY_LIMIT = 10;
+export const FREE_SPEAKING_DAILY_QUESTION_LIMIT = 5;
 
-export type UsageResource = "reading" | "listening" | "writing";
+export type UsageResource = "reading" | "listening" | "writing" | "speaking";
 
 export type PracticeSetLimitInput = {
   isAdmin: boolean;
@@ -17,6 +18,13 @@ export type WritingDailyLimitInput = {
   isAdmin: boolean;
   isPro: boolean;
   usedToday: number;
+};
+
+export type SpeakingDailyLimitInput = {
+  isAdmin: boolean;
+  isPro: boolean;
+  usedToday: number;
+  alreadyUnlocked: boolean;
 };
 
 export function getUsageDayRange(now = new Date()) {
@@ -71,5 +79,24 @@ export function getWritingDailyLimitDecision({
     usedToday,
     limitToday: unlimited ? null : limit,
     remainingToday: unlimited ? null : Math.max(0, limit - usedToday),
+  };
+}
+
+export function getSpeakingDailyLimitDecision({
+  isAdmin,
+  isPro,
+  usedToday,
+  alreadyUnlocked,
+}: SpeakingDailyLimitInput) {
+  const unlimited = isAdmin || isPro;
+  const limit = FREE_SPEAKING_DAILY_QUESTION_LIMIT;
+
+  return {
+    allowed: unlimited || alreadyUnlocked || usedToday < limit,
+    unlimited,
+    usedToday,
+    limitToday: unlimited ? null : limit,
+    remainingToday: unlimited ? null : Math.max(0, limit - usedToday),
+    alreadyUnlocked,
   };
 }

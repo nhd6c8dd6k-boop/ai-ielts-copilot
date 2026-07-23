@@ -443,7 +443,7 @@ async function getDistinctCompletedPracticeSetIds({
   skill,
 }: {
   userId: string;
-  skill: Exclude<UsageResource, "writing">;
+  skill: "reading" | "listening";
 }) {
   const admin = createSupabaseAdminClient();
   const { data, error } = await admin

@@ -1,0 +1,25 @@
+{
+  "name": "ai-ielts-copilot-product-video",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "render": "remotion render src/index.ts TikTokProduct out/ai-ielts-copilot-tiktok-en.mp4",
+    "render:voice": "remotion render src/index.ts TikTokProduct out/ai-ielts-copilot-tiktok-en-voice.mp4",
+    "render:elevenlabs": "remotion render src/index.ts TikTokProduct out/ai-ielts-copilot-tiktok-en-elevenlabs.mp4",
+    "still": "remotion still src/index.ts TikTokProduct out/preview-frame.png --frame=360 --scale=0.35"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.388",
+    "@remotion/media": "4.0.496",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "remotion": "^4.0.388",
+    "zod": "4.3.6"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "^5.9.3"
+  }
+}

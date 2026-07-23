@@ -359,6 +359,27 @@ export const messages: Record<Language, Record<string, string>> = {
     "speaking.incorrect": "Incorrect",
     "speaking.better": "Better",
     "speaking.why": "Why",
+    "speaking.unlimitedPractice": "Unlimited Speaking practice",
+    "speaking.unlimitedPracticeDescription":
+      "Your Pro or Admin access is not limited by the daily free allowance.",
+    "speaking.freeLimitTitle": "5 free questions per day",
+    "speaking.usageSummary": "{used} of {limit} used today",
+    "speaking.remainingToday": "{count} remaining today",
+    "speaking.unlockedToday": "Unlocked today",
+    "speaking.lockedQuestionTitle": "Speaking question",
+    "speaking.unlockPromptTitle": "Unlock this Speaking question",
+    "speaking.unlockPromptDescription":
+      "Opening a new question uses one of your 5 free Speaking questions for today.",
+    "speaking.signInTitle": "Sign in to unlock Speaking practice",
+    "speaking.signInDescription":
+      "Create a free account to unlock up to 5 Speaking questions per day.",
+    "speaking.viewUnlockedQuestion": "View question",
+    "speaking.unlockQuestion": "Unlock question",
+    "speaking.limitReachedTitle": "Daily Speaking limit reached",
+    "speaking.limitReachedDescription":
+      "Free accounts can unlock 5 different Speaking questions per day. Upgrade to Pro for unlimited Speaking preparation.",
+    "speaking.upgradeToPro": "Upgrade to Pro",
+    "speaking.loadQuestionError": "Unable to load this question. Please try again.",
 
     "reading.eyebrow": "Reading Practice",
     "reading.title": "IELTS Reading practice sets",
@@ -785,11 +806,10 @@ export const messages: Record<Language, Record<string, string>> = {
     "pricing.yearly.title": "Pro Yearly",
     "pricing.yearly.body":
       "Yearly Pro access for learners who want a longer practice period.",
-    "pricing.yearly.price": "Contact us for yearly pricing",
-    "pricing.yearly.subPrice":
-      "Final payment details are confirmed in live chat.",
+    "pricing.yearly.monthlyEquivalent": "About CA$6.67/month",
+    "pricing.yearly.save": "Save 33%",
     "pricing.yearly.note":
-      "Yearly pricing is confirmed manually before payment.",
+      "Save CA$39.89 compared with monthly billing.",
     "pricing.proPriceCad": "CA$9.99 / month",
     "pricing.proPriceRmb": "Approx. ¥52 / month",
     "pricing.exchangeDisclaimer":
@@ -798,9 +818,9 @@ export const messages: Record<Language, Record<string, string>> = {
     "pricing.chatCta.monthly": "Chat to upgrade monthly",
     "pricing.chatCta.yearly": "Chat to upgrade yearly",
     "pricing.chatMessage.monthly":
-      "Hi, I’d like to upgrade to the Pro Monthly plan.",
+      "Hi, I’d like to upgrade to the Pro Monthly plan for CA$9.99.",
     "pricing.chatMessage.yearly":
-      "Hi, I’d like to upgrade to the Pro Yearly plan.",
+      "Hi, I’d like to upgrade to the Pro Yearly plan for CA$79.99.",
     "pricing.manualActivationNote":
       "After payment is confirmed, Pro will be manually activated using your registered email.",
     "pricing.activationTiming":
@@ -820,6 +840,9 @@ export const messages: Record<Language, Record<string, string>> = {
     "pricing.faq.pay.q": "How do I pay?",
     "pricing.faq.pay.a":
       "Use WeChat Pay, Alipay, PayPal, or Interac e-Transfer. Contact us in live chat for payment details.",
+    "pricing.faq.price.q": "How much is Pro?",
+    "pricing.faq.price.a":
+      "Monthly Pro is CA$9.99/month. Yearly Pro is CA$79.99/year, about CA$6.67/month and 33% less than paying monthly for 12 months.",
     "pricing.faq.activate.q": "How is Pro activated?",
     "pricing.faq.activate.a":
       "After payment is confirmed, your account is upgraded manually.",
@@ -1240,6 +1263,26 @@ export const messages: Record<Language, Record<string, string>> = {
     "speaking.incorrect": "错误表达",
     "speaking.better": "更好表达",
     "speaking.why": "原因",
+    "speaking.unlimitedPractice": "Speaking 无限练习",
+    "speaking.unlimitedPracticeDescription":
+      "你的 Pro 或管理员权限不受免费每日额度限制。",
+    "speaking.freeLimitTitle": "每天免费解锁 5 道题",
+    "speaking.usageSummary": "今天已使用 {used} / {limit}",
+    "speaking.remainingToday": "今天还剩 {count} 道",
+    "speaking.unlockedToday": "今天已解锁",
+    "speaking.lockedQuestionTitle": "Speaking 题目",
+    "speaking.unlockPromptTitle": "解锁这道 Speaking 题",
+    "speaking.unlockPromptDescription":
+      "打开一道新题会使用今天 5 道免费 Speaking 题额度中的 1 道。",
+    "speaking.signInTitle": "登录后解锁 Speaking 练习",
+    "speaking.signInDescription": "创建免费账号后，每天可以解锁最多 5 道 Speaking 题。",
+    "speaking.viewUnlockedQuestion": "查看题目",
+    "speaking.unlockQuestion": "解锁题目",
+    "speaking.limitReachedTitle": "今日 Speaking 免费额度已用完",
+    "speaking.limitReachedDescription":
+      "免费账号每天可解锁 5 道不同 Speaking 题。升级 Pro 可无限使用 Speaking preparation。",
+    "speaking.upgradeToPro": "升级 Pro",
+    "speaking.loadQuestionError": "暂时无法加载这道题，请稍后重试。",
 
     "reading.eyebrow": "Reading 练习",
     "reading.title": "IELTS Reading 练习套题",
@@ -1629,9 +1672,9 @@ export const messages: Record<Language, Record<string, string>> = {
     "pricing.yearly.badge": "年度选项",
     "pricing.yearly.title": "Pro 年付",
     "pricing.yearly.body": "适合希望较长周期练习的用户。付款确认后人工开通。",
-    "pricing.yearly.price": "联系确认年付价格",
-    "pricing.yearly.subPrice": "最终付款信息会在在线客服中确认。",
-    "pricing.yearly.note": "年付价格会在付款前由客服确认。",
+    "pricing.yearly.monthlyEquivalent": "约 CA$6.67 / 月",
+    "pricing.yearly.save": "节省 33%",
+    "pricing.yearly.note": "相比连续月付，可节省 CA$39.89。",
     "pricing.proPriceCad": "CA$9.99 / 月",
     "pricing.proPriceRmb": "约 ¥52 / 月",
     "pricing.exchangeDisclaimer":
@@ -1639,8 +1682,8 @@ export const messages: Record<Language, Record<string, string>> = {
     "pricing.contactUpgrade": "联系开通 Pro",
     "pricing.chatCta.monthly": "联系客服开通月付",
     "pricing.chatCta.yearly": "联系客服开通年付",
-    "pricing.chatMessage.monthly": "你好，我想开通 Pro 月付。",
-    "pricing.chatMessage.yearly": "你好，我想开通 Pro 年付。",
+    "pricing.chatMessage.monthly": "你好，我想升级到 CA$9.99/月的 Pro 月付套餐。",
+    "pricing.chatMessage.yearly": "你好，我想升级到 CA$79.99/年的 Pro 年付套餐。",
     "pricing.manualActivationNote":
       "付款确认后，管理员会使用你的注册邮箱手动开通 Pro。",
     "pricing.activationTiming": "我们会在确认付款后尽快为你开通会员。",
@@ -1659,6 +1702,9 @@ export const messages: Record<Language, Record<string, string>> = {
     "pricing.faq.pay.q": "如何付款？",
     "pricing.faq.pay.a":
       "支持 WeChat Pay、Alipay、PayPal 和 Interac e-Transfer。请通过在线客服获取正确付款信息。",
+    "pricing.faq.price.q": "Pro 价格是多少？",
+    "pricing.faq.price.a":
+      "Pro 月付为 CA$9.99/月。Pro 年付为 CA$79.99/年，约 CA$6.67/月，比连续购买 12 个月月付节省约 33%。",
     "pricing.faq.activate.q": "Pro 如何开通？",
     "pricing.faq.activate.a": "付款确认后，管理员会手动将你的账号升级为 Pro。",
     "pricing.faq.account.q": "需要重新注册账号吗？",
