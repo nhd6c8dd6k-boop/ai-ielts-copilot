@@ -23,6 +23,8 @@ export const messages: Record<Language, Record<string, string>> = {
     "nav.login": "Log in",
     "nav.register": "Start free",
     "nav.language": "Language",
+    "nav.switchToEnglish": "Switch language to English",
+    "nav.switchToChinese": "Switch language to Chinese",
 
     "footer.helpTitle": "Need help or want to report a bug?",
     "footer.contactPrefix": "Contact:",
@@ -939,6 +941,8 @@ export const messages: Record<Language, Record<string, string>> = {
     "nav.login": "登录",
     "nav.register": "注册账号",
     "nav.language": "语言",
+    "nav.switchToEnglish": "切换到英文",
+    "nav.switchToChinese": "切换到中文",
 
     "footer.helpTitle": "遇到问题或想反馈？",
     "footer.contactPrefix": "欢迎联系：",

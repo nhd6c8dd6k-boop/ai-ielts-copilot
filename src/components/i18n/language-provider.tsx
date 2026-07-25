@@ -6,15 +6,21 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
+import { useRouter } from "next/navigation";
 
 import {
   getMessage,
   languageStorageKey,
   type Language,
 } from "@/lib/i18n/messages";
-import { getHtmlLang, languageCookieName } from "@/lib/i18n/language";
+import {
+  getHtmlLang,
+  languageCookieName,
+  normalizeLanguage,
+} from "@/lib/i18n/language";
 
 type LanguageContextValue = {
   language: Language;
@@ -31,20 +37,53 @@ export function LanguageProvider({
   children: React.ReactNode;
   initialLanguage: Language;
 }) {
+  const router = useRouter();
   const [language, setLanguageState] = useState<Language>(initialLanguage);
+  const hasHydrated = useRef(false);
 
-  const setLanguage = useCallback((nextLanguage: Language) => {
-    setLanguageState(nextLanguage);
+  const persistLanguage = useCallback((nextLanguage: Language) => {
     window.localStorage.setItem(languageStorageKey, nextLanguage);
     document.cookie = `${languageCookieName}=${nextLanguage}; path=/; max-age=31536000; SameSite=Lax`;
     document.documentElement.lang = getHtmlLang(nextLanguage);
   }, []);
 
+  const setLanguage = useCallback(
+    (nextLanguage: Language) => {
+      if (nextLanguage === language) {
+        return;
+      }
+
+      setLanguageState(nextLanguage);
+      persistLanguage(nextLanguage);
+      router.refresh();
+    },
+    [language, persistLanguage, router],
+  );
+
   useEffect(() => {
-    window.localStorage.setItem(languageStorageKey, language);
-    document.cookie = `${languageCookieName}=${language}; path=/; max-age=31536000; SameSite=Lax`;
-    document.documentElement.lang = getHtmlLang(language);
-  }, [language]);
+    if (!hasHydrated.current) {
+      hasHydrated.current = true;
+
+      const storedLanguage = normalizeLanguage(
+        window.localStorage.getItem(languageStorageKey),
+      );
+      const cookieLanguage = normalizeLanguage(readCookie(languageCookieName));
+      const preferredLanguage = cookieLanguage ?? storedLanguage ?? language;
+
+      persistLanguage(preferredLanguage);
+      if (preferredLanguage !== language) {
+        const syncLanguage = window.setTimeout(() => {
+          setLanguageState(preferredLanguage);
+          router.refresh();
+        }, 0);
+
+        return () => window.clearTimeout(syncLanguage);
+      }
+      return;
+    }
+
+    persistLanguage(language);
+  }, [language, persistLanguage, router]);
 
   const value = useMemo<LanguageContextValue>(
     () => ({
@@ -70,4 +109,12 @@ export function useI18n() {
   }
 
   return context;
+}
+
+function readCookie(name: string) {
+  return document.cookie
+    .split(";")
+    .map((cookie) => cookie.trim())
+    .find((cookie) => cookie.startsWith(`${name}=`))
+    ?.slice(name.length + 1);
 }

@@ -22,6 +22,7 @@ export function LanguageSwitcher({
 
   return (
     <div
+      role="group"
       className={cn(
         "inline-flex items-center rounded-md border border-slate-200 bg-white p-1 text-xs text-slate-600",
         className,
@@ -47,6 +48,11 @@ export function LanguageSwitcher({
                 : "hover:bg-slate-100 hover:text-slate-950",
             )}
             aria-pressed={active}
+            aria-label={
+              option.value === "en"
+                ? t("nav.switchToEnglish", "Switch language to English")
+                : t("nav.switchToChinese", "Switch language to Chinese")
+            }
             onClick={() => setLanguage(option.value)}
           >
             {option.label}
