@@ -15,7 +15,7 @@ const noStoreHeaders = {
 };
 
 const topicParamsSchema = z.object({
-  id: z.string().uuid(),
+  topicId: z.string().uuid(),
 });
 
 const topicMetadataSchema = z.object({
@@ -47,7 +47,7 @@ const topicMetadataSchema = z.object({
 
 type RouteContext = {
   params: Promise<{
-    id: string;
+    topicId: string;
   }>;
 };
 
@@ -70,7 +70,7 @@ export async function GET(_request: Request, context: RouteContext) {
   }
 
   try {
-    const topic = await getAdminSpeakingTopicDetailById(parsed.data.id);
+    const topic = await getAdminSpeakingTopicDetailById(parsed.data.topicId);
 
     if (!topic) {
       return NextResponse.json(
@@ -134,7 +134,7 @@ export async function PATCH(request: Request, context: RouteContext) {
 
   try {
     const topic = await updateAdminSpeakingTopicMetadata({
-      id: parsedParams.data.id,
+      id: parsedParams.data.topicId,
       input: parsedBody.data,
       adminUserId: auth.userId,
     });
