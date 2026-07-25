@@ -620,29 +620,17 @@ export default function Home() {
                     <Link href="/practice/writing">
                       {msg(
                         "home.hero.primaryCta",
-                        "Try Writing feedback free",
+                        "Try AI Writing Feedback",
                       )}
                       <ArrowRight className="h-4 w-4" aria-hidden="true" />
                     </Link>
                   </Button>
                   <Button asChild variant="outline" size="lg">
-                    <Link href="/practice/writing">
-                      {msg(
-                        "home.hero.secondaryCta",
-                        "Browse Writing tasks",
-                      )}
+                    <Link href="/demo/writing-feedback">
+                      {msg("home.hero.sampleLink", "View Sample Feedback")}
                     </Link>
                   </Button>
                 </div>
-                <Link
-                  href="/demo/writing-feedback"
-                  className="mt-4 inline-flex text-sm font-medium text-teal-800 underline-offset-4 hover:underline"
-                >
-                  {msg(
-                    "home.hero.sampleLink",
-                    "View full sample feedback",
-                  )}
-                </Link>
               </div>
               <div className="min-w-0">
                 <WritingFeedbackPreview t={msg} />
