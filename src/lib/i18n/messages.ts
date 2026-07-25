@@ -158,7 +158,7 @@ export const messages: Record<Language, Record<string, string>> = {
     "practice.eyebrow": "Practice",
     "practice.title": "Choose a practice mode",
     "practice.description":
-      "Choose Reading, Listening, or Writing practice and build familiarity with the computer-based IELTS workflow.",
+      "Choose Reading, Listening, Writing, or Speaking practice and build familiarity with the computer-based IELTS workflow.",
     "practice.betaHint":
       "Sign in to start practice for free and save your progress.",
     "practice.reading.title": "Reading Practice",
@@ -173,10 +173,11 @@ export const messages: Record<Language, Record<string, string>> = {
     "practice.writing.description":
       "Write Task 1 or Task 2 responses and get AI feedback on band score, criteria, grammar, and vocabulary.",
     "practice.writing.cta": "Practice Writing",
-    "practice.fullExam.title": "Full Exam",
+    "practice.fullExam.title": "Full IELTS Mock Exam",
     "practice.fullExam.description":
-      "A longer Computer IELTS-style exam workspace for combining sections.",
-    "practice.fullExam.cta": "Open Full Exam",
+      "Complete Reading, Listening, and Writing in one timed exam experience.",
+    "practice.fullExam.cta": "Learn more",
+    "practice.comingSoon": "Coming soon",
     "practice.setsAvailable": "sets available",
     "practice.tasksAvailable": "tasks available",
     "practice.audioPractice": "Audio practice",
@@ -1070,7 +1071,7 @@ export const messages: Record<Language, Record<string, string>> = {
     "practice.eyebrow": "练习中心",
     "practice.title": "选择一种练习方式",
     "practice.description":
-      "选择 Reading、Listening 或 Writing，提前熟悉电脑雅思的练习节奏。",
+      "选择 Reading、Listening、Writing 或 Speaking，提前熟悉电脑雅思的练习节奏。",
     "practice.betaHint": "登录后即可免费开始练习并保存记录。",
     "practice.reading.title": "Reading Practice",
     "practice.reading.description": "练习 IELTS-style Reading 套题，提交后自动判分并查看解析。",
@@ -1082,10 +1083,11 @@ export const messages: Record<Language, Record<string, string>> = {
     "practice.writing.description":
       "完成 Task 1 或 Task 2 写作，获得 AI band feedback、四项评分和改进建议。",
     "practice.writing.cta": "开始 Writing",
-    "practice.fullExam.title": "完整模考",
+    "practice.fullExam.title": "完整 IELTS Mock Test",
     "practice.fullExam.description":
-      "用于组合多个部分的电脑雅思风格模考空间。",
-    "practice.fullExam.cta": "打开完整模考",
+      "在限时环境中完成 Reading、Listening 和 Writing，体验更完整的考试流程。",
+    "practice.fullExam.cta": "了解更多",
+    "practice.comingSoon": "即将上线",
     "practice.setsAvailable": "套可练习",
     "practice.tasksAvailable": "篇可练习",
     "practice.audioPractice": "音频练习",
