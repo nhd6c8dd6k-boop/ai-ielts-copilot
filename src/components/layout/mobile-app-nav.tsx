@@ -32,6 +32,8 @@ type SessionResponse = {
   } | null;
 };
 
+type AuthMode = "loading" | "demo" | "anonymous" | "supabase" | "error";
+
 const baseItems = [
   { href: "/practice", labelKey: "nav.practice", fallback: "Practice", icon: LibraryBig },
   { href: "/practice/reading", labelKey: "nav.reading", fallback: "Reading", icon: BookOpenText },
@@ -59,11 +61,23 @@ const supportItem = {
   icon: LifeBuoy,
 };
 
+const publicItems = [
+  { href: "/practice", labelKey: "nav.practice", fallback: "Practice", icon: LibraryBig },
+  { href: "/pricing", labelKey: "nav.pricing", fallback: "Pricing", icon: CreditCard },
+  {
+    href: "/demo/writing-feedback",
+    labelKey: "nav.sampleFeedback",
+    fallback: "Sample Feedback",
+    icon: PenLine,
+  },
+  supportItem,
+];
+
 export function MobileAppNav() {
   const { t } = useI18n();
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [mode, setMode] = useState<AuthMode>("loading");
   const [isAdmin, setIsAdmin] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
 
@@ -79,13 +93,18 @@ export function MobileAppNav() {
           return;
         }
 
-        const isSupabaseUser = response.ok && payload.mode === "supabase";
+        if (!response.ok) {
+          setMode("error");
+          setIsAdmin(false);
+          return;
+        }
 
-        setIsAuthenticated(isSupabaseUser);
-        setIsAdmin(isSupabaseUser && payload.user?.role === "admin");
+        const nextMode = payload.mode ?? "anonymous";
+        setMode(nextMode);
+        setIsAdmin(nextMode === "supabase" && payload.user?.role === "admin");
       } catch {
         if (isActive) {
-          setIsAuthenticated(false);
+          setMode("error");
           setIsAdmin(false);
         }
       }
@@ -135,9 +154,11 @@ export function MobileAppNav() {
     };
   }, [isOpen]);
 
-  if (!isAuthenticated) {
+  if (mode === "loading") {
     return null;
   }
+
+  const isAuthenticated = mode === "supabase";
 
   const signOut = async () => {
     setIsSigningOut(true);
@@ -154,13 +175,15 @@ export function MobileAppNav() {
     }
   };
 
-  const navItems = isAdmin
-    ? [
-        ...baseItems,
-        { href: "/admin", labelKey: "nav.admin", fallback: "Admin", icon: Shield },
-        supportItem,
-      ]
-    : [...baseItems, supportItem];
+  const navItems = isAuthenticated
+    ? isAdmin
+      ? [
+          ...baseItems,
+          { href: "/admin", labelKey: "nav.admin", fallback: "Admin", icon: Shield },
+          supportItem,
+        ]
+      : [...baseItems, supportItem]
+    : publicItems;
 
   return (
     <>
@@ -171,13 +194,20 @@ export function MobileAppNav() {
         className="lg:hidden"
         aria-label={t("nav.open", "Open navigation")}
         aria-expanded={isOpen}
+        aria-controls={isOpen ? "mobile-app-nav" : undefined}
         onClick={() => setIsOpen(true)}
       >
         <Menu className="h-5 w-5" aria-hidden="true" />
       </Button>
 
       {isOpen ? (
-        <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true">
+        <div
+          id="mobile-app-nav"
+          className="fixed inset-0 z-50 lg:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-label={t("nav.navigation", "Navigation")}
+        >
           <button
             type="button"
             className="absolute inset-0 h-full w-full bg-slate-950/40"
@@ -228,18 +258,33 @@ export function MobileAppNav() {
 
             <div className="space-y-3 border-t border-slate-200 px-4 py-4">
               <LanguageSwitcher className="w-full justify-center" />
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full justify-start"
-                onClick={signOut}
-                disabled={isSigningOut}
-              >
-                <LogOut className="h-4 w-4" aria-hidden="true" />
-                {isSigningOut
-                  ? t("nav.signingOut", "Signing out")
-                  : t("nav.signOut", "Sign out")}
-              </Button>
+              {isAuthenticated ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={signOut}
+                  disabled={isSigningOut}
+                >
+                  <LogOut className="h-4 w-4" aria-hidden="true" />
+                  {isSigningOut
+                    ? t("nav.signingOut", "Signing out")
+                    : t("nav.signOut", "Sign out")}
+                </Button>
+              ) : (
+                <div className="grid grid-cols-2 gap-2">
+                  <Button asChild size="sm" variant="outline">
+                    <Link href="/login" onClick={() => setIsOpen(false)}>
+                      {t("nav.login", "Log in")}
+                    </Link>
+                  </Button>
+                  <Button asChild size="sm">
+                    <Link href="/register" onClick={() => setIsOpen(false)}>
+                      {t("nav.register", "Start free")}
+                    </Link>
+                  </Button>
+                </div>
+              )}
               <p className="text-xs leading-5 text-slate-500">
                 AI IELTS Copilot
               </p>
