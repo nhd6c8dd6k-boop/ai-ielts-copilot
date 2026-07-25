@@ -121,12 +121,7 @@ export function HeaderAuthNav() {
   };
 
   if (mode === "loading") {
-    return (
-      <div
-        aria-label={t("nav.login", "Checking sign-in status")}
-        className="h-9 w-20 rounded-md bg-slate-100 sm:w-40"
-      />
-    );
+    return null;
   }
 
   if (mode !== "supabase" || !user) {
