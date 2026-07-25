@@ -474,7 +474,7 @@ export default function ProfilePage() {
                 />
               </div>
               <div className="space-y-2 sm:col-span-2">
-                <Label>{t("profile.currentPlan", "Current Plan")}</Label>
+                <Label>{t("profile.currentPlan", "Current plan")}</Label>
                 <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge
@@ -556,7 +556,7 @@ export default function ProfilePage() {
             icon={CalendarDays}
           />
           <ProfileStat
-            title={t("profile.currentPlan", "Current Plan")}
+            title={t("profile.currentPlan", "Current plan")}
             value={subscriptionSummary.planLabel}
             detail={subscriptionSummary.detail}
             icon={Crown}
@@ -878,7 +878,7 @@ function ProfileHeroSummaryCard({
         <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2">
           <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
             <p className="text-sm font-medium text-slate-600">
-              {t("profile.currentPlan", "Current Plan")}
+              {t("profile.currentPlan", "Current plan")}
             </p>
             {membershipLabel ? (
               <Badge

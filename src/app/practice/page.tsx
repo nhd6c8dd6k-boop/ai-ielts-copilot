@@ -17,7 +17,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { buildLoginRedirectHref } from "@/lib/auth/redirect";
 import { absoluteUrl, siteDescription } from "@/lib/seo";
 import { isUserSignedIn } from "@/server/services/auth-session";
-import { getPracticeLibraryStats } from "@/server/services/practice-library";
 
 export const metadata: Metadata = {
   title: "IELTS Practice",
@@ -30,77 +29,65 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function PracticePage() {
-  const [stats, isSignedIn] = await Promise.all([
-    getPracticeLibraryStats(),
-    isUserSignedIn(),
-  ]);
+  const isSignedIn = await isUserSignedIn();
 
   const practiceCards = [
     {
-      title: "Reading Practice",
+      slug: "reading",
+      title: "Reading",
       titleKey: "practice.reading.title",
       description:
-        "Practise IELTS-style Reading sets with automatic scoring and explanations.",
+        "Practise IELTS-style Reading questions and review your results after submitting.",
       descriptionKey: "practice.reading.description",
-      count: stats.readingCount,
-      countLabelKey: "practice.setsAvailable",
-      countLabel: "sets available",
       href: "/practice/reading",
-      cta: "Start Reading Practice",
+      cta: "Start Reading",
       ctaKey: "practice.reading.cta",
       icon: BookOpen,
-      badge: null,
+      badge: "Automatic scoring",
+      badgeKey: "practice.automaticScoring",
     },
     {
-      title: "Listening Practice",
+      slug: "listening",
+      title: "Listening",
       titleKey: "practice.listening.title",
       description:
-        "Practise with audio-based Listening sets, then review your answers and explanations.",
+        "Listen to IELTS-style audio, answer the questions, and review your results.",
       descriptionKey: "practice.listening.description",
-      count: stats.listeningCount,
-      countLabelKey: "practice.setsAvailable",
-      countLabel: "sets available",
       href: "/practice/listening",
-      cta: "Start Listening Practice",
+      cta: "Start Listening",
       ctaKey: "practice.listening.cta",
       icon: Headphones,
       badge: "Audio practice",
       badgeKey: "practice.audioPractice",
     },
     {
-      title: "Writing Practice",
+      slug: "writing",
+      title: "Writing",
       titleKey: "practice.writing.title",
       description:
-        "Write Task 1 or Task 2 responses and get AI feedback on band score, criteria, grammar, and vocabulary.",
+        "Complete IELTS Writing tasks and receive detailed feedback across all four criteria.",
       descriptionKey: "practice.writing.description",
-      count: stats.writingCount,
-      countLabelKey: "practice.tasksAvailable",
-      countLabel: "tasks available",
       href: "/practice/writing",
-      cta: "Practice Writing",
+      cta: "Start Writing",
       ctaKey: "practice.writing.cta",
       icon: PenLine,
-      badge: "AI Feedback available",
+      badge: "AI feedback available",
       badgeKey: "practice.aiFeedbackAvailable",
+      badgeClassName: "border-teal-200 bg-teal-50 text-teal-800",
     },
     {
-      title: "Speaking Preparation",
+      slug: "speaking",
+      title: "Speaking",
       titleKey: "practice.speaking.title",
       description:
-        "Practice IELTS-style Part 1, Part 2, and Part 3 questions with Band 6-8 sample answers and useful language.",
+        "Browse IELTS Speaking topics and prepare answers for Parts 1, 2, and 3.",
       descriptionKey: "practice.speaking.description",
-      count: stats.speakingCount,
-      countLabelKey: "speaking.topicsAvailable",
-      countLabel: "topics available",
-      secondaryCount: stats.speakingQuestionCount,
-      secondaryCountLabelKey: "speaking.questions",
-      secondaryCountLabel: "questions",
       href: "/practice/speaking",
-      cta: "Start Speaking Practice",
+      cta: "View Speaking Library",
       ctaKey: "practice.speaking.cta",
       icon: MessageSquareText,
-      badge: "Preparation library",
-      badgeKey: "speaking.preparationLibrary",
+      badge: "Topic library",
+      badgeKey: "practice.topicLibrary",
     },
   ];
   const fullExamCard = {
@@ -142,7 +129,7 @@ export default async function PracticePage() {
 
             return (
               <Card
-                key={card.title}
+                key={card.slug}
                 className="flex h-full flex-col overflow-hidden transition-colors hover:border-slate-300"
               >
                 <CardHeader>
@@ -154,36 +141,13 @@ export default async function PracticePage() {
                           fallback={card.title}
                         />
                       </CardTitle>
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        {card.count === null ? null : (
-                          <Badge>
-                            {card.count}{" "}
-                            <LocalizedText
-                              k={card.countLabelKey}
-                              fallback={card.countLabel}
-                            />
-                          </Badge>
-                        )}
-                        {"secondaryCount" in card &&
-                        card.secondaryCount !== null &&
-                        card.secondaryCountLabelKey &&
-                        card.secondaryCountLabel ? (
-                          <Badge className="bg-white">
-                            {card.secondaryCount}{" "}
-                            <LocalizedText
-                              k={card.secondaryCountLabelKey}
-                              fallback={card.secondaryCountLabel}
-                            />
-                          </Badge>
-                        ) : null}
-                        {card.badge ? (
-                          <Badge className="bg-white">
-                            <LocalizedText
-                              k={card.badgeKey}
-                              fallback={card.badge}
-                            />
-                          </Badge>
-                        ) : null}
+                      <div className="mt-3">
+                        <Badge className={card.badgeClassName ?? "bg-white"}>
+                          <LocalizedText
+                            k={card.badgeKey}
+                            fallback={card.badge}
+                          />
+                        </Badge>
                       </div>
                     </div>
                     <div className="flex h-10 w-10 items-center justify-center rounded-md bg-slate-100 text-slate-600">

@@ -11,7 +11,6 @@ import {
   MessageSquareText,
   PenLine,
   ShieldCheck,
-  Timer,
   type LucideIcon,
 } from "lucide-react";
 
@@ -24,15 +23,11 @@ import { Button } from "@/components/ui/button";
 import type { Language } from "@/lib/i18n/messages";
 import { supportEmail, xiaohongshuAccount } from "@/lib/support";
 
-type Pillar = {
-  title: string;
-  description: string;
-  icon: LucideIcon;
-};
-
 type PracticeCard = {
+  slug: "writing" | "reading" | "listening" | "speaking";
   title: string;
   description: string;
+  status: string;
   cta: string;
   href: string;
 };
@@ -69,9 +64,10 @@ type HomeCopy = {
   steps: string[][];
   betaFreeTitle: string;
   betaFreeText: string;
+  betaPrimary: string;
+  betaSecondary: string;
   emailLabel: string;
   xiaohongshuLabel: string;
-  pillars: Pillar[];
   complianceBadge: string;
   complianceTitle: string;
   complianceText: string;
@@ -85,7 +81,7 @@ const copy = {
     badge: "IELTS 机考练习平台",
     title: "免费开始 IELTS 练习",
     subtitle:
-      "AI IELTS Copilot 帮你用电脑端页面练习 Reading、Listening 和 Writing，熟悉机考流程，并获得 Writing AI 评分与反馈。",
+      "AI IELTS Copilot 帮你用电脑端页面练习 Reading、Listening、Writing 和 Speaking 备考，熟悉机考流程，并获得 Writing AI 评分与反馈。",
     availability: [
       "Reading / Listening 自动判分",
       "Writing AI 评分与反馈",
@@ -96,34 +92,42 @@ const copy = {
     primary: "开始练习",
     secondary: "查看练习项目",
     languageLabel: "首页语言",
-    oneLine: "一站式练习 Reading、Listening 和 Writing。",
+    oneLine: "一站式练习 Reading、Listening、Writing 和 Speaking 备考。",
     practiceCards: [
       {
-        title: "Writing Practice",
+        slug: "writing",
+        title: "Writing",
         description:
-          "完成 Task 1 / Task 2 写作，提交后获得 AI band feedback、四项评分、原句改写和下一步建议。",
-        cta: "免费试一次 Writing 批改",
+          "完成 Task 1 / Task 2 写作，提交后获得详细 AI Feedback。",
+        status: "提供 AI Feedback",
+        cta: "开始 Writing",
         href: "/practice/writing",
       },
       {
-        title: "Reading Practice",
+        slug: "reading",
+        title: "Reading",
         description:
-          "练习原创英文文章和题目，提交后自动判分并查看答案解析。",
+          "完成 IELTS-style Reading 题目，提交后自动判分并查看结果。",
+        status: "自动判分",
         cta: "开始 Reading",
         href: "/practice/reading",
       },
       {
-        title: "Listening Practice",
+        slug: "listening",
+        title: "Listening",
         description:
-          "播放 IELTS-style 听力音频，完成题目后自动判分并查看复盘。",
+          "播放 IELTS-style 听力音频，在线答题并提交查看结果。",
+        status: "音频练习",
         cta: "开始 Listening",
         href: "/practice/listening",
       },
       {
+        slug: "speaking",
         title: "Speaking",
         description:
-          "练习雅思口语 Part 1、Part 2 和 Part 3 题目，查看 Band 6–8 示例答案与实用表达。",
-        cta: "开始 Speaking",
+          "使用 Part 1、Part 2 和 Part 3 题目、示例答案、短语和词汇进行备考。",
+        status: "Speaking 题库",
+        cta: "查看 Speaking 题库",
         href: "/practice/speaking",
       },
     ],
@@ -150,50 +154,20 @@ const copy = {
       "3. Complete the sentence below.",
       "4. Choose the correct answer.",
     ],
-    stepsBadge: "三步开始",
-    stepsTitle: "三步开始练习",
+    stepsBadge: "三步流程",
+    stepsTitle: "Writing feedback 如何使用",
     steps: [
-      ["选择练习项目", "选择 Reading、Listening 或 Writing。"],
-      ["完成练习", "在接近机考的页面中完成题目或写作任务。"],
-      ["查看结果", "查看分数、答案解析，以及 Writing AI 反馈。"],
+      ["选择 Writing 题目", "选择 Task 1 或 Task 2，进入写作练习页面。"],
+      ["提交作文", "完成作文后提交，系统会生成预估 Band 和详细反馈。"],
+      ["查看下一步重点", "根据四项评分、句子改写和 task-specific feedback 调整下一篇作文。"],
     ],
-    betaFreeTitle: "免费开始，Pro 可联系开通",
+    betaFreeTitle: "准备开始 IELTS Writing 练习？",
     betaFreeText:
-      "你可以先使用免费账户开始练习 Reading、Listening 和 Writing。需要开通 Pro 会员时，请通过邮箱或小红书联系，我们会根据注册邮箱人工开通。",
+      "选择一道题目，提交作文并查看详细反馈。你也可以进入 Practice 页面练习 Reading、Listening 和 Speaking 备考。",
+    betaPrimary: "免费体验 Writing 批改",
+    betaSecondary: "查看全部练习",
     emailLabel: "邮箱",
     xiaohongshuLabel: "小红书",
-    pillars: [
-      {
-        title: "电脑雅思风格界面",
-        description:
-          "左右分栏、计时器、答题卡和题号导航，让学生先熟悉 Computer IELTS 的操作感。",
-        icon: Timer,
-      },
-      {
-        title: "Reading / Listening 自动判分",
-        description:
-          "完成练习后自动统计正确率、分数和预估表现，减少手动对答案的成本。",
-        icon: CheckCircle2,
-      },
-      {
-        title: "答案解析和复盘",
-        description:
-          "结果页展示用户答案、正确答案和解析，方便回看错误原因。",
-        icon: ShieldCheck,
-      },
-      {
-        title: "学习记录 Dashboard",
-        description:
-          "自动记录最近练习、分数和学习轨迹，帮助学生看见自己的进度。",
-        icon: LineChart,
-      },
-      {
-        title: "Writing AI 反馈",
-        description:
-          "选择 Task 1 / Task 2 题目完成写作，提交后获得 AI 评分、四项标准反馈、语法建议、词汇升级和参考范文。",
-        icon: PenLine,
-      },
-    ],
     complianceBadge: "内容合规",
     complianceTitle: "原创 IELTS 风格练习内容",
     complianceText:
@@ -206,7 +180,7 @@ const copy = {
     badge: "IELTS practice platform",
     title: "Start IELTS practice for free",
     subtitle:
-      "AI IELTS Copilot helps you practise Reading, Listening, and Writing in a computer-based IELTS-style workspace, with AI-powered Writing scores and feedback.",
+      "AI IELTS Copilot helps you practise Reading, Listening, Writing, and Speaking preparation in a computer-based IELTS-style workspace, with AI-powered Writing scores and feedback.",
     availability: [
       "Reading / Listening auto scoring",
       "Writing AI scoring and feedback",
@@ -215,36 +189,44 @@ const copy = {
     betaNotice:
       "AI feedback is for study support and is not an official IELTS score.",
     primary: "Start Practicing",
-    secondary: "View Practice Options",
+    secondary: "View practice options",
     languageLabel: "Homepage language",
-    oneLine: "Practice Reading, Listening, and Writing in one place.",
+    oneLine: "Practice Reading, Listening, Writing, and Speaking preparation in one place.",
     practiceCards: [
       {
-        title: "Writing Practice",
+        slug: "writing",
+        title: "Writing",
         description:
-          "Complete Task 1 or Task 2 and receive AI band feedback, criterion scores, sentence rewrites, and next steps.",
-        cta: "Try Writing feedback free",
+          "Complete Task 1 or Task 2 and receive detailed AI feedback.",
+        status: "AI feedback available",
+        cta: "Start Writing",
         href: "/practice/writing",
       },
       {
-        title: "Reading Practice",
+        slug: "reading",
+        title: "Reading",
         description:
-          "Practice original English passages and questions, then review your score, answers, and explanations.",
+          "Practise IELTS-style questions and receive automatic results after submitting.",
+        status: "Automatic scoring",
         cta: "Start Reading",
         href: "/practice/reading",
       },
       {
-        title: "Listening Practice",
+        slug: "listening",
+        title: "Listening",
         description:
-          "Play IELTS-style listening audio, answer questions, and review your score after submitting.",
+          "Listen to IELTS-style audio, answer online, and review your results.",
+        status: "Audio practice",
         cta: "Start Listening",
         href: "/practice/listening",
       },
       {
+        slug: "speaking",
         title: "Speaking",
         description:
-          "Practice IELTS-style Part 1, Part 2 and Part 3 questions with Band 6–8 sample answers and useful language.",
-        cta: "Start Speaking Practice",
+          "Prepare with topics, sample answers, phrases, and vocabulary for Parts 1, 2, and 3.",
+        status: "Topic library",
+        cta: "View Speaking Library",
         href: "/practice/speaking",
       },
     ],
@@ -256,7 +238,7 @@ const copy = {
     previewAutoScoringBadge: "Auto scoring preview",
     previewAnswerPlaceholder: "Type your answer",
     previewSubmitHint: "Flag, review, then submit when ready.",
-    previewSubmit: "Submit Practice",
+    previewSubmit: "Submit practice",
     passageTitle: "Reading Passage 2",
     timer: "36:42",
     answerSheet: "Answer Sheet",
@@ -272,58 +254,28 @@ const copy = {
       "4. Choose the correct answer.",
     ],
     stepsBadge: "3 steps",
-    stepsTitle: "Start practicing in 3 steps",
+    stepsTitle: "How Writing feedback works",
     steps: [
       [
-        "Choose a skill",
-        "Pick Reading, Listening, or Writing based on what you want to practise.",
+        "Choose a Writing task",
+        "Pick Task 1 or Task 2 and open the Writing practice editor.",
       ],
       [
-        "Complete the practice",
-        "Work through the questions or writing task in a computer-based IELTS-style interface.",
+        "Submit your response",
+        "Write your essay and submit it to generate an estimated band and detailed feedback.",
       ],
       [
-        "Review your results",
-        "Check your score, answers, explanations, and AI writing feedback where available.",
+        "Review your next focus",
+        "Use the criteria, sentence improvements, and task-specific feedback to plan your next essay.",
       ],
     ],
-    betaFreeTitle: "Start free, upgrade to Pro when ready",
+    betaFreeTitle: "Ready to practise IELTS Writing?",
     betaFreeText:
-      "You can start with a free account and practise Reading, Listening, and Writing. If you want Pro membership, contact us by email or Xiaohongshu and we will activate it manually using your registered email.",
+      "Choose a task and receive detailed feedback on your response. You can also explore Reading, Listening, and Speaking preparation from the Practice page.",
+    betaPrimary: "Try AI Writing Feedback",
+    betaSecondary: "View all practice",
     emailLabel: "Email",
     xiaohongshuLabel: "Xiaohongshu",
-    pillars: [
-      {
-        title: "Computer IELTS-style interface",
-        description:
-          "Split panes, timer, answer sheet, and question navigation help students get used to the computer test flow.",
-        icon: Timer,
-      },
-      {
-        title: "Reading / Listening auto scoring",
-        description:
-          "Submissions are scored automatically with correct count, percentage, and estimated performance.",
-        icon: CheckCircle2,
-      },
-      {
-        title: "Answer review",
-        description:
-          "Result pages show user answers, correct answers, and explanations for review.",
-        icon: ShieldCheck,
-      },
-      {
-        title: "Dashboard history",
-        description:
-          "Track recent attempts, scores, and learning progress in one place.",
-        icon: LineChart,
-      },
-      {
-        title: "Writing AI Feedback",
-        description:
-          "Choose a Task 1 or Task 2 prompt, submit your essay, and receive AI scoring, criteria feedback, grammar advice, vocabulary upgrades, and a sample answer.",
-        icon: PenLine,
-      },
-    ],
     complianceBadge: "Compliance first",
     complianceTitle: "Built for original IELTS style training",
     complianceText:
@@ -439,7 +391,12 @@ function PreviewTextBlock({ label, text }: { label: string; text: string }) {
 export default function Home() {
   const { language, t: msg } = useI18n();
   const t = copy[language];
-  const practiceIcons = [PenLine, BookOpen, Headphones, MessageSquareText];
+  const practiceIcons: Record<PracticeCard["slug"], LucideIcon> = {
+    writing: PenLine,
+    reading: BookOpen,
+    listening: Headphones,
+    speaking: MessageSquareText,
+  };
   const heroPoints = [
     msg("home.hero.point.taskFeedback", "Task 1 and Task 2 specific feedback"),
     msg("home.hero.point.rewrite", "Original → Improved → Why"),
@@ -464,18 +421,18 @@ export default function Home() {
       icon: CheckCircle2,
     },
     {
-      title: msg("home.why.card.score.title", "Scores with clear reasons"),
+      title: msg("home.why.card.score.title", "Estimated band and four criteria"),
       description: msg(
         "home.why.card.score.description",
-        "Criterion scores, score summary, and detailed feedback work together to show what is holding back your Band.",
+        "The report uses Task Achievement or Task Response, Coherence and Cohesion, Lexical Resource, and Grammar to explain the band estimate.",
       ),
       icon: LineChart,
     },
     {
-      title: msg("home.why.card.language.title", "Feedback in English or Chinese"),
+      title: msg("home.why.card.language.title", "Clear next focus"),
       description: msg(
         "home.why.card.language.description",
-        "Choose the language that helps you learn best without receiving two full versions of the same report.",
+        "Score summary and next steps point to what to practise in the next essay without turning the report into a long checklist.",
       ),
       icon: ShieldCheck,
     },
@@ -637,52 +594,6 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              {t.practiceCards.map((card, index) => {
-                const Icon = practiceIcons[index] ?? BookOpen;
-                const isFeatured = index === 0;
-                const title = isFeatured
-                  ? msg("home.practice.writingTitle", card.title)
-                  : card.title;
-                const description = isFeatured
-                  ? msg("home.practice.writingDescription", card.description)
-                  : card.description;
-                const cta = isFeatured
-                  ? msg("home.practice.writingCta", card.cta)
-                  : card.cta;
-
-                return (
-                  <div
-                    key={title}
-                    className={
-                      isFeatured
-                        ? "flex min-w-0 flex-col rounded-lg border border-teal-300 bg-white p-5 text-left shadow-md"
-                        : "flex min-w-0 flex-col rounded-lg border border-slate-200 bg-white/90 p-5 text-left shadow-sm"
-                    }
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-md bg-slate-950 text-white">
-                        <Icon className="h-5 w-5" aria-hidden="true" />
-                      </div>
-                      {isFeatured ? (
-                        <Badge className="bg-teal-50 text-teal-800">
-                          {msg("home.practice.aiFeedbackBadge", "AI feedback")}
-                        </Badge>
-                      ) : null}
-                    </div>
-                    <h2 className="mt-5 text-lg font-semibold text-slate-950">
-                      {title}
-                    </h2>
-                    <p className="mt-3 flex-1 text-sm leading-6 text-slate-600">
-                      {description}
-                    </p>
-                    <Button asChild className="mt-5 w-full">
-                      <Link href={card.href}>{cta}</Link>
-                    </Button>
-                  </div>
-                );
-              })}
-            </div>
           </div>
         </section>
 
@@ -740,13 +651,13 @@ export default function Home() {
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Button asChild>
                 <Link href="/practice/writing">
-                  {msg("home.why.primaryCta", "Try Writing feedback free")}
+                  {msg("home.why.primaryCta", "Try AI Writing Feedback")}
                   <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </Link>
               </Button>
               <Button asChild variant="outline">
                 <Link href="/demo/writing-feedback">
-                  {msg("home.why.secondaryCta", "View full sample feedback")}
+                  {msg("home.why.secondaryCta", "See a sample feedback report")}
                 </Link>
               </Button>
             </div>
@@ -782,6 +693,87 @@ export default function Home() {
 
         <section className="border-y border-slate-200 bg-white">
           <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+            <div className="max-w-3xl">
+              <Badge className="bg-slate-950 text-white">
+                {msg("home.modules.eyebrow", "Practice modules")}
+              </Badge>
+              <h2 className="mt-5 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
+                {msg("home.modules.title", "Practise across IELTS skills")}
+              </h2>
+              <p className="mt-4 text-sm leading-6 text-slate-600 sm:text-base sm:leading-7">
+                {msg(
+                  "home.modules.description",
+                  "Writing includes AI feedback. Reading and Listening use automatic scoring. Speaking is currently a preparation library.",
+                )}
+              </p>
+            </div>
+
+            <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              {t.practiceCards.map((card) => {
+                const Icon = practiceIcons[card.slug];
+                const isFeatured = card.slug === "writing";
+                const title = isFeatured
+                  ? msg("home.practice.writingTitle", card.title)
+                  : card.title;
+                const description = isFeatured
+                  ? msg("home.practice.writingDescription", card.description)
+                  : card.description;
+                const cta = isFeatured
+                  ? msg("home.practice.writingCta", card.cta)
+                  : card.cta;
+                const status = isFeatured
+                  ? msg("home.practice.aiFeedbackBadge", card.status)
+                  : card.status;
+
+                return (
+                  <div
+                    key={card.slug}
+                    className={
+                      isFeatured
+                        ? "flex min-w-0 flex-col rounded-lg border border-teal-300 bg-white p-5 text-left shadow-md"
+                        : "flex min-w-0 flex-col rounded-lg border border-slate-200 bg-white p-5 text-left shadow-sm"
+                    }
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-md bg-slate-950 text-white">
+                        <Icon className="h-5 w-5" aria-hidden="true" />
+                      </div>
+                      <Badge
+                        className={
+                          isFeatured
+                            ? "bg-teal-50 text-teal-800"
+                            : "bg-white"
+                        }
+                      >
+                        {status}
+                      </Badge>
+                    </div>
+                    <h2 className="mt-5 text-lg font-semibold text-slate-950">
+                      {title}
+                    </h2>
+                    <p className="mt-3 flex-1 text-sm leading-6 text-slate-600">
+                      {description}
+                    </p>
+                    <Button asChild className="mt-5 w-full">
+                      <Link href={card.href}>{cta}</Link>
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="mt-8">
+              <Button asChild variant="outline">
+                <Link href="/practice">
+                  {msg("home.modules.cta", "View all practice")}
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </section>
+
+        <section className="border-b border-slate-200 bg-white">
+          <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
             <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
               <div className="min-w-0">
                 <Badge className="bg-slate-950 text-white">
@@ -815,22 +807,6 @@ export default function Home() {
                   ))}
                 </div>
 
-                <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-                  <Button asChild>
-                    <Link href="/practice/writing">
-                      {msg(
-                        "home.trust.primaryCta",
-                        "Start Writing practice free",
-                      )}
-                      <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                    </Link>
-                  </Button>
-                  <Button asChild variant="outline">
-                    <Link href="/demo/writing-feedback">
-                      {msg("home.trust.secondaryCta", "View sample feedback")}
-                    </Link>
-                  </Button>
-                </div>
                 <Link
                   href="/pricing"
                   className="mt-4 inline-flex text-sm font-medium text-teal-800 underline-offset-4 hover:underline"
@@ -890,6 +866,17 @@ export default function Home() {
                   <p className="mt-3 text-sm leading-6 text-slate-600">
                     {t.betaFreeText}
                   </p>
+                  <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                    <Button asChild>
+                      <Link href="/practice/writing">
+                        {t.betaPrimary}
+                        <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                      </Link>
+                    </Button>
+                    <Button asChild variant="outline">
+                      <Link href="/practice">{t.betaSecondary}</Link>
+                    </Button>
+                  </div>
                 </div>
                 <div className="space-y-4">
                   <div className="overflow-hidden rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
@@ -925,27 +912,6 @@ export default function Home() {
               </div>
             </div>
           </div>
-        </section>
-
-        <section className="mx-auto grid max-w-7xl gap-4 px-4 pb-16 sm:px-6 md:grid-cols-2 xl:grid-cols-5 lg:px-8">
-          {t.pillars.map((pillar) => {
-            const Icon = pillar.icon;
-
-            return (
-              <div
-                key={pillar.title}
-                className="rounded-lg border border-slate-200 bg-white p-6"
-              >
-                <Icon className="h-5 w-5 text-teal-700" aria-hidden="true" />
-                <h2 className="mt-5 text-base font-semibold text-slate-950">
-                  {pillar.title}
-                </h2>
-                <p className="mt-3 text-sm leading-6 text-slate-600">
-                  {pillar.description}
-                </p>
-              </div>
-            );
-          })}
         </section>
 
         <section className="border-y border-slate-200 bg-white">

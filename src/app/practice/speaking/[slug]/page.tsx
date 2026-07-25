@@ -30,12 +30,12 @@ export async function generateMetadata({
 
   if (!topic) {
     return {
-      title: "IELTS Speaking Practice | AI IELTS Copilot",
+      title: "IELTS Speaking Practice",
     };
   }
 
   return {
-    title: `${topic.title} - IELTS Speaking Practice | AI IELTS Copilot`,
+    title: `${topic.title} - IELTS Speaking Practice`,
     description: topic.description,
     alternates: {
       canonical: absoluteUrl(`/practice/speaking/${topic.slug}`),

@@ -239,7 +239,7 @@ export default function DashboardPage() {
         eyebrowKey="dashboard.eyebrow"
         title="你的 IELTS 学习驾驶舱"
         titleKey="dashboard.title"
-        description="自动汇总 Reading、Listening 和 Writing 练习记录，展示预计分数、学习趋势、技能分布和下一步建议。"
+        description="自动汇总 Reading、Listening、Writing 与 Speaking 备考记录，展示预计分数、学习趋势、技能分布和下一步建议。"
         descriptionKey="dashboard.description"
       />
 
@@ -774,7 +774,7 @@ function DashboardSpeakingPreparationCard({
           <Link href="/practice/speaking">
             {t(
               "dashboard.speakingPreparation.cta",
-              "Start Speaking Practice",
+              "View Speaking Library",
             )}
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </Link>

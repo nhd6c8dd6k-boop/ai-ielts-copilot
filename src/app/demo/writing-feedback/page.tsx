@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { WritingSampleFeedbackPage } from "@/components/marketing/writing-sample-feedback";
 
 export const metadata: Metadata = {
-  title: "IELTS Writing AI Feedback Example | AI IELTS Copilot",
+  title: "IELTS Writing AI Feedback Example",
   description:
     "View a sample IELTS Writing feedback report with criterion scores, task-specific analysis, sentence rewrites, grammar feedback, and practical next steps.",
   alternates: {

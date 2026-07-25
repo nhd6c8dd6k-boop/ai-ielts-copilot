@@ -65,31 +65,36 @@ export const messages: Record<Language, Record<string, string>> = {
       "Score summary explains why the band is not higher.",
     "home.preview.nextPoint":
       "Next steps show what to practise in the next essay.",
-    "home.practice.writingTitle": "Writing Practice",
+    "home.practice.writingTitle": "Writing",
     "home.practice.writingDescription":
-      "Complete Task 1 or Task 2 and receive AI band feedback, criterion scores, sentence rewrites, and next steps.",
-    "home.practice.writingCta": "Try Writing feedback free",
-    "home.practice.aiFeedbackBadge": "AI feedback",
-    "home.why.eyebrow": "Why AI IELTS Copilot",
-    "home.why.title": "Feedback you can use in your next essay.",
+      "Complete Task 1 or Task 2 and receive detailed AI feedback.",
+    "home.practice.writingCta": "Start Writing",
+    "home.practice.aiFeedbackBadge": "AI feedback available",
+    "home.why.eyebrow": "AI Writing Feedback",
+    "home.why.title": "Understand exactly how to improve your IELTS Writing",
     "home.why.description":
-      "From criterion scores and task-specific analysis to sentence rewrites and practical next steps, every part of the report is designed to help with your next essay.",
-    "home.why.card.task.title": "Task-specific feedback",
+      "Receive an estimated band score and detailed feedback across Task Achievement or Task Response, Coherence and Cohesion, Lexical Resource, and Grammatical Range and Accuracy.",
+    "home.why.card.task.title": "Task-specific guidance",
     "home.why.card.task.description":
       "Task 1 focuses on overview, key features, and comparisons. Task 2 focuses on position, idea development, and examples.",
     "home.why.card.rewrite.title": "Original → Improved → Why",
     "home.why.card.rewrite.description":
       "See a clearer version of your sentence and understand why the revision is more accurate and natural.",
-    "home.why.card.score.title": "Scores with clear reasons",
+    "home.why.card.score.title": "Estimated band and four criteria",
     "home.why.card.score.description":
-      "Criterion scores, score summary, and detailed feedback work together to show what is holding back your Band.",
-    "home.why.card.language.title": "Feedback in English or Chinese",
+      "The report uses Task Achievement or Task Response, Coherence and Cohesion, Lexical Resource, and Grammar to explain the band estimate.",
+    "home.why.card.language.title": "Clear next focus",
     "home.why.card.language.description":
-      "Choose the language that helps you learn best without receiving two full versions of the same report.",
+      "Score summary and next steps point to what to practise in the next essay without turning the report into a long checklist.",
     "home.why.note":
       "You can also practise Reading and Listening in a computer-based IELTS-style interface.",
-    "home.why.primaryCta": "Try Writing feedback free",
-    "home.why.secondaryCta": "View full sample feedback",
+    "home.why.primaryCta": "Try AI Writing Feedback",
+    "home.why.secondaryCta": "See a sample feedback report",
+    "home.modules.eyebrow": "Practice modules",
+    "home.modules.title": "Practise across IELTS skills",
+    "home.modules.description":
+      "Writing includes AI feedback. Reading and Listening use automatic scoring. Speaking is currently a preparation library.",
+    "home.modules.cta": "View all practice",
     "home.trust.eyebrow": "Before you start",
     "home.trust.title": "Clear answers about scoring, privacy, and Pro access.",
     "home.trust.description":
@@ -97,8 +102,6 @@ export const messages: Record<Language, Record<string, string>> = {
     "home.trust.point.study": "AI scores are for study guidance",
     "home.trust.point.demo": "Public demos do not use real user essays",
     "home.trust.point.pro": "Pro is manually activated after verification",
-    "home.trust.primaryCta": "Start Writing practice free",
-    "home.trust.secondaryCta": "View sample feedback",
     "home.trust.pricingLink": "View Pro and payment options",
     "home.faq.officialScore.question":
       "Is the AI Writing score an official IELTS score?",
@@ -163,27 +166,27 @@ export const messages: Record<Language, Record<string, string>> = {
       "Choose Reading, Listening, Writing, or Speaking practice and build familiarity with the computer-based IELTS workflow.",
     "practice.betaHint":
       "Sign in to start practice for free and save your progress.",
-    "practice.reading.title": "Reading Practice",
+    "practice.reading.title": "Reading",
     "practice.reading.description":
-      "Practise IELTS-style Reading sets with automatic scoring and explanations.",
+      "Practise IELTS-style Reading questions and review your results after submitting.",
     "practice.reading.cta": "Start Reading",
-    "practice.listening.title": "Listening Practice",
+    "practice.listening.title": "Listening",
     "practice.listening.description":
-      "Practise with audio-based Listening sets, then review your answers and explanations.",
+      "Listen to IELTS-style audio, answer the questions, and review your results.",
     "practice.listening.cta": "Start Listening",
-    "practice.writing.title": "Writing Practice",
+    "practice.writing.title": "Writing",
     "practice.writing.description":
-      "Write Task 1 or Task 2 responses and get AI feedback on band score, criteria, grammar, and vocabulary.",
-    "practice.writing.cta": "Practice Writing",
+      "Complete IELTS Writing tasks and receive detailed feedback across all four criteria.",
+    "practice.writing.cta": "Start Writing",
     "practice.fullExam.title": "Full IELTS Mock Exam",
     "practice.fullExam.description":
       "Complete Reading, Listening, and Writing in one timed exam experience.",
     "practice.fullExam.cta": "Learn more",
     "practice.comingSoon": "Coming soon",
-    "practice.setsAvailable": "sets available",
-    "practice.tasksAvailable": "tasks available",
+    "practice.automaticScoring": "Automatic scoring",
     "practice.audioPractice": "Audio practice",
-    "practice.aiFeedbackAvailable": "AI Feedback available",
+    "practice.aiFeedbackAvailable": "AI feedback available",
+    "practice.topicLibrary": "Topic library",
     "practice.betaPreview": "Preview",
     "usage.readingTitle": "Reading usage",
     "usage.listeningTitle": "Listening usage",
@@ -284,12 +287,12 @@ export const messages: Record<Language, Record<string, string>> = {
     "practice.filter.charts": "Charts",
     "practice.filter.tables": "Tables",
     "practice.filter.process": "Process",
-    "practice.speaking.title": "Speaking Preparation",
+    "practice.speaking.title": "Speaking",
     "practice.speaking.description":
-      "Practice IELTS-style Part 1, Part 2, and Part 3 questions with Band 6-8 sample answers and useful language.",
-    "practice.speaking.cta": "Start Speaking Practice",
+      "Browse IELTS Speaking topics and prepare answers for Parts 1, 2, and 3.",
+    "practice.speaking.cta": "View Speaking Library",
     "speaking.eyebrow": "Speaking Library",
-    "speaking.title": "Speaking Preparation",
+    "speaking.title": "Speaking Preparation Library",
     "speaking.description":
       "Practice IELTS-style speaking questions with sample answers, useful phrases, and vocabulary.",
     "speaking.libraryNotice":
@@ -467,7 +470,7 @@ export const messages: Record<Language, Record<string, string>> = {
     "dashboard.eyebrow": "Dashboard",
     "dashboard.title": "Your IELTS practice dashboard",
     "dashboard.description":
-      "Track Reading, Listening, and Writing practice records, scores, trends, and skill focus in one place.",
+      "Track Reading, Listening, Writing, and Speaking preparation in one place.",
     "dashboard.sync.loading": "Syncing practice records",
     "dashboard.sync.local": "Local records",
     "dashboard.sync.supabase": "Synced to account",
@@ -522,7 +525,7 @@ export const messages: Record<Language, Record<string, string>> = {
     "dashboard.speakingPreparation.part3": "Part 3",
     "dashboard.speakingPreparation.loading": "Loading library",
     "dashboard.speakingPreparation.libraryAvailable": "Preparation library",
-    "dashboard.speakingPreparation.cta": "Start Speaking Practice",
+    "dashboard.speakingPreparation.cta": "View Speaking Library",
     "dashboard.nextAction.continueEyebrow": "Continue practice",
     "dashboard.nextAction.recommendedEyebrow": "Recommended next",
     "dashboard.nextAction.continueWritingTitle": "Continue your Writing draft",
@@ -673,7 +676,7 @@ export const messages: Record<Language, Record<string, string>> = {
     "profile.country": "Country",
     "profile.timezone": "Timezone",
     "profile.subscription": "Subscription",
-    "profile.currentPlan": "Current Plan",
+    "profile.currentPlan": "Current plan",
     "profile.active": "Active",
     "profile.activeUntil": "Active until {date}",
     "profile.expired": "Expired",
@@ -712,6 +715,19 @@ export const messages: Record<Language, Record<string, string>> = {
       "Chinese explanations and study advice",
     "profile.preference.computerIelts":
       "Computer IELTS-style practice first",
+
+    "exam.eyebrow": "Full IELTS Mock Exam",
+    "exam.title": "Full IELTS Mock Exam is coming soon.",
+    "exam.description":
+      "The current product focuses on published Reading, Listening, and Writing practice. The full timed exam experience will be enabled after the reviewed content library has enough complete test sections.",
+    "exam.cardTitle": "Use practice mode for now",
+    "exam.badge.published": "Published content",
+    "exam.badge.scoring": "Auto scoring",
+    "exam.badge.dashboard": "Dashboard tracking",
+    "exam.body":
+      "Reading and Listening practice already use published content, submit answers through server-side scoring, and save attempts to your dashboard. Writing offers AI feedback while the full timed exam experience is being prepared.",
+    "exam.readingCta": "Start Reading",
+    "exam.listeningCta": "Start Listening",
 
     "result.score": "Score",
     "result.correctAnswers": "Correct answers",
@@ -769,48 +785,41 @@ export const messages: Record<Language, Record<string, string>> = {
     "result.noItems": "No items returned.",
 
     "pricing.eyebrow": "Free / Pro",
-    "pricing.title": "Choose your plan",
+    "pricing.title": "Choose the plan that fits your IELTS practice",
     "pricing.description":
-      "Get more IELTS practice, higher usage limits, and full access to AI Writing feedback.",
+      "Start with Reading, Listening, Speaking preparation, and limited Writing feedback. Upgrade when you need more Writing practice.",
+    "pricing.billingStatus":
+      "Pro billing is currently handled through live chat and manual activation. The Pro buttons do not start Stripe Checkout.",
     "pricing.free": "Free",
-    "pricing.paidLater": "Pro membership can be manually activated after contact.",
     "pricing.availableNow": "Available now",
-    "pricing.betaAccess": "Free",
-    "pricing.betaBody":
-      "Create a free account and start practising Reading, Listening, and Writing.",
-    "pricing.duringBeta": "free access",
     "pricing.startPracticing": "Start practising for free",
-    "pricing.proInactive": "Pro",
-    "pricing.proInactiveBody":
-      "Support the project and receive Pro membership with access to future Pro features. Pro is manually activated after payment confirmation.",
     "pricing.freePlan": "Free",
     "pricing.freeBody":
-      "Create a free account and start practising Reading, Listening, Writing, and Speaking preparation.",
-    "pricing.freePrice": "free access",
-    "pricing.proPlan": "Pro",
-    "pricing.proBody":
-      "Support the project and receive Pro membership with access to future Pro features. Pro is manually activated after payment confirmation.",
+      "Explore the core practice experience before upgrading.",
+    "pricing.freeAmount": "Free",
+    "pricing.freePrice": "No credit card required",
     "pricing.monthly.badge": "Most flexible",
     "pricing.monthly.title": "Pro Monthly",
     "pricing.monthly.body":
-      "Monthly Pro access with manual activation after payment confirmation.",
+      "For learners who want regular Writing feedback without a long commitment.",
     "pricing.monthly.note":
       "Monthly access. Renewal is handled manually through support.",
     "pricing.yearly.badge": "Yearly option",
     "pricing.yearly.title": "Pro Yearly",
     "pricing.yearly.body":
-      "Yearly Pro access for learners who want a longer practice period.",
+      "For learners who expect to practise consistently across a longer period.",
     "pricing.yearly.monthlyEquivalent": "About CA$6.67/month",
     "pricing.yearly.save": "Save 33%",
     "pricing.yearly.note":
       "Save CA$39.89 compared with monthly billing.",
-    "pricing.proPriceCad": "CA$9.99 / month",
     "pricing.proPriceRmb": "Approx. ¥52 / month",
-    "pricing.exchangeDisclaimer":
-      "The RMB amount is an estimate. The actual amount may vary with the exchange rate at the time of payment.",
     "pricing.contactUpgrade": "Contact to upgrade",
-    "pricing.chatCta.monthly": "Chat to upgrade monthly",
-    "pricing.chatCta.yearly": "Chat to upgrade yearly",
+    "pricing.checkingPlan": "Checking plan",
+    "pricing.currentPlan": "Current plan",
+    "pricing.continuePractice": "Continue practising",
+    "pricing.proIncludes": "Everything in Free, plus:",
+    "pricing.chatCta.monthly": "Contact us to activate Pro Monthly",
+    "pricing.chatCta.yearly": "Contact us to activate Pro Yearly",
     "pricing.chatMessage.monthly":
       "Hi, I’d like to upgrade to the Pro Monthly plan for CA$9.99.",
     "pricing.chatMessage.yearly":
@@ -818,7 +827,7 @@ export const messages: Record<Language, Record<string, string>> = {
     "pricing.manualActivationNote":
       "After payment is confirmed, Pro will be manually activated using your registered email.",
     "pricing.activationTiming":
-      "We’ll activate your membership as soon as the payment is confirmed.",
+      "Use the registered email on your AI IELTS Copilot account so we can activate the correct user.",
     "pricing.noAutoActivation":
       "This button opens live chat. It does not automatically activate Pro or start Stripe Checkout.",
     "pricing.how.title": "How manual Pro activation works",
@@ -831,41 +840,44 @@ export const messages: Record<Language, Record<string, string>> = {
     "pricing.confirmation.security":
       "Do not send passwords, card numbers, bank login details, or authentication codes.",
     "pricing.faq.title": "FAQ",
+    "pricing.faq.official.q": "Is AI feedback an official IELTS score?",
+    "pricing.faq.official.a":
+      "No. AI Writing feedback is for practice and study guidance only. It does not replace an official IELTS score or examiner assessment.",
+    "pricing.faq.free.q": "What is included in the Free plan?",
+    "pricing.faq.free.a":
+      "Free includes 5 different Reading sets, 5 different Listening sets, 1 AI Writing feedback each day, and 5 Speaking preparation questions each day.",
+    "pricing.faq.writing.q": "How many Writing feedback submissions do I get?",
+    "pricing.faq.writing.a":
+      "Free users get 1 AI Writing feedback per day. Pro users get up to 10 AI Writing feedbacks per day.",
+    "pricing.faq.skills.q": "Do Reading, Listening, and Speaking require Pro?",
+    "pricing.faq.skills.a":
+      "You can start all three on the Free plan. Pro raises the limits for Reading, Listening, and Speaking preparation.",
     "pricing.faq.pay.q": "How do I pay?",
     "pricing.faq.pay.a":
-      "Use WeChat Pay, Alipay, PayPal, or Interac e-Transfer. Contact us in live chat for payment details.",
+      "Use WeChat Pay, Alipay, PayPal, or Interac e-Transfer. Contact us in live chat for payment details. Pro is manually activated after confirmation.",
     "pricing.faq.price.q": "How much is Pro?",
     "pricing.faq.price.a":
       "Monthly Pro is CA$9.99/month. Yearly Pro is CA$79.99/year, about CA$6.67/month and 33% less than paying monthly for 12 months.",
-    "pricing.faq.activate.q": "How is Pro activated?",
-    "pricing.faq.activate.a":
-      "After payment is confirmed, your account is upgraded manually.",
-    "pricing.faq.account.q": "Do I need to create a new account?",
-    "pricing.faq.account.a":
-      "No. Use the same email/account you use on AI IELTS Copilot.",
+    "pricing.faq.fullExam.q": "Is the Full IELTS Mock Exam included?",
+    "pricing.faq.fullExam.a":
+      "No. The Full IELTS Mock Exam is still coming soon and is not part of the current Free or Pro plan.",
     "pricing.faq.cancel.q": "Can I cancel?",
     "pricing.faq.cancel.a":
       "Because this is currently a manual payment system, there is no automatic recurring charge unless the current payment method explicitly creates one.",
-    "pricing.feature.reading": "Complete any 5 different Reading practice sets",
-    "pricing.feature.listening": "Complete any 5 different Listening practice sets",
+    "pricing.feature.reading": "Access to 5 different Reading practice sets",
+    "pricing.feature.listening": "Access to 5 different Listening practice sets",
     "pricing.feature.writing": "1 AI Writing feedback per day",
     "pricing.feature.speaking":
-      "Speaking Preparation Library with sample answers",
+      "5 Speaking Preparation Library questions per day",
     "pricing.feature.repeat": "Repeat completed sets without using another slot",
-    "pricing.feature.dashboard": "Basic practice history",
+    "pricing.feature.dashboard": "Saved practice history",
     "pricing.feature.account": "Free account access",
-    "pricing.pro.feature.membership": "Unlimited Reading practice",
-    "pricing.pro.feature.support": "Unlimited Listening practice",
-    "pricing.pro.feature.reading": "Unlimited Reading practice",
-    "pricing.pro.feature.listening": "Unlimited Listening practice",
+    "pricing.pro.feature.reading": "Access to all available Reading practice sets",
+    "pricing.pro.feature.listening": "Access to all available Listening practice sets",
     "pricing.pro.feature.writing": "Up to 10 AI Writing feedbacks per day",
     "pricing.pro.feature.speaking":
-      "Speaking Preparation Library with Band 6–8 sample answers",
-    "pricing.pro.feature.future": "Priority access to future Pro features",
+      "Daily access to Speaking questions without the Free plan limit",
     "pricing.pro.feature.manual": "Manually activated using your registered email",
-    "pricing.planned.moreSets": "More published practice sets",
-    "pricing.planned.proPlans": "Pro membership and future advanced features",
-    "pricing.planned.paidLater": "Pro can be manually activated after contact",
 
     "support.title": "Support & Pro upgrade",
     "support.description":
@@ -982,31 +994,36 @@ export const messages: Record<Language, Record<string, string>> = {
       "“Working from home” 在这里更自然，修改后的句子也更清楚地展开了原因。",
     "home.preview.summaryPoint": "评分小结会说明为什么还没到更高分。",
     "home.preview.nextPoint": "下一步建议会告诉你下一篇最该练什么。",
-    "home.practice.writingTitle": "Writing Practice",
+    "home.practice.writingTitle": "Writing",
     "home.practice.writingDescription":
-      "完成 Task 1 / Task 2 写作，提交后获得 AI band feedback、四项评分、原句改写和下一步建议。",
-    "home.practice.writingCta": "免费试一次 Writing 批改",
-    "home.practice.aiFeedbackBadge": "AI feedback",
-    "home.why.eyebrow": "为什么选择 AI IELTS Copilot",
-    "home.why.title": "不只告诉你哪里错，还告诉你下一篇怎么改",
+      "完成 Task 1 或 Task 2，并获得详细 AI Feedback。",
+    "home.practice.writingCta": "开始 Writing",
+    "home.practice.aiFeedbackBadge": "提供 AI Feedback",
+    "home.why.eyebrow": "AI Writing Feedback",
+    "home.why.title": "清楚知道 IELTS Writing 下一篇该怎么改",
     "home.why.description":
-      "从四项评分到题型专项反馈，再到原句改写和下一步建议，每一部分都围绕“下一篇如何写得更好”。",
-    "home.why.card.task.title": "Task 1 / Task 2 专项反馈",
+      "获得预估 Band，并从 Task Achievement 或 Task Response、Coherence and Cohesion、Lexical Resource、Grammar 四项理解主要问题。",
+    "home.why.card.task.title": "Task-specific feedback",
     "home.why.card.task.description":
       "Task 1 会重点检查 Overview、主要特征和数据比较；Task 2 会重点检查立场、观点展开和例子。",
     "home.why.card.rewrite.title": "原句 → 修改后 → 为什么这样改",
     "home.why.card.rewrite.description":
       "不只标记问题，还展示更自然、更准确的表达，并解释修改原因。",
-    "home.why.card.score.title": "分数有原因，不只是一串数字",
+    "home.why.card.score.title": "预估 Band 与四项评分",
     "home.why.card.score.description":
-      "四项评分、评分小结和具体问题保持一致，让你知道是什么限制了当前 Band。",
-    "home.why.card.language.title": "中文或英文反馈",
+      "报告会用 Task Achievement 或 Task Response、Coherence and Cohesion、Lexical Resource、Grammar 解释分数依据。",
+    "home.why.card.language.title": "下一步重点更清楚",
     "home.why.card.language.description":
-      "根据当前语言提供单语言反馈，不同时堆叠中英两套内容，阅读更清楚。",
+      "评分小结和下一步建议会指出下一篇最该练什么，而不是堆叠一长串泛泛建议。",
     "home.why.note":
       "还可以练习 Reading 和 Listening，熟悉电脑化 IELTS 作答流程。",
-    "home.why.primaryCta": "免费试一次 Writing 批改",
-    "home.why.secondaryCta": "查看完整反馈示例",
+    "home.why.primaryCta": "免费体验 Writing 批改",
+    "home.why.secondaryCta": "查看反馈示例",
+    "home.modules.eyebrow": "练习模块",
+    "home.modules.title": "覆盖 IELTS 多项练习",
+    "home.modules.description":
+      "Writing 提供 AI Feedback；Reading 和 Listening 自动判分；Speaking 当前是备考题库。",
+    "home.modules.cta": "查看全部练习",
     "home.trust.eyebrow": "使用前你可能想知道",
     "home.trust.title": "清楚了解评分、隐私和 Pro 开通方式",
     "home.trust.description":
@@ -1014,8 +1031,6 @@ export const messages: Record<Language, Record<string, string>> = {
     "home.trust.point.study": "AI 评分仅供学习参考",
     "home.trust.point.demo": "不使用真实用户作文作为公开 Demo",
     "home.trust.point.pro": "Pro 由管理员确认后人工开通",
-    "home.trust.primaryCta": "免费开始 Writing 练习",
-    "home.trust.secondaryCta": "查看完整反馈示例",
     "home.trust.pricingLink": "查看 Pro 与付款方式",
     "home.faq.officialScore.question": "AI Writing 分数是官方 IELTS 成绩吗？",
     "home.faq.officialScore.answer":
@@ -1077,25 +1092,25 @@ export const messages: Record<Language, Record<string, string>> = {
     "practice.description":
       "选择 Reading、Listening、Writing 或 Speaking，提前熟悉电脑雅思的练习节奏。",
     "practice.betaHint": "登录后即可免费开始练习并保存记录。",
-    "practice.reading.title": "Reading Practice",
-    "practice.reading.description": "练习 IELTS-style Reading 套题，提交后自动判分并查看解析。",
+    "practice.reading.title": "Reading",
+    "practice.reading.description": "完成 IELTS Reading 练习，并在提交后查看答题结果。",
     "practice.reading.cta": "开始 Reading",
-    "practice.listening.title": "Listening Practice",
-    "practice.listening.description": "练习带音频的 Listening 套题，完成后查看分数、答案和解析。",
+    "practice.listening.title": "Listening",
+    "practice.listening.description": "完成 IELTS Listening 音频练习，并在提交后查看结果。",
     "practice.listening.cta": "开始 Listening",
-    "practice.writing.title": "Writing Practice",
+    "practice.writing.title": "Writing",
     "practice.writing.description":
-      "完成 Task 1 或 Task 2 写作，获得 AI band feedback、四项评分和改进建议。",
+      "完成 IELTS Writing 练习，并获得四项评分标准的详细反馈。",
     "practice.writing.cta": "开始 Writing",
     "practice.fullExam.title": "完整 IELTS Mock Test",
     "practice.fullExam.description":
       "在限时环境中完成 Reading、Listening 和 Writing，体验更完整的考试流程。",
     "practice.fullExam.cta": "了解更多",
     "practice.comingSoon": "即将上线",
-    "practice.setsAvailable": "套可练习",
-    "practice.tasksAvailable": "篇可练习",
+    "practice.automaticScoring": "自动判分",
     "practice.audioPractice": "音频练习",
-    "practice.aiFeedbackAvailable": "AI feedback 已开放",
+    "practice.aiFeedbackAvailable": "提供 AI Feedback",
+    "practice.topicLibrary": "Speaking 题库",
     "practice.betaPreview": "预览",
     "usage.readingTitle": "Reading 使用量",
     "usage.listeningTitle": "Listening 使用量",
@@ -1185,12 +1200,12 @@ export const messages: Record<Language, Record<string, string>> = {
     "practice.filter.charts": "图表题",
     "practice.filter.tables": "表格题",
     "practice.filter.process": "流程图",
-    "practice.speaking.title": "Speaking 备考",
+    "practice.speaking.title": "Speaking",
     "practice.speaking.description":
-      "练习雅思口语 Part 1、Part 2 和 Part 3 题目，查看 Band 6–8 示例答案与实用表达。",
-    "practice.speaking.cta": "开始 Speaking 练习",
+      "浏览 IELTS Speaking 题目，准备 Part 1、Part 2 和 Part 3 的回答。",
+    "practice.speaking.cta": "查看 Speaking 题库",
     "speaking.eyebrow": "Speaking 题库",
-    "speaking.title": "口语备考",
+    "speaking.title": "Speaking 备考题库",
     "speaking.description":
       "通过雅思风格口语题、分数段参考答案、实用短语和词汇进行练习。",
     "speaking.libraryNotice":
@@ -1359,7 +1374,7 @@ export const messages: Record<Language, Record<string, string>> = {
     "dashboard.eyebrow": "学习记录",
     "dashboard.title": "你的 IELTS 学习驾驶舱",
     "dashboard.description":
-      "自动汇总 Reading、Listening 和 Writing 练习记录，展示预计分数、学习趋势、技能分布和下一步建议。",
+      "自动汇总 Reading、Listening、Writing 与 Speaking 备考记录，展示预计分数、学习趋势、技能分布和下一步建议。",
     "dashboard.sync.loading": "正在同步学习记录",
     "dashboard.sync.local": "本地记录",
     "dashboard.sync.supabase": "已同步到账号",
@@ -1409,7 +1424,7 @@ export const messages: Record<Language, Record<string, string>> = {
     "dashboard.speakingPreparation.part3": "Part 3",
     "dashboard.speakingPreparation.loading": "正在加载题库",
     "dashboard.speakingPreparation.libraryAvailable": "备考题库",
-    "dashboard.speakingPreparation.cta": "开始 Speaking 练习",
+    "dashboard.speakingPreparation.cta": "查看 Speaking 题库",
     "dashboard.nextAction.continueEyebrow": "继续练习",
     "dashboard.nextAction.recommendedEyebrow": "下一步建议",
     "dashboard.nextAction.continueWritingTitle": "继续完成 Writing 草稿",
@@ -1580,6 +1595,19 @@ export const messages: Record<Language, Record<string, string>> = {
     "profile.preference.chineseSupport": "中文解析和学习建议",
     "profile.preference.computerIelts": "优先电脑雅思模拟体验",
 
+    "exam.eyebrow": "完整 IELTS Mock Test",
+    "exam.title": "完整 IELTS Mock Test 即将上线。",
+    "exam.description":
+      "当前产品重点提供已发布的 Reading、Listening 和 Writing 练习。等审核题库覆盖完整考试部分后，会开放完整限时模考体验。",
+    "exam.cardTitle": "目前请先使用 Practice 模式",
+    "exam.badge.published": "已发布内容",
+    "exam.badge.scoring": "自动判分",
+    "exam.badge.dashboard": "Dashboard 记录",
+    "exam.body":
+      "Reading 和 Listening 已使用发布后的内容，提交后由服务端判分，并保存到 Dashboard。Writing 可获得 AI feedback。完整限时模考准备好后会单独开放。",
+    "exam.readingCta": "开始 Reading",
+    "exam.listeningCta": "开始 Listening",
+
     "result.score": "分数",
     "result.correctAnswers": "正确答案",
     "result.yourAnswer": "你的答案",
@@ -1633,46 +1661,42 @@ export const messages: Record<Language, Record<string, string>> = {
     "result.noItems": "暂无返回内容。",
 
     "pricing.eyebrow": "Free / Pro",
-    "pricing.title": "选择适合你的方案",
+    "pricing.title": "选择适合你的 IELTS 练习套餐",
     "pricing.description":
-      "获得更多 IELTS 练习额度、更高使用限制，以及完整 AI Writing feedback。",
+      "先使用 Reading、Listening 和 Speaking 备考内容，并体验有限次数的 Writing Feedback；需要更多 Writing 练习时可升级 Pro。",
+    "pricing.billingStatus":
+      "目前 Pro 通过在线客服和人工确认开通。Pro 按钮不会自动启动 Stripe Checkout。",
     "pricing.free": "免费版",
-    "pricing.paidLater": "Pro 会员可联系人工开通。",
     "pricing.availableNow": "当前可用",
-    "pricing.betaAccess": "免费版",
-    "pricing.betaBody": "创建免费账户后即可开始练习 Reading、Listening 和 Writing。",
-    "pricing.duringBeta": "免费使用",
     "pricing.startPracticing": "开始免费练习",
-    "pricing.proInactive": "Pro",
-    "pricing.proInactiveBody": "支持项目并获得 Pro 会员身份与未来 Pro 功能。确认付款后会根据注册邮箱人工开通。",
     "pricing.freePlan": "免费版",
     "pricing.freeBody":
-      "创建免费账户后即可开始练习 Reading、Listening、Writing 和 Speaking preparation。",
-    "pricing.freePrice": "免费使用",
-    "pricing.proPlan": "Pro",
-    "pricing.proBody": "支持项目并获得 Pro 会员身份与未来 Pro 功能。确认付款后会根据注册邮箱人工开通。",
+      "先体验核心练习功能，再决定是否升级。",
+    "pricing.freeAmount": "免费",
+    "pricing.freePrice": "无需信用卡",
     "pricing.monthly.badge": "更灵活",
     "pricing.monthly.title": "Pro 月付",
-    "pricing.monthly.body": "月付 Pro。付款确认后，管理员会人工开通。",
+    "pricing.monthly.body": "适合希望定期获得 Writing Feedback、但暂时不需要长期周期的学习者。",
     "pricing.monthly.note": "月付访问权限。续费通过客服人工处理。",
     "pricing.yearly.badge": "年度选项",
     "pricing.yearly.title": "Pro 年付",
-    "pricing.yearly.body": "适合希望较长周期练习的用户。付款确认后人工开通。",
+    "pricing.yearly.body": "适合计划在较长周期内持续练习的学习者。",
     "pricing.yearly.monthlyEquivalent": "约 CA$6.67 / 月",
     "pricing.yearly.save": "节省 33%",
     "pricing.yearly.note": "相比连续月付，可节省 CA$39.89。",
-    "pricing.proPriceCad": "CA$9.99 / 月",
     "pricing.proPriceRmb": "约 ¥52 / 月",
-    "pricing.exchangeDisclaimer":
-      "人民币金额仅供参考，实际金额以付款时汇率为准。",
     "pricing.contactUpgrade": "联系开通 Pro",
-    "pricing.chatCta.monthly": "联系客服开通月付",
-    "pricing.chatCta.yearly": "联系客服开通年付",
+    "pricing.checkingPlan": "正在检查计划",
+    "pricing.currentPlan": "当前计划",
+    "pricing.continuePractice": "继续练习",
+    "pricing.proIncludes": "包含 Free 的全部内容，另外：",
+    "pricing.chatCta.monthly": "联系客服开通 Pro 月付",
+    "pricing.chatCta.yearly": "联系客服开通 Pro 年付",
     "pricing.chatMessage.monthly": "你好，我想升级到 CA$9.99/月的 Pro 月付套餐。",
     "pricing.chatMessage.yearly": "你好，我想升级到 CA$79.99/年的 Pro 年付套餐。",
     "pricing.manualActivationNote":
       "付款确认后，管理员会使用你的注册邮箱手动开通 Pro。",
-    "pricing.activationTiming": "我们会在确认付款后尽快为你开通会员。",
+    "pricing.activationTiming": "请使用你在 AI IELTS Copilot 注册的邮箱，方便我们开通正确账号。",
     "pricing.noAutoActivation":
       "这个按钮会打开在线客服，不会自动开通 Pro，也不会启动 Stripe Checkout。",
     "pricing.how.title": "人工开通 Pro 的流程",
@@ -1685,38 +1709,43 @@ export const messages: Record<Language, Record<string, string>> = {
     "pricing.confirmation.security":
       "不要发送密码、银行卡号、网银登录信息或验证码。",
     "pricing.faq.title": "常见问题",
+    "pricing.faq.official.q": "AI Feedback 是官方 IELTS 成绩吗？",
+    "pricing.faq.official.a":
+      "不是。AI Writing Feedback 仅用于练习和学习参考，不代表官方 IELTS 成绩，也不能替代考官评分。",
+    "pricing.faq.free.q": "Free 包含哪些内容？",
+    "pricing.faq.free.a":
+      "Free 包含 5 套不同 Reading、5 套不同 Listening、每天 1 次 AI Writing Feedback，以及每天 5 道 Speaking preparation 题。",
+    "pricing.faq.writing.q": "Writing Feedback 有多少次？",
+    "pricing.faq.writing.a":
+      "Free 用户每天 1 次 AI Writing Feedback。Pro 用户每天最多 10 次 AI Writing Feedback。",
+    "pricing.faq.skills.q": "Reading、Listening 和 Speaking 需要 Pro 吗？",
+    "pricing.faq.skills.a":
+      "Free 用户也可以开始使用这三项。Pro 会提高 Reading、Listening 和 Speaking preparation 的使用额度。",
     "pricing.faq.pay.q": "如何付款？",
     "pricing.faq.pay.a":
-      "支持 WeChat Pay、Alipay、PayPal 和 Interac e-Transfer。请通过在线客服获取正确付款信息。",
+      "支持 WeChat Pay、Alipay、PayPal 和 Interac e-Transfer。请通过在线客服获取正确付款信息。确认后会人工开通 Pro。",
     "pricing.faq.price.q": "Pro 价格是多少？",
     "pricing.faq.price.a":
       "Pro 月付为 CA$9.99/月。Pro 年付为 CA$79.99/年，约 CA$6.67/月，比连续购买 12 个月月付节省约 33%。",
-    "pricing.faq.activate.q": "Pro 如何开通？",
-    "pricing.faq.activate.a": "付款确认后，管理员会手动将你的账号升级为 Pro。",
-    "pricing.faq.account.q": "需要重新注册账号吗？",
-    "pricing.faq.account.a": "不需要。请使用你在 AI IELTS Copilot 的同一个邮箱/账号。",
+    "pricing.faq.fullExam.q": "Full IELTS Mock Exam 包含在当前套餐里吗？",
+    "pricing.faq.fullExam.a":
+      "不包含。Full IELTS Mock Exam 仍是 Coming soon，不属于当前 Free 或 Pro 的已开放权益。",
     "pricing.faq.cancel.q": "可以取消吗？",
     "pricing.faq.cancel.a":
       "当前是人工付款流程，除非付款方式本身明确创建了自动扣款，否则不会自动续费。",
-    "pricing.feature.reading": "任意完成 5 套不同 Reading 练习",
-    "pricing.feature.listening": "任意完成 5 套不同 Listening 练习",
+    "pricing.feature.reading": "可解锁 5 套不同的 Reading 练习",
+    "pricing.feature.listening": "可解锁 5 套不同的 Listening 练习",
     "pricing.feature.writing": "每天 1 次 AI Writing feedback",
-    "pricing.feature.speaking": "Speaking Preparation Library 示例答案",
+    "pricing.feature.speaking": "每天 5 道 Speaking Preparation Library 题",
     "pricing.feature.repeat": "已完成题目可重复练习",
-    "pricing.feature.dashboard": "基础练习记录",
+    "pricing.feature.dashboard": "保存练习记录",
     "pricing.feature.account": "免费账号访问",
-    "pricing.pro.feature.membership": "Reading 无限练习",
-    "pricing.pro.feature.support": "Listening 无限练习",
-    "pricing.pro.feature.reading": "Reading 无限练习",
-    "pricing.pro.feature.listening": "Listening 无限练习",
+    "pricing.pro.feature.reading": "可使用全部已发布 Reading 练习",
+    "pricing.pro.feature.listening": "可使用全部已发布 Listening 练习",
     "pricing.pro.feature.writing": "每天最多 10 次 AI Writing feedback",
     "pricing.pro.feature.speaking":
-      "Speaking Preparation Library，包含 Band 6–8 示例答案",
-    "pricing.pro.feature.future": "优先体验后续 Pro 功能",
+      "Speaking 题目不受 Free 每日额度限制",
     "pricing.pro.feature.manual": "使用注册邮箱人工开通",
-    "pricing.planned.moreSets": "更多已发布练习内容",
-    "pricing.planned.proPlans": "Pro 会员与未来高级功能",
-    "pricing.planned.paidLater": "Pro 可联系人工开通",
 
     "support.title": "支持与 Pro 开通",
     "support.description":

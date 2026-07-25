@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { LegalPage } from "@/components/legal/legal-page";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | AI IELTS Copilot",
+  title: "Privacy Policy",
   description:
     "Privacy Policy for AI IELTS Copilot users, including account data, practice records, AI feedback, and support contact information.",
 };

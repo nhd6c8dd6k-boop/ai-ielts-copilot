@@ -12,7 +12,7 @@ import { absoluteUrl } from "@/lib/seo";
 import { getSpeakingLibraryStats } from "@/server/services/speaking-practice";
 
 export const metadata: Metadata = {
-  title: "IELTS Speaking Practice | AI IELTS Copilot",
+  title: "IELTS Speaking Practice",
   description:
     "Practice IELTS-style Speaking questions with sample answers, useful phrases, vocabulary, and answer-building guidance.",
   alternates: {
@@ -60,7 +60,7 @@ export default async function SpeakingPracticePage() {
       <PageHeader
         eyebrow="Speaking Library"
         eyebrowKey="speaking.eyebrow"
-        title="Speaking Preparation"
+        title="Speaking Preparation Library"
         titleKey="speaking.title"
         description="Practice IELTS-style speaking questions with sample answers, useful phrases, and vocabulary."
         descriptionKey="speaking.description"

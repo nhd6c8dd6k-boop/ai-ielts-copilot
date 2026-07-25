@@ -1,4 +1,3 @@
-import Link from "next/link";
 import type { Metadata } from "next";
 import {
   Check,
@@ -12,14 +11,17 @@ import { LocalizedText } from "@/components/i18n/localized-text";
 import { MarketingHeader } from "@/components/layout/marketing-header";
 import { ManualPaymentMethods } from "@/components/payments/manual-payment-methods";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { proPricing } from "@/config/pricing";
-import { ContactToUpgradeButton } from "@/features/payments/contact-to-upgrade-button";
+import {
+  PricingFreePlanAction,
+  PricingPlanActionProvider,
+  PricingProPlanAction,
+} from "@/features/payments/pricing-plan-actions";
 import { absoluteUrl } from "@/lib/seo";
 
 export const metadata: Metadata = {
-  title: "AI IELTS Copilot Pro Pricing",
+  title: "Pro Pricing",
   description:
     "Compare AI IELTS Copilot Free, Pro Monthly, and Pro Yearly membership options for IELTS practice and AI Writing feedback.",
   alternates: {
@@ -28,27 +30,27 @@ export const metadata: Metadata = {
 };
 
 const freeFeatures = [
-  ["pricing.feature.reading", "Complete any 5 different Reading practice sets"],
+  ["pricing.feature.reading", "Access to 5 different Reading practice sets"],
   [
     "pricing.feature.listening",
-    "Complete any 5 different Listening practice sets",
+    "Access to 5 different Listening practice sets",
   ],
   ["pricing.feature.writing", "1 AI Writing feedback per day"],
   [
     "pricing.feature.speaking",
-    "Speaking Preparation Library with sample answers",
+    "5 Speaking Preparation Library questions per day",
   ],
   ["pricing.feature.repeat", "Repeat completed sets without using another slot"],
-  ["pricing.feature.dashboard", "Basic practice history"],
+  ["pricing.feature.dashboard", "Saved practice history"],
 ];
 
 const proFeatures = [
-  ["pricing.pro.feature.reading", "Unlimited Reading practice"],
-  ["pricing.pro.feature.listening", "Unlimited Listening practice"],
+  ["pricing.pro.feature.reading", "Access to all available Reading practice sets"],
+  ["pricing.pro.feature.listening", "Access to all available Listening practice sets"],
   ["pricing.pro.feature.writing", "Up to 10 AI Writing feedbacks per day"],
   [
     "pricing.pro.feature.speaking",
-    "Speaking Preparation Library with Band 6–8 sample answers",
+    "Daily access to Speaking questions without the Free plan limit",
   ],
   [
     "pricing.pro.feature.manual",
@@ -67,28 +69,46 @@ const steps = [
 
 const faqs = [
   [
+    "pricing.faq.official.q",
+    "Is AI feedback an official IELTS score?",
+    "pricing.faq.official.a",
+    "No. AI Writing feedback is for practice and study guidance only. It does not replace an official IELTS score or examiner assessment.",
+  ],
+  [
+    "pricing.faq.free.q",
+    "What is included in the Free plan?",
+    "pricing.faq.free.a",
+    "Free includes 5 different Reading sets, 5 different Listening sets, 1 AI Writing feedback each day, and 5 Speaking preparation questions each day.",
+  ],
+  [
+    "pricing.faq.writing.q",
+    "How many Writing feedback submissions do I get?",
+    "pricing.faq.writing.a",
+    "Free users get 1 AI Writing feedback per day. Pro users get up to 10 AI Writing feedbacks per day.",
+  ],
+  [
+    "pricing.faq.skills.q",
+    "Do Reading, Listening, and Speaking require Pro?",
+    "pricing.faq.skills.a",
+    "You can start all three on the Free plan. Pro raises the limits for Reading, Listening, and Speaking preparation.",
+  ],
+  [
     "pricing.faq.price.q",
     "How much is Pro?",
     "pricing.faq.price.a",
     "Monthly Pro is CA$9.99/month. Yearly Pro is CA$79.99/year, about CA$6.67/month and 33% less than paying monthly for 12 months.",
   ],
   [
+    "pricing.faq.fullExam.q",
+    "Is the Full IELTS Mock Exam included?",
+    "pricing.faq.fullExam.a",
+    "No. The Full IELTS Mock Exam is still coming soon and is not part of the current Free or Pro plan.",
+  ],
+  [
     "pricing.faq.pay.q",
     "How do I pay?",
     "pricing.faq.pay.a",
-    "Use WeChat Pay, Alipay, PayPal, or Interac e-Transfer. Contact us in live chat for payment details.",
-  ],
-  [
-    "pricing.faq.activate.q",
-    "How is Pro activated?",
-    "pricing.faq.activate.a",
-    "After payment is confirmed, your account is upgraded manually.",
-  ],
-  [
-    "pricing.faq.account.q",
-    "Do I need to create a new account?",
-    "pricing.faq.account.a",
-    "No. Use the same email/account you use on AI IELTS Copilot.",
+    "Use WeChat Pay, Alipay, PayPal, or Interac e-Transfer. Contact us in live chat for payment details. Pro is manually activated after confirmation.",
   ],
   [
     "pricing.faq.cancel.q",
@@ -113,95 +133,99 @@ export default function PricingPage() {
           <p className="mt-5 text-lg leading-8 text-slate-600">
             <LocalizedText
               k="pricing.description"
-              fallback="Get more IELTS practice, higher usage limits, and full access to AI Writing feedback."
+              fallback="Start with Reading, Listening, Speaking preparation, and limited Writing feedback. Upgrade when you need more Writing practice."
             />
           </p>
+          <div className="mt-5 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-600">
+            <LocalizedText
+              k="pricing.billingStatus"
+              fallback="Pro billing is currently handled through live chat and manual activation. The Pro buttons do not start Stripe Checkout."
+            />
+          </div>
         </div>
 
-        <div className="mt-12 grid gap-5 lg:grid-cols-3">
-          <section className="rounded-lg border border-slate-200 bg-white p-6">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <Badge className="border-slate-950 bg-slate-950 text-white">
-                  <LocalizedText
-                    k="pricing.availableNow"
-                    fallback="Available now"
-                  />
-                </Badge>
-                <h2 className="mt-5 text-2xl font-semibold text-slate-950">
-                  <LocalizedText k="pricing.freePlan" fallback="Free" />
-                </h2>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  <LocalizedText
-                    k="pricing.freeBody"
-                    fallback="Create a free account and start practising Reading, Listening, Writing, and Speaking preparation."
-                  />
-                </p>
-              </div>
-              <div className="text-right">
-                <div className="text-4xl font-semibold tracking-tight text-slate-950">
-                  ¥0
+        <PricingPlanActionProvider>
+          <div className="mt-12 grid gap-5 lg:grid-cols-3">
+            <section className="rounded-lg border border-slate-200 bg-white p-6">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <Badge className="border-slate-950 bg-slate-950 text-white">
+                    <LocalizedText
+                      k="pricing.availableNow"
+                      fallback="Available now"
+                    />
+                  </Badge>
+                  <h2 className="mt-5 text-2xl font-semibold text-slate-950">
+                    <LocalizedText k="pricing.freePlan" fallback="Free" />
+                  </h2>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">
+                    <LocalizedText
+                      k="pricing.freeBody"
+                      fallback="Create a free account and start practising Reading, Listening, Writing, and Speaking preparation."
+                    />
+                  </p>
                 </div>
-                <div className="mt-1 text-sm text-slate-500">
-                  <LocalizedText k="pricing.freePrice" fallback="free access" />
+                <div className="text-right">
+                  <div className="text-4xl font-semibold tracking-tight text-slate-950">
+                    <LocalizedText k="pricing.freeAmount" fallback="Free" />
+                  </div>
+                  <div className="mt-1 text-sm text-slate-500">
+                    <LocalizedText
+                      k="pricing.freePrice"
+                      fallback="No credit card required"
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <ul className="mt-8 grid gap-3">
-              {freeFeatures.map(([key, fallback]) => (
-                <li key={key} className="flex gap-3 text-sm text-slate-600">
-                  <Check
-                    className="mt-0.5 h-4 w-4 text-teal-700"
-                    aria-hidden="true"
-                  />
-                  <LocalizedText k={key} fallback={fallback} />
-                </li>
-              ))}
-            </ul>
+              <ul className="mt-8 grid gap-3">
+                {freeFeatures.map(([key, fallback]) => (
+                  <li key={key} className="flex gap-3 text-sm text-slate-600">
+                    <Check
+                      className="mt-0.5 h-4 w-4 text-teal-700"
+                      aria-hidden="true"
+                    />
+                    <LocalizedText k={key} fallback={fallback} />
+                  </li>
+                ))}
+              </ul>
 
-            <Button asChild className="mt-8 w-full">
-              <Link href="/practice/writing">
-                <LocalizedText
-                  k="pricing.startPracticing"
-                  fallback="Start practising for free"
-                />
-              </Link>
-            </Button>
-          </section>
+              <PricingFreePlanAction />
+            </section>
 
-          <ProPlanCard
-            plan="monthly"
-            badgeKey="pricing.monthly.badge"
-            badgeFallback="Most flexible"
-            titleKey="pricing.monthly.title"
-            titleFallback="Pro Monthly"
-            bodyKey="pricing.monthly.body"
-            bodyFallback="Monthly Pro access with manual activation after payment confirmation."
-            price={proPricing.monthly.display}
-            subPriceKey="pricing.proPriceRmb"
-            subPriceFallback={proPricing.monthly.rmbEstimate}
-            noteKey="pricing.monthly.note"
-            noteFallback="Monthly access. Renewal is handled manually through support."
-          />
+            <ProPlanCard
+              plan="monthly"
+              badgeKey="pricing.monthly.badge"
+              badgeFallback="Most flexible"
+              titleKey="pricing.monthly.title"
+              titleFallback="Pro Monthly"
+              bodyKey="pricing.monthly.body"
+              bodyFallback="Monthly Pro access with manual activation after payment confirmation."
+              price={proPricing.monthly.display}
+              subPriceKey="pricing.proPriceRmb"
+              subPriceFallback={proPricing.monthly.rmbEstimate}
+              noteKey="pricing.monthly.note"
+              noteFallback="Monthly access. Renewal is handled manually through support."
+            />
 
-          <ProPlanCard
-            plan="yearly"
-            badgeKey="pricing.yearly.badge"
-            badgeFallback="Yearly option"
-            titleKey="pricing.yearly.title"
-            titleFallback="Pro Yearly"
-            bodyKey="pricing.yearly.body"
-            bodyFallback="Yearly Pro access for learners who want a longer practice period."
-            price={proPricing.yearly.display}
-            subPriceKey="pricing.yearly.monthlyEquivalent"
-            subPriceFallback={proPricing.yearly.monthlyEquivalent}
-            highlightKey="pricing.yearly.save"
-            highlightFallback={proPricing.yearly.savingsPercent}
-            noteKey="pricing.yearly.note"
-            noteFallback="Approximate local payment amount will be confirmed in live chat."
-          />
-        </div>
+            <ProPlanCard
+              plan="yearly"
+              badgeKey="pricing.yearly.badge"
+              badgeFallback="Yearly option"
+              titleKey="pricing.yearly.title"
+              titleFallback="Pro Yearly"
+              bodyKey="pricing.yearly.body"
+              bodyFallback="Yearly Pro access for learners who want a longer practice period."
+              price={proPricing.yearly.display}
+              subPriceKey="pricing.yearly.monthlyEquivalent"
+              subPriceFallback={proPricing.yearly.monthlyEquivalent}
+              highlightKey="pricing.yearly.save"
+              highlightFallback={proPricing.yearly.savingsPercent}
+              noteKey="pricing.yearly.note"
+              noteFallback="Approximate local payment amount will be confirmed in live chat."
+            />
+          </div>
+        </PricingPlanActionProvider>
 
         <section className="mt-12 grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
           <Card>
@@ -239,7 +263,7 @@ export default function PricingPage() {
               <p className="mt-2 text-sm leading-6 text-slate-500">
                 <LocalizedText
                   k="pricing.activationTiming"
-                  fallback="We’ll activate your membership as soon as the payment is confirmed."
+                  fallback="Use the registered email on your AI IELTS Copilot account so we can activate the correct user."
                 />
               </p>
             </CardContent>
@@ -350,6 +374,12 @@ function ProPlanCard({
       <p className="mt-3 text-sm leading-6 text-slate-600">
         <LocalizedText k={bodyKey} fallback={bodyFallback} />
       </p>
+      <p className="mt-4 text-sm font-medium text-slate-800">
+        <LocalizedText
+          k="pricing.proIncludes"
+          fallback="Everything in Free, plus:"
+        />
+      </p>
       <div className="mt-5 rounded-md border border-teal-200 bg-white px-4 py-4">
         <p className="text-3xl font-semibold tracking-tight text-slate-950">
           {price}
@@ -382,13 +412,7 @@ function ProPlanCard({
           </li>
         ))}
       </ul>
-      <ContactToUpgradeButton plan={plan} className="mt-6 w-full" />
-      <p className="mt-3 text-xs leading-5 text-slate-500">
-        <LocalizedText
-          k="pricing.noAutoActivation"
-          fallback="This button opens live chat. It does not automatically activate Pro or start Stripe Checkout."
-        />
-      </p>
+      <PricingProPlanAction plan={plan} />
     </section>
   );
 }

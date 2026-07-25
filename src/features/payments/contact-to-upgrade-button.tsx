@@ -55,14 +55,14 @@ export function ContactToUpgradeButton({
       onClick={openChat}
       aria-label={
         plan === "monthly"
-          ? t("pricing.chatCta.monthly", "Chat to upgrade monthly")
-          : t("pricing.chatCta.yearly", "Chat to upgrade yearly")
+          ? t("pricing.chatCta.monthly", "Contact us to activate Pro Monthly")
+          : t("pricing.chatCta.yearly", "Contact us to activate Pro Yearly")
       }
     >
       <MessageCircle className="h-4 w-4" aria-hidden="true" />
       {plan === "monthly"
-        ? t("pricing.chatCta.monthly", "Chat to upgrade monthly")
-        : t("pricing.chatCta.yearly", "Chat to upgrade yearly")}
+        ? t("pricing.chatCta.monthly", "Contact us to activate Pro Monthly")
+        : t("pricing.chatCta.yearly", "Contact us to activate Pro Yearly")}
       <span className="sr-only">
         {language === "zh" ? "，打开在线客服" : ", opens live chat"}
       </span>

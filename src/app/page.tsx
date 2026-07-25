@@ -5,7 +5,9 @@ import { absoluteUrl, siteDescription, siteName } from "@/lib/seo";
 import HomePageClient from "./home-page-client";
 
 export const metadata: Metadata = {
-  title: "AI IELTS Copilot | IELTS Practice with AI Feedback",
+  title: {
+    absolute: "AI IELTS Copilot | IELTS Practice with AI Feedback",
+  },
   description: siteDescription,
   alternates: {
     canonical: absoluteUrl("/"),

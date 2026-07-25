@@ -111,7 +111,7 @@ export default async function WritingPracticePage({ searchParams }: PageProps) {
                       <Badge className="bg-teal-50 text-teal-800">
                         <LocalizedText
                           k="practice.aiFeedbackAvailable"
-                          fallback="AI Feedback available"
+                          fallback="AI feedback available"
                         />
                       </Badge>
                     </div>

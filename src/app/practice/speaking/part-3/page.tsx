@@ -4,7 +4,7 @@ import { absoluteUrl } from "@/lib/seo";
 import { SpeakingPartPage } from "../speaking-part-page";
 
 export const metadata: Metadata = {
-  title: "IELTS Speaking Part 3 Topics | AI IELTS Copilot",
+  title: "IELTS Speaking Part 3 Topics",
   description:
     "Practise IELTS-style Speaking Part 3 discussion questions with developed opinions, examples, and sample answers.",
   alternates: {
