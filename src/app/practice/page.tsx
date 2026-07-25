@@ -143,7 +143,7 @@ export default async function PracticePage() {
             return (
               <Card
                 key={card.title}
-                className="overflow-hidden transition-colors hover:border-slate-300"
+                className="flex h-full flex-col overflow-hidden transition-colors hover:border-slate-300"
               >
                 <CardHeader>
                   <div className="flex items-start justify-between gap-4">
@@ -191,14 +191,14 @@ export default async function PracticePage() {
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="flex flex-1 flex-col">
                   <p className="min-h-[72px] text-sm leading-6 text-slate-600">
                     <LocalizedText
                       k={card.descriptionKey}
                       fallback={card.description}
                     />
                   </p>
-                  <Button asChild className="mt-5 w-full">
+                  <Button asChild className="mt-auto w-full">
                     <Link
                       href={
                         isSignedIn
