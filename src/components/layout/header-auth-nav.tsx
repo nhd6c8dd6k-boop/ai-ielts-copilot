@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
+import { createPortal } from "react-dom";
 import {
   ArrowRight,
   CreditCard,
@@ -390,7 +391,7 @@ function MarketingMobileMenu({
     return null;
   }
 
-  return (
+  return createPortal(
     <div
       id="mobile-marketing-nav"
       className="fixed inset-0 z-50 md:hidden"
@@ -451,6 +452,7 @@ function MarketingMobileMenu({
           {footer}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
