@@ -225,17 +225,14 @@ export function HeaderAuthNav() {
         <Button
           type="button"
           variant="outline"
-          size="sm"
-          className="gap-1 px-2 md:hidden"
+          size="icon"
+          className="md:hidden"
           aria-label={t("nav.open", "Open navigation")}
           aria-expanded={isMenuOpen}
           aria-controls="mobile-marketing-nav"
           onClick={() => setIsMenuOpen(true)}
         >
           <Menu className="h-4 w-4" aria-hidden="true" />
-          <span className="hidden min-[430px]:inline">
-            {t("nav.menu", "Menu")}
-          </span>
         </Button>
         <MarketingMobileMenu
           isOpen={isMenuOpen}
@@ -337,21 +334,18 @@ export function HeaderAuthNav() {
       <Button
         type="button"
         variant="outline"
-        size="sm"
-        className="gap-1 px-2 md:hidden"
-        aria-label={t("nav.account", "Account")}
+        size="icon"
+        className="md:hidden"
+        aria-label={t("nav.open", "Open navigation")}
         aria-expanded={isMenuOpen}
         aria-controls="mobile-marketing-nav"
         onClick={() => setIsMenuOpen(true)}
       >
-        <UserRound className="h-4 w-4" aria-hidden="true" />
-        <span className="hidden min-[430px]:inline">
-          {t("nav.account", "Account")}
-        </span>
+        <Menu className="h-4 w-4" aria-hidden="true" />
       </Button>
       <MarketingMobileMenu
         isOpen={isMenuOpen}
-        title={t("nav.account", "Account")}
+        title={t("nav.navigation", "Navigation")}
         items={accountMenuItems}
         pathname={pathname}
         onClose={() => setIsMenuOpen(false)}
