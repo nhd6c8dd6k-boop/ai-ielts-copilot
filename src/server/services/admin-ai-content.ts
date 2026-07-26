@@ -12,6 +12,18 @@ import {
   normalizeWritingTitleKey,
   validateAdminWritingContentPayload,
 } from "@/server/services/admin-writing-generation-schema";
+import {
+  adminGenerateSpeakingInputSchema,
+  buildAdminSpeakingGenerationRequirements,
+  getAdminSpeakingOutputSchema,
+  normalizeSpeakingSlug,
+  validateAdminSpeakingContentPayload,
+  type AdminGenerateSpeakingInput,
+  type AdminSpeakingContentPayload,
+  type AdminSpeakingPartOneOutput,
+  type AdminSpeakingPartThreeOutput,
+  type AdminSpeakingPartTwoOutput,
+} from "@/server/services/admin-speaking-generation-schema";
 
 const adminReadingQuestionSchema = z.object({
   type: z.string().min(1),
@@ -91,12 +103,16 @@ export const adminGenerateWritingInputSchema = z.object({
   promptTemplateId: z.string().uuid().optional(),
 });
 
+export { adminGenerateSpeakingInputSchema };
+
 type AdminGenerateResult = {
   id: string;
   title: string;
   band: number;
   topic: string;
   status: "pending_review";
+  part?: number;
+  questionCount?: number;
 };
 
 type UsageSummary = {
@@ -112,6 +128,27 @@ type UsageTrackedError = Error & {
   code?: string;
   requestId?: string;
   safeMessage?: string;
+};
+
+type SpeakingQuestionInsertRow = {
+  topic_id: string;
+  question_order: number;
+  question: string;
+  answer_tip: string;
+  cue_card_points: string[];
+  preparation_ideas: string[];
+  suggested_structure: string[];
+  direct_answer: string | null;
+  main_reason: string | null;
+  example: string | null;
+  alternative_perspective: string | null;
+  sample_band_6: string;
+  sample_band_7: string;
+  sample_band_8: string;
+  useful_phrases: AdminSpeakingPartOneOutput["questions"][number]["usefulPhrases"];
+  vocabulary: AdminSpeakingPartOneOutput["questions"][number]["vocabulary"];
+  sentence_patterns: AdminSpeakingPartOneOutput["questions"][number]["sentencePatterns"];
+  common_mistakes: AdminSpeakingPartOneOutput["questions"][number]["commonMistakes"];
 };
 
 class AdminGenerationRequestError extends Error {
@@ -381,6 +418,109 @@ export async function generateAdminWritingContent({
   });
 }
 
+export async function generateAdminSpeakingContent({
+  adminUserId,
+  input,
+}: {
+  adminUserId: string;
+  input: AdminGenerateSpeakingInput;
+}) {
+  return generateMany({
+    quantity: 1,
+    contentType: "speaking",
+    adminUserId,
+    createOne: async () => {
+      const promptTemplate = await loadPromptTemplate(
+        "speaking",
+        input.promptTemplateId,
+      );
+      const payload = await callStrictJson({
+        schemaName: `admin_speaking_part_${input.part}_content`,
+        schema: getAdminSpeakingOutputSchema(input.part),
+        systemPrompt: buildSystemPrompt(promptTemplate, "speaking"),
+        userPrompt: JSON.stringify({
+          ...input,
+          optionalInstructions: input.optionalInstructions ?? "",
+          requirements: buildAdminSpeakingGenerationRequirements(input),
+        }),
+      });
+      const data = validateAdminSpeakingContentPayload({
+        payload: payload.data,
+        input,
+      });
+
+      assertOriginalContentPolicy(buildSpeakingOriginalityText(data));
+
+      const admin = createSupabaseAdminClient();
+      const slug = await buildUniqueSpeakingSlug({
+        slug: data.topic.slug,
+        title: data.topic.title,
+        part: input.part,
+      });
+
+      const { data: topic, error } = await admin
+        .from("speaking_topics")
+        .insert({
+          title: data.topic.title.trim(),
+          slug,
+          part: input.part,
+          description: data.topic.description.trim(),
+          target_band: input.targetBand,
+          source_type: "ai_generated",
+          status: "review",
+          created_by: adminUserId,
+          published_at: null,
+        })
+        .select("id,title,target_band,slug,status")
+        .single();
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      try {
+        const { error: questionError } = await admin
+          .from("speaking_questions")
+          .insert(toSpeakingQuestionRows(topic.id, data));
+
+        if (questionError) {
+          throw new Error(questionError.message);
+        }
+      } catch (questionError) {
+        await admin.from("speaking_topics").delete().eq("id", topic.id);
+        throw questionError;
+      }
+
+      await recordUsageAndAdminLog({
+        adminUserId,
+        contentType: "speaking",
+        targetId: topic.id,
+        usage: payload.usage,
+        action: "ai_speaking_generated",
+        metadata: {
+          title: topic.title,
+          slug,
+          part: input.part,
+          questionCount: data.questions.length,
+        },
+      });
+
+      return {
+        result: {
+          id: topic.id,
+          title: topic.title,
+          band: Number(topic.target_band ?? input.targetBand),
+          topic: input.topic,
+          status: "pending_review" as const,
+          part: input.part,
+          questionCount: data.questions.length,
+        },
+        usage: payload.usage,
+      };
+    },
+  });
+}
+
 async function generateAdminWritingPayloadWithRetry({
   input,
   promptTemplate,
@@ -500,6 +640,114 @@ async function loadExistingWritingTitleKeys(
       );
     }),
   );
+}
+
+async function buildUniqueSpeakingSlug({
+  slug,
+  title,
+  part,
+}: {
+  slug: string;
+  title: string;
+  part: 1 | 2 | 3;
+}) {
+  const baseSlug = normalizeSpeakingSlug(
+    slug,
+    `part-${part}-${title || "speaking-topic"}`,
+  );
+  const admin = createSupabaseAdminClient();
+  const { data, error } = await admin
+    .from("speaking_topics")
+    .select("slug")
+    .ilike("slug", `${baseSlug}%`)
+    .limit(200);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const existingSlugs = new Set((data ?? []).map((item) => item.slug));
+
+  if (!existingSlugs.has(baseSlug)) {
+    return baseSlug;
+  }
+
+  for (let suffix = 2; suffix <= 200; suffix += 1) {
+    const candidate = `${baseSlug}-${suffix}`;
+
+    if (!existingSlugs.has(candidate)) {
+      return candidate;
+    }
+  }
+
+  throw new Error("Unable to create a unique Speaking topic slug.");
+}
+
+function toSpeakingQuestionRows(
+  topicId: string,
+  data: AdminSpeakingContentPayload,
+): SpeakingQuestionInsertRow[] {
+  if (data.topic.part === 2) {
+    const partTwoData = data as AdminSpeakingPartTwoOutput;
+
+    return partTwoData.questions.map((question) => ({
+      topic_id: topicId,
+      question_order: question.questionOrder,
+      question: question.question.trim(),
+      answer_tip: question.answerTip.trim(),
+      cue_card_points: question.cueCardPoints,
+      preparation_ideas: question.preparationIdeas,
+      suggested_structure: question.suggestedStructure,
+      direct_answer: null,
+      main_reason: null,
+      example: null,
+      alternative_perspective: null,
+      sample_band_6: question.sampleBand6.trim(),
+      sample_band_7: question.sampleBand7.trim(),
+      sample_band_8: question.sampleBand8.trim(),
+      useful_phrases: question.usefulPhrases,
+      vocabulary: question.vocabulary,
+      sentence_patterns: question.sentencePatterns,
+      common_mistakes: question.commonMistakes,
+    }));
+  }
+
+  const discussionData = data as AdminSpeakingPartOneOutput | AdminSpeakingPartThreeOutput;
+
+  return discussionData.questions.map((question) => ({
+    topic_id: topicId,
+    question_order: question.questionOrder,
+    question: question.question.trim(),
+    answer_tip: question.answerTip.trim(),
+    cue_card_points: [],
+    preparation_ideas: [],
+    suggested_structure: [],
+    direct_answer: question.directAnswer.trim(),
+    main_reason: question.mainReason.trim(),
+    example: question.example.trim(),
+    alternative_perspective: question.alternativePerspective.trim(),
+    sample_band_6: question.sampleBand6.trim(),
+    sample_band_7: question.sampleBand7.trim(),
+    sample_band_8: question.sampleBand8.trim(),
+    useful_phrases: question.usefulPhrases,
+    vocabulary: question.vocabulary,
+    sentence_patterns: question.sentencePatterns,
+    common_mistakes: question.commonMistakes,
+  }));
+}
+
+function buildSpeakingOriginalityText(data: AdminSpeakingContentPayload) {
+  return [
+    data.topic.title,
+    data.topic.description,
+    ...data.questions.flatMap((question) => [
+      question.question,
+      question.answerTip,
+      question.sampleBand6,
+      question.sampleBand7,
+      question.sampleBand8,
+    ]),
+  ].join("\n\n");
 }
 
 async function generateMany({
@@ -633,7 +881,7 @@ function normalizeOpenAIRequestError(error: unknown) {
     return new AdminGenerationRequestError({
       message,
       safeMessage:
-        "Writing generation could not start because the output schema is invalid.",
+        "Admin generation could not start because the output schema is invalid.",
       code: "invalid_json_schema",
       requestId,
     });

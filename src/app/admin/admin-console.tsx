@@ -56,7 +56,8 @@ type AdminTab =
   | "memberships"
   | "prompts"
   | "logs";
-type GenerateMode = "reading" | "listening" | "writing";
+type GenerateMode = "reading" | "listening" | "writing" | "speaking";
+type SpeakingGeneratePart = 1 | 2 | 3;
 type AdminContentTabType = AdminContentType | "speaking";
 type MembershipAction = "grant" | "extend" | "revoke";
 type MembershipModalState = {
@@ -93,6 +94,8 @@ type GenerateApiResponse = {
     band: number;
     topic: string;
     status: "pending_review";
+    part?: number;
+    questionCount?: number;
   }>;
   usage: {
     model: string;
@@ -404,6 +407,10 @@ export function AdminConsole({
   const [section, setSection] = useState(1);
   const [taskType, setTaskType] = useState(2);
   const [quantity, setQuantity] = useState(1);
+  const [speakingPart, setSpeakingPart] = useState<SpeakingGeneratePart>(1);
+  const [speakingQuestionCount, setSpeakingQuestionCount] = useState(5);
+  const [speakingOptionalInstructions, setSpeakingOptionalInstructions] =
+    useState("");
   const [promptTemplateId, setPromptTemplateId] = useState("");
   const [readingTypes, setReadingTypes] = useState<string[]>([
     "multiple_choice",
@@ -981,6 +988,12 @@ export function AdminConsole({
             setTaskType={setTaskType}
             quantity={quantity}
             setQuantity={setQuantity}
+            speakingPart={speakingPart}
+            setSpeakingPart={setSpeakingPart}
+            speakingQuestionCount={speakingQuestionCount}
+            setSpeakingQuestionCount={setSpeakingQuestionCount}
+            speakingOptionalInstructions={speakingOptionalInstructions}
+            setSpeakingOptionalInstructions={setSpeakingOptionalInstructions}
             promptTemplateId={promptTemplateId}
             setPromptTemplateId={setPromptTemplateId}
             promptTemplates={data.promptTemplates}
@@ -1010,6 +1023,9 @@ export function AdminConsole({
                       section,
                       taskType,
                       quantity,
+                      speakingPart,
+                      speakingQuestionCount,
+                      speakingOptionalInstructions,
                       promptTemplateId,
                       readingTypes,
                       listeningTypes,
@@ -1029,24 +1045,28 @@ export function AdminConsole({
                 }
 
                 setGenerationResult(payload);
-                setContent((current) => [
-                  ...payload.results.map((item) => ({
-                    id: item.id,
-                    type: generateMode,
-                    title: item.title,
-                    skill:
-                      generateMode === "reading"
-                        ? ("Reading" as const)
-                        : generateMode === "listening"
-                          ? ("Listening" as const)
-                          : ("Writing" as const),
-                    source: "AI Generated",
-                    status: "review" as const,
-                    audioStatus:
-                      generateMode === "listening" ? "pending" : undefined,
-                  })),
-                  ...current,
-                ]);
+                if (generateMode === "speaking") {
+                  setActiveContentType("speaking");
+                } else {
+                  setContent((current) => [
+                    ...payload.results.map((item) => ({
+                      id: item.id,
+                      type: generateMode,
+                      title: item.title,
+                      skill:
+                        generateMode === "reading"
+                          ? ("Reading" as const)
+                          : generateMode === "listening"
+                            ? ("Listening" as const)
+                            : ("Writing" as const),
+                      source: "AI Generated",
+                      status: "review" as const,
+                      audioStatus:
+                        generateMode === "listening" ? "pending" : undefined,
+                    })),
+                    ...current,
+                  ]);
+                }
                 setLogs((current) => [
                   `${generateMode} generated · ${payload.results.length} draft(s)`,
                   ...current,
@@ -2091,6 +2111,12 @@ function GeneratePanel({
   setTaskType,
   quantity,
   setQuantity,
+  speakingPart,
+  setSpeakingPart,
+  speakingQuestionCount,
+  setSpeakingQuestionCount,
+  speakingOptionalInstructions,
+  setSpeakingOptionalInstructions,
   promptTemplateId,
   setPromptTemplateId,
   promptTemplates,
@@ -2115,6 +2141,12 @@ function GeneratePanel({
   setTaskType: (taskType: number) => void;
   quantity: number;
   setQuantity: (quantity: number) => void;
+  speakingPart: SpeakingGeneratePart;
+  setSpeakingPart: (part: SpeakingGeneratePart) => void;
+  speakingQuestionCount: number;
+  setSpeakingQuestionCount: (questionCount: number) => void;
+  speakingOptionalInstructions: string;
+  setSpeakingOptionalInstructions: (instructions: string) => void;
   promptTemplateId: string;
   setPromptTemplateId: (promptTemplateId: string) => void;
   promptTemplates: AdminDashboardData["promptTemplates"];
@@ -2136,6 +2168,8 @@ function GeneratePanel({
   const filteredTemplates = promptTemplates.filter(
     (template) => template.skill === mode,
   );
+  const speakingQuestionCountOptions =
+    speakingPart === 2 ? [1] : [3, 4, 5, 6];
 
   return (
     <div className="grid gap-6 xl:grid-cols-[420px_1fr]">
@@ -2144,8 +2178,8 @@ function GeneratePanel({
           <CardTitle>AI Content Pipeline</CardTitle>
         </CardHeader>
         <CardContent className="space-y-5">
-          <div className="grid grid-cols-3 gap-2">
-            {(["reading", "listening", "writing"] as const).map((item) => (
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {(["reading", "listening", "writing", "speaking"] as const).map((item) => (
               <Button
                 key={item}
                 type="button"
@@ -2156,10 +2190,16 @@ function GeneratePanel({
                   setTopic(
                     item === "listening"
                       ? "accommodation"
-                      : item === "writing"
-                        ? "education"
-                        : "education",
+                      : item === "speaking"
+                        ? "Hometown"
+                        : item === "writing"
+                          ? "education"
+                          : "education",
                   );
+                  if (item === "speaking") {
+                    setQuantity(1);
+                    setSpeakingQuestionCount(speakingPart === 2 ? 1 : 5);
+                  }
                 }}
               >
                 {item}
@@ -2177,15 +2217,54 @@ function GeneratePanel({
             }))}
           />
 
-          <AdminSelect
-            label="Topic"
-            value={topic}
-            onChange={setTopic}
-            options={topicOptions.map((item) => ({
-              value: item.value,
-              label: item.label,
-            }))}
-          />
+          {mode === "speaking" ? (
+            <AdminInput
+              label="Topic"
+              value={topic}
+              onChange={setTopic}
+            />
+          ) : (
+            <AdminSelect
+              label="Topic"
+              value={topic}
+              onChange={setTopic}
+              options={topicOptions.map((item) => ({
+                value: item.value,
+                label: item.label,
+              }))}
+            />
+          )}
+
+          {mode === "speaking" ? (
+            <div className="grid gap-4 md:grid-cols-2">
+              <AdminSelect
+                label="Part"
+                value={String(speakingPart)}
+                onChange={(value) => {
+                  const nextPart = Number(value) as SpeakingGeneratePart;
+                  setSpeakingPart(nextPart);
+                  setSpeakingQuestionCount(nextPart === 2 ? 1 : 5);
+                }}
+                options={[
+                  { value: "1", label: "Part 1" },
+                  { value: "2", label: "Part 2" },
+                  { value: "3", label: "Part 3" },
+                ]}
+              />
+              <AdminSelect
+                label="Number of Questions"
+                value={String(speakingPart === 2 ? 1 : speakingQuestionCount)}
+                onChange={(value) => setSpeakingQuestionCount(Number(value))}
+                options={speakingQuestionCountOptions.map((item) => ({
+                  value: String(item),
+                  label:
+                    speakingPart === 2
+                      ? "1 cue card"
+                      : `${item} questions`,
+                }))}
+              />
+            </div>
+          ) : null}
 
           {mode === "listening" ? (
             <AdminSelect
@@ -2211,15 +2290,24 @@ function GeneratePanel({
             />
           ) : null}
 
-          <AdminSelect
-            label="Quantity"
-            value={String(quantity)}
-            onChange={(value) => setQuantity(Number(value))}
-            options={[1, 2, 3, 4, 5].map((item) => ({
-              value: String(item),
-              label: `${item}`,
-            }))}
-          />
+          {mode === "speaking" ? (
+            <AdminTextarea
+              label="Optional Instructions"
+              value={speakingOptionalInstructions}
+              rows={4}
+              onChange={setSpeakingOptionalInstructions}
+            />
+          ) : (
+            <AdminSelect
+              label="Quantity"
+              value={String(quantity)}
+              onChange={(value) => setQuantity(Number(value))}
+              options={[1, 2, 3, 4, 5].map((item) => ({
+                value: String(item),
+                label: `${item}`,
+              }))}
+            />
+          )}
 
           <AdminSelect
             label="Prompt Template"
@@ -2294,6 +2382,15 @@ function GeneratePanel({
                       <div className="flex flex-wrap gap-2">
                         <Badge>Band {item.band}</Badge>
                         <Badge className="bg-white">{item.topic}</Badge>
+                        {item.part ? (
+                          <Badge className="bg-white">Part {item.part}</Badge>
+                        ) : null}
+                        {item.questionCount ? (
+                          <Badge className="bg-white">
+                            {item.questionCount} question
+                            {item.questionCount === 1 ? "" : "s"}
+                          </Badge>
+                        ) : null}
                         <Badge className="bg-amber-50 text-amber-800">
                           {item.status}
                         </Badge>
@@ -2775,6 +2872,9 @@ function buildGeneratePayload({
   section,
   taskType,
   quantity,
+  speakingPart,
+  speakingQuestionCount,
+  speakingOptionalInstructions,
   promptTemplateId,
   readingTypes,
   listeningTypes,
@@ -2785,6 +2885,9 @@ function buildGeneratePayload({
   section: number;
   taskType: number;
   quantity: number;
+  speakingPart: SpeakingGeneratePart;
+  speakingQuestionCount: number;
+  speakingOptionalInstructions: string;
   promptTemplateId: string;
   readingTypes: string[];
   listeningTypes: string[];
@@ -2809,6 +2912,17 @@ function buildGeneratePayload({
       ...base,
       section,
       questionTypes: listeningTypes,
+    };
+  }
+
+  if (mode === "speaking") {
+    return {
+      part: speakingPart,
+      topic,
+      targetBand: band,
+      questionCount: speakingPart === 2 ? 1 : speakingQuestionCount,
+      optionalInstructions: speakingOptionalInstructions.trim() || undefined,
+      promptTemplateId: promptTemplateId || undefined,
     };
   }
 
