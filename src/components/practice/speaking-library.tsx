@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronDown, ChevronUp, Loader2, LockKeyhole } from "lucide-react";
+import { Loader2, LockKeyhole } from "lucide-react";
 
 import { useI18n } from "@/components/i18n/language-provider";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +13,6 @@ import {
   buildLoginRedirectHref,
   buildRegisterRedirectHref,
 } from "@/lib/auth/redirect";
-import { cn } from "@/lib/utils";
 import type {
   CommonMistake,
   SentencePattern,
@@ -24,14 +23,6 @@ import type {
   UsefulPhrase,
   VocabularyUpgrade,
 } from "@/server/services/speaking-practice";
-
-type BandKey = "band6" | "band7" | "band8";
-
-const bandTabs: Array<{ value: BandKey; key: string; fallback: string }> = [
-  { value: "band6", key: "speaking.band6", fallback: "Band 6" },
-  { value: "band7", key: "speaking.band7", fallback: "Band 7" },
-  { value: "band8", key: "speaking.band8", fallback: "Band 8" },
-];
 
 export function SpeakingTopicPractice({
   questions,
@@ -44,9 +35,37 @@ export function SpeakingTopicPractice({
 }) {
   const { t } = useI18n();
   const [usage, setUsage] = useState(initialUsage);
+  const sectionTitle =
+    part === 1
+      ? t("speaking.part1Questions", "Part 1 Questions")
+      : part === 2
+        ? t("speaking.part2PracticeTitle", "IELTS Speaking Part 2")
+        : t("speaking.part3Discussion", "Part 3 Discussion");
+  const sectionDescription =
+    part === 1
+      ? t(
+          "speaking.part1PracticeDescription",
+          "Practise short, natural answers for familiar interview questions.",
+        )
+      : part === 2
+        ? t(
+            "speaking.part2PracticeDescription",
+            "Use the cue card, prepare your notes, then study the sample answer as a spoken response.",
+          )
+        : t(
+            "speaking.part3PracticeDescription",
+            "Practise developing opinions, reasons, and examples for abstract discussion questions.",
+          );
 
   return (
     <div className="space-y-5">
+      <div>
+        <h2 className="text-lg font-semibold text-slate-950">{sectionTitle}</h2>
+        <p className="mt-1 text-sm leading-6 text-slate-600">
+          {sectionDescription}
+        </p>
+      </div>
+
       <Card>
         <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -248,6 +267,12 @@ export function SpeakingQuestionCard({
   part: SpeakingPart;
 }) {
   const { t } = useI18n();
+  const title =
+    part === 1
+      ? t("speaking.part1Questions", "Part 1 Questions")
+      : part === 2
+        ? t("speaking.part2PracticeTitle", "IELTS Speaking Part 2")
+        : t("speaking.part3Discussion", "Part 3 Discussion");
 
   return (
     <Card>
@@ -259,27 +284,23 @@ export function SpeakingQuestionCard({
           <Badge>
             {t(`speaking.part${part}`, `Part ${part}`)}
           </Badge>
+          {part === 3 ? (
+            <Badge className="bg-slate-50">
+              {t("speaking.discussionOpinion", "Discussion / opinion")}
+            </Badge>
+          ) : null}
         </div>
-        <CardTitle className="text-xl leading-8">{question.question}</CardTitle>
+        <CardTitle className="text-xl leading-8">{title}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-5">
         {part === 2 ? (
-          <CueCard
-            points={question.cueCardPoints}
-            ideas={question.preparationIdeas}
-            structure={question.suggestedStructure}
-          />
-        ) : null}
+          <Part2Practice question={question} />
+        ) : part === 3 ? (
+          <Part3Practice question={question} />
+        ) : (
+          <Part1Practice question={question} />
+        )}
 
-        {part === 3 ? (
-          <DiscussionFramework question={question} />
-        ) : question.answerTip ? (
-          <InfoSection title={t("speaking.answerTip", "Answer Tip")}>
-            <p>{question.answerTip}</p>
-          </InfoSection>
-        ) : null}
-
-        <BandSampleSwitcher questionId={question.id} samples={question.samples} />
         <UsefulPhraseList phrases={question.usefulPhrases} />
         <VocabularyUpgradeList vocabulary={question.vocabulary} />
         <SentencePatternList patterns={question.sentencePatterns} />
@@ -352,130 +373,152 @@ function SpeakingLimitReached() {
   );
 }
 
-function BandSampleSwitcher({
-  questionId,
-  samples,
-}: {
-  questionId: string;
-  samples: SpeakingQuestion["samples"];
-}) {
+function Part1Practice({ question }: { question: SpeakingQuestion }) {
   const { t } = useI18n();
-  const [activeBand, setActiveBand] = useState<BandKey>("band7");
-  const [isVisible, setIsVisible] = useState(true);
-  const idPrefix = `speaking-sample-${questionId}`;
 
   return (
-    <section className="rounded-md border border-slate-200 bg-white p-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h3 className="text-sm font-semibold text-slate-950">
-          {t("speaking.sampleAnswer", "Sample Answer")}
-        </h3>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => setIsVisible((current) => !current)}
-          aria-expanded={isVisible}
-        >
-          {isVisible ? (
-            <>
-              <ChevronUp className="h-4 w-4" aria-hidden="true" />
-              {t("speaking.hideSample", "Hide Sample")}
-            </>
-          ) : (
-            <>
-              <ChevronDown className="h-4 w-4" aria-hidden="true" />
-              {t("speaking.showSample", "Show Sample")}
-            </>
+    <div className="space-y-4">
+      <InfoSection title={t("speaking.question", "Question")}>
+        <p className="text-base font-semibold leading-7 text-slate-950">
+          {question.question}
+        </p>
+        {question.answerTip ? (
+          <p className="mt-3 text-sm leading-6 text-slate-600">
+            {question.answerTip}
+          </p>
+        ) : null}
+      </InfoSection>
+      <SpeakingSampleAnswer
+        title={t("speaking.band7SampleAnswer", "Band 7 Sample Answer")}
+        sample={question.samples.band7}
+      />
+    </div>
+  );
+}
+
+function Part2Practice({ question }: { question: SpeakingQuestion }) {
+  const { t } = useI18n();
+
+  return (
+    <div className="space-y-4">
+      <CueCard question={question.question} points={question.cueCardPoints} />
+      <div className="grid gap-4 lg:grid-cols-2">
+        <InfoSection
+          title={t(
+            "speaking.oneMinutePreparationNotes",
+            "1-minute Preparation Notes",
           )}
-        </Button>
+        >
+          <BulletList items={question.preparationIdeas} />
+        </InfoSection>
+        <InfoSection
+          title={t("speaking.suggestedStructure", "Suggested Structure")}
+        >
+          <NumberedList items={question.suggestedStructure} />
+        </InfoSection>
       </div>
+      <SpeakingSampleAnswer
+        title={t("speaking.band7SampleAnswer", "Band 7 Sample Answer")}
+        sample={question.samples.band7}
+        note={t("speaking.approxOneAndHalfMinutes", "Approx. 1.5 minutes")}
+      />
+      <SpeakingSampleAnswer
+        title={t("speaking.band8UpgradeAnswer", "Band 8 Upgrade Answer")}
+        sample={question.samples.band8}
+      />
+    </div>
+  );
+}
 
-      {isVisible ? (
-        <div className="mt-4">
-          <div
-            className="flex flex-wrap gap-2"
-            role="tablist"
-            aria-label={t("speaking.bandTabs", "Sample answer band")}
-          >
-            {bandTabs.map((tab) => {
-              const active = activeBand === tab.value;
-              const tabId = `${idPrefix}-tab-${tab.value}`;
-              const panelId = `${idPrefix}-panel-${tab.value}`;
+function Part3Practice({ question }: { question: SpeakingQuestion }) {
+  const { t } = useI18n();
 
-              return (
-                <button
-                  key={tab.value}
-                  id={tabId}
-                  type="button"
-                  role="tab"
-                  aria-selected={active}
-                  aria-controls={panelId}
-                  className={cn(
-                    "rounded-md border px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2",
-                    active
-                      ? "border-slate-950 bg-slate-950 text-white"
-                      : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-950",
-                  )}
-                  onClick={() => setActiveBand(tab.value)}
-                >
-                  {t(tab.key, tab.fallback)}
-                </button>
-              );
-            })}
-          </div>
-          {bandTabs.map((tab) => {
-            const active = activeBand === tab.value;
+  return (
+    <div className="space-y-4">
+      <InfoSection title={t("speaking.question", "Question")}>
+        <p className="text-base font-semibold leading-7 text-slate-950">
+          {question.question}
+        </p>
+        <p className="mt-3 text-sm leading-6 text-slate-600">
+          {t(
+            "speaking.part3OpinionPrompt",
+            "Focus on giving a clear opinion, developing a reason, and supporting it with an example.",
+          )}
+        </p>
+      </InfoSection>
+      <DiscussionFramework question={question} />
+      <SpeakingSampleAnswer
+        title={t("speaking.band7SampleAnswer", "Band 7 Sample Answer")}
+        sample={question.samples.band7}
+      />
+    </div>
+  );
+}
 
-            return (
-              <div
-                key={tab.value}
-                id={`${idPrefix}-panel-${tab.value}`}
-                role="tabpanel"
-                aria-labelledby={`${idPrefix}-tab-${tab.value}`}
-                hidden={!active}
-                className="mt-4 rounded-md bg-slate-50 p-4 text-sm leading-7 text-slate-700"
-              >
-                {samples[tab.value]}
-              </div>
-            );
-          })}
-        </div>
-      ) : null}
+function SpeakingSampleAnswer({
+  title,
+  sample,
+  note,
+}: {
+  title: string;
+  sample: string;
+  note?: string;
+}) {
+  return (
+    <section className="rounded-md border border-slate-200 bg-white p-4">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <h3 className="text-sm font-semibold text-slate-950">{title}</h3>
+        {note ? (
+          <Badge className="w-fit bg-slate-50 text-slate-700">{note}</Badge>
+        ) : null}
+      </div>
+      <div className="mt-4 border-l-2 border-slate-950 bg-slate-50 px-4 py-3 text-sm leading-7 text-slate-700">
+        {sample}
+      </div>
     </section>
   );
 }
 
 function CueCard({
+  question,
   points,
-  ideas,
-  structure,
 }: {
+  question: string;
   points: string[];
-  ideas: string[];
-  structure: string[];
 }) {
   const { t } = useI18n();
 
   return (
-    <div className="grid gap-4 lg:grid-cols-3">
-      <InfoSection title={t("speaking.youShouldSay", "You should say")}>
-        <BulletList items={points} />
-      </InfoSection>
-      <InfoSection title={t("speaking.preparationIdeas", "Preparation Ideas")}>
-        <BulletList items={ideas} />
-      </InfoSection>
-      <InfoSection title={t("speaking.suggestedStructure", "Suggested Structure")}>
-        <ol className="space-y-2">
-          {structure.map((item, index) => (
-            <li key={item} className="flex gap-2">
-              <span className="font-semibold text-slate-950">{index + 1}.</span>
-              <span>{item}</span>
-            </li>
-          ))}
-        </ol>
-      </InfoSection>
+    <div className="rounded-md border border-slate-300 bg-white p-4">
+      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+        {t("speaking.cueCard", "Cue Card")}
+      </p>
+      <h3 className="mt-3 text-lg font-semibold leading-8 text-slate-950">
+        {question}
+      </h3>
+      <div className="mt-4">
+        <InfoSection title={t("speaking.youShouldSay", "You should say")}>
+          <BulletList items={points} />
+        </InfoSection>
+      </div>
     </div>
+  );
+}
+
+function NumberedList({ items }: { items: string[] }) {
+  if (!items.length) {
+    return null;
+  }
+
+  return (
+    <ol className="space-y-2">
+      {items.map((item, index) => (
+        <li key={item} className="flex gap-2">
+          <span className="font-semibold text-slate-950">{index + 1}.</span>
+          <span>{item}</span>
+        </li>
+      ))}
+    </ol>
   );
 }
 

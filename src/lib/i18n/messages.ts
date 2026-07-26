@@ -379,6 +379,15 @@ export const messages: Record<Language, Record<string, string>> = {
       "Build longer cue card answers with preparation ideas, structure, and sample responses.",
     "speaking.part3PageDescription":
       "Develop opinions for abstract discussion questions with reasons, examples, and balanced views.",
+    "speaking.part1Questions": "Part 1 Questions",
+    "speaking.part2PracticeTitle": "IELTS Speaking Part 2",
+    "speaking.part3Discussion": "Part 3 Discussion",
+    "speaking.part1PracticeDescription":
+      "Practise short, natural answers for familiar interview questions.",
+    "speaking.part2PracticeDescription":
+      "Use the cue card, prepare your notes, then study the sample answer as a spoken response.",
+    "speaking.part3PracticeDescription":
+      "Practise developing opinions, reasons, and examples for abstract discussion questions.",
     "speaking.answerTip": "Answer Tip",
     "speaking.sampleAnswer": "Sample Answer",
     "speaking.bandTabs": "Sample answer band",
@@ -387,6 +396,14 @@ export const messages: Record<Language, Record<string, string>> = {
     "speaking.band8": "Band 8",
     "speaking.showSample": "Show Sample",
     "speaking.hideSample": "Hide Sample",
+    "speaking.cueCard": "Cue Card",
+    "speaking.oneMinutePreparationNotes": "1-minute Preparation Notes",
+    "speaking.band7SampleAnswer": "Band 7 Sample Answer",
+    "speaking.band8UpgradeAnswer": "Band 8 Upgrade Answer",
+    "speaking.approxOneAndHalfMinutes": "Approx. 1.5 minutes",
+    "speaking.discussionOpinion": "Discussion / opinion",
+    "speaking.part3OpinionPrompt":
+      "Focus on giving a clear opinion, developing a reason, and supporting it with an example.",
     "speaking.youShouldSay": "You should say",
     "speaking.preparationIdeas": "Preparation Ideas",
     "speaking.suggestedStructure": "Suggested Structure",
@@ -1329,6 +1346,15 @@ export const messages: Record<Language, Record<string, string>> = {
     "speaking.part2PageDescription":
       "通过 preparation ideas、结构和参考答案练习较长的 cue card 回答。",
     "speaking.part3PageDescription": "练习抽象讨论题中的观点、原因、例子和平衡表达。",
+    "speaking.part1Questions": "Part 1 问题",
+    "speaking.part2PracticeTitle": "IELTS Speaking Part 2",
+    "speaking.part3Discussion": "Part 3 讨论题",
+    "speaking.part1PracticeDescription":
+      "练习熟悉话题下简短、自然的面试回答。",
+    "speaking.part2PracticeDescription":
+      "先看 Cue Card，再准备 1 分钟 notes，最后学习口语化参考回答。",
+    "speaking.part3PracticeDescription":
+      "练习抽象讨论题中的观点、原因和例子展开。",
     "speaking.answerTip": "回答提示",
     "speaking.sampleAnswer": "参考答案",
     "speaking.bandTabs": "参考答案 Band",
@@ -1337,6 +1363,13 @@ export const messages: Record<Language, Record<string, string>> = {
     "speaking.band8": "Band 8",
     "speaking.showSample": "显示参考答案",
     "speaking.hideSample": "隐藏参考答案",
+    "speaking.cueCard": "Cue Card",
+    "speaking.oneMinutePreparationNotes": "1-minute 准备笔记",
+    "speaking.band7SampleAnswer": "Band 7 参考答案",
+    "speaking.band8UpgradeAnswer": "Band 8 升级答案",
+    "speaking.approxOneAndHalfMinutes": "约 1.5 分钟",
+    "speaking.discussionOpinion": "讨论 / 观点",
+    "speaking.part3OpinionPrompt": "重点练习清晰观点、原因展开和例子支撑。",
     "speaking.youShouldSay": "You should say",
     "speaking.preparationIdeas": "准备思路",
     "speaking.suggestedStructure": "建议结构",
