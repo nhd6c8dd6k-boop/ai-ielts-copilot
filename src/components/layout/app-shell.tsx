@@ -24,9 +24,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
           <div className="mb-4 space-y-4 lg:hidden">
             <div className="flex items-center justify-between gap-3">
-              <BrandLogo compact textClassName="max-[430px]:hidden" />
+              <BrandLogo compact className="min-w-0 flex-1" textClassName="truncate" />
               <div className="flex shrink-0 items-center gap-2">
-                <LanguageSwitcher compact className="shrink-0" />
+                <LanguageSwitcher compact className="hidden shrink-0 sm:inline-flex" />
                 <MobileAppNav />
               </div>
             </div>

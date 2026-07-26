@@ -154,10 +154,6 @@ export function MobileAppNav() {
     };
   }, [isOpen]);
 
-  if (mode === "loading") {
-    return null;
-  }
-
   const isAuthenticated = mode === "supabase";
 
   const signOut = async () => {
@@ -194,7 +190,7 @@ export function MobileAppNav() {
         className="lg:hidden"
         aria-label={t("nav.open", "Open navigation")}
         aria-expanded={isOpen}
-        aria-controls={isOpen ? "mobile-app-nav" : undefined}
+        aria-controls="mobile-app-nav"
         onClick={() => setIsOpen(true)}
       >
         <Menu className="h-5 w-5" aria-hidden="true" />
@@ -243,11 +239,12 @@ export function MobileAppNav() {
                     href={item.href}
                     onClick={() => setIsOpen(false)}
                     className={cn(
-                      "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors",
+                      "flex items-center gap-3 border-l-2 px-3 py-2.5 text-sm transition-colors",
                       isActive
-                        ? "bg-slate-950 text-white"
-                        : "text-slate-600 hover:bg-slate-100 hover:text-slate-950",
+                        ? "border-slate-950 font-semibold text-slate-950"
+                        : "border-transparent text-slate-600 hover:text-slate-950",
                     )}
+                    aria-current={isActive ? "page" : undefined}
                   >
                     <Icon className="h-4 w-4" aria-hidden="true" />
                     {t(item.labelKey, item.fallback)}
@@ -258,7 +255,7 @@ export function MobileAppNav() {
 
             <div className="space-y-3 border-t border-slate-200 px-4 py-4">
               <LanguageSwitcher className="w-full justify-center" />
-              {isAuthenticated ? (
+              {mode === "loading" ? null : isAuthenticated ? (
                 <Button
                   type="button"
                   variant="outline"

@@ -6,6 +6,7 @@ export const languageStorageKey = "ai-ielts-language";
 
 export const messages: Record<Language, Record<string, string>> = {
   en: {
+    "nav.home": "Home",
     "nav.practice": "Practice",
     "nav.reading": "Reading",
     "nav.listening": "Listening",
@@ -939,6 +940,7 @@ export const messages: Record<Language, Record<string, string>> = {
       "Include your registered email in the payment note when the payment method supports it.",
   },
   zh: {
+    "nav.home": "首页",
     "nav.practice": "练习",
     "nav.reading": "Reading",
     "nav.listening": "Listening",

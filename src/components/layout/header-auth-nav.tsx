@@ -5,14 +5,18 @@ import Link from "next/link";
 import {
   ArrowRight,
   CreditCard,
+  Home,
   LayoutDashboard,
   LibraryBig,
+  LifeBuoy,
   LogOut,
   Menu,
   Shield,
   UserRound,
   X,
+  type LucideIcon,
 } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 import { LanguageSwitcher } from "@/components/i18n/language-switcher";
 import { useI18n } from "@/components/i18n/language-provider";
@@ -38,12 +42,14 @@ type MobileMenuItem = {
   href: string;
   labelKey: string;
   fallback: string;
-  icon: typeof LibraryBig;
+  icon: LucideIcon;
 };
 
 const publicMenuItems: MobileMenuItem[] = [
+  { href: "/", labelKey: "nav.home", fallback: "Home", icon: Home },
   { href: "/practice", labelKey: "nav.practice", fallback: "Practice", icon: LibraryBig },
   { href: "/pricing", labelKey: "nav.pricing", fallback: "Plans", icon: CreditCard },
+  { href: "/support", labelKey: "nav.support", fallback: "Support", icon: LifeBuoy },
   {
     href: "/demo/writing-feedback",
     labelKey: "nav.sampleFeedback",
@@ -54,6 +60,7 @@ const publicMenuItems: MobileMenuItem[] = [
 
 export function HeaderAuthNav() {
   const { t } = useI18n();
+  const pathname = usePathname();
   const [mode, setMode] = useState<AuthMode>("loading");
   const [user, setUser] = useState<SessionUser | null>(null);
   const [isSigningOut, setIsSigningOut] = useState(false);
@@ -175,7 +182,30 @@ export function HeaderAuthNav() {
   };
 
   if (mode === "loading") {
-    return null;
+    return (
+      <>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="md:hidden"
+          aria-label={t("nav.open", "Open navigation")}
+          aria-expanded={isMenuOpen}
+          aria-controls="mobile-marketing-nav"
+          onClick={() => setIsMenuOpen(true)}
+        >
+          <Menu className="h-4 w-4" aria-hidden="true" />
+        </Button>
+        <MarketingMobileMenu
+          isOpen={isMenuOpen}
+          title={t("nav.navigation", "Navigation")}
+          items={publicMenuItems}
+          pathname={pathname}
+          onClose={() => setIsMenuOpen(false)}
+          footer={null}
+        />
+      </>
+    );
   }
 
   if (mode !== "supabase" || !user) {
@@ -199,7 +229,7 @@ export function HeaderAuthNav() {
           className="gap-1 px-2 md:hidden"
           aria-label={t("nav.open", "Open navigation")}
           aria-expanded={isMenuOpen}
-          aria-controls={isMenuOpen ? "mobile-marketing-nav" : undefined}
+          aria-controls="mobile-marketing-nav"
           onClick={() => setIsMenuOpen(true)}
         >
           <Menu className="h-4 w-4" aria-hidden="true" />
@@ -211,6 +241,7 @@ export function HeaderAuthNav() {
           isOpen={isMenuOpen}
           title={t("nav.navigation", "Navigation")}
           items={publicMenuItems}
+          pathname={pathname}
           onClose={() => setIsMenuOpen(false)}
           footer={
             <div className="grid grid-cols-2 gap-2">
@@ -310,7 +341,7 @@ export function HeaderAuthNav() {
         className="gap-1 px-2 md:hidden"
         aria-label={t("nav.account", "Account")}
         aria-expanded={isMenuOpen}
-        aria-controls={isMenuOpen ? "mobile-marketing-nav" : undefined}
+        aria-controls="mobile-marketing-nav"
         onClick={() => setIsMenuOpen(true)}
       >
         <UserRound className="h-4 w-4" aria-hidden="true" />
@@ -322,6 +353,7 @@ export function HeaderAuthNav() {
         isOpen={isMenuOpen}
         title={t("nav.account", "Account")}
         items={accountMenuItems}
+        pathname={pathname}
         onClose={() => setIsMenuOpen(false)}
         footer={
           <Button
@@ -347,12 +379,14 @@ function MarketingMobileMenu({
   isOpen,
   title,
   items,
+  pathname,
   footer,
   onClose,
 }: {
   isOpen: boolean;
   title: string;
   items: MobileMenuItem[];
+  pathname: string;
   footer: ReactNode;
   onClose: () => void;
 }) {
@@ -393,6 +427,9 @@ function MarketingMobileMenu({
         <nav className="flex-1 space-y-1 px-3 py-4">
           {items.map((item) => {
             const Icon = item.icon;
+            const isActive =
+              pathname === item.href ||
+              (item.href !== "/" && pathname.startsWith(`${item.href}/`));
 
             return (
               <Link
@@ -400,9 +437,13 @@ function MarketingMobileMenu({
                 href={item.href}
                 onClick={onClose}
                 className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm text-slate-600 transition-colors",
-                  "hover:bg-slate-100 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950",
+                  "flex items-center gap-3 border-l-2 px-3 py-2.5 text-sm transition-colors",
+                  "hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950",
+                  isActive
+                    ? "border-slate-950 font-semibold text-slate-950"
+                    : "border-transparent text-slate-600",
                 )}
+                aria-current={isActive ? "page" : undefined}
               >
                 <Icon className="h-4 w-4" aria-hidden="true" />
                 {t(item.labelKey, item.fallback)}
