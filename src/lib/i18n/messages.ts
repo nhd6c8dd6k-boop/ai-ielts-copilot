@@ -161,6 +161,50 @@ export const messages: Record<Language, Record<string, string>> = {
     "demo.bottomCtaTitle": "Ready to try it with your own essay?",
     "demo.freeLimitNote": "Free users receive 1 AI Writing feedback each day.",
 
+    "writingFeedback.hero.eyebrow": "AI IELTS Writing",
+    "writingFeedback.hero.title": "Get free IELTS Writing feedback in minutes",
+    "writingFeedback.hero.description":
+      "Receive an estimated band score and detailed feedback across the IELTS Writing assessment criteria.",
+    "writingFeedback.cta.primary": "Try free Writing feedback",
+    "writingFeedback.cta.secondary": "View sample feedback",
+    "writingFeedback.trust.free": "Free to try",
+    "writingFeedback.trust.noCard": "No credit card required",
+    "writingFeedback.trust.criteria":
+      "Feedback based on IELTS Writing assessment criteria",
+    "writingFeedback.features.band.title": "Estimated Band",
+    "writingFeedback.features.band.body":
+      "Receive an estimated overall band score.",
+    "writingFeedback.features.criteria.title": "Four Criteria",
+    "writingFeedback.features.criteria.body":
+      "Feedback across Task Achievement / Response, Coherence & Cohesion, Lexical Resource, and Grammar.",
+    "writingFeedback.features.sentences.title": "Sentence Improvements",
+    "writingFeedback.features.sentences.body":
+      "Review clearer sentence suggestions and corrections.",
+    "writingFeedback.features.actionable.title": "Actionable Feedback",
+    "writingFeedback.features.actionable.body":
+      "Understand what to improve before your next attempt.",
+    "writingFeedback.preview.title": "Writing feedback preview",
+    "writingFeedback.preview.overall": "Estimated Band",
+    "writingFeedback.how.eyebrow": "How it works",
+    "writingFeedback.how.title": "From essay to feedback in three steps",
+    "writingFeedback.how.description":
+      "The goal is simple: write once, understand what held the score back, then practise the next essay with a clearer focus.",
+    "writingFeedback.how.step1.title": "Choose a Writing task",
+    "writingFeedback.how.step1.body":
+      "Start with an IELTS-style Task 1 or Task 2 prompt.",
+    "writingFeedback.how.step2.title": "Write your response",
+    "writingFeedback.how.step2.body":
+      "Complete your answer online in the Writing practice area.",
+    "writingFeedback.how.step3.title": "Receive detailed AI feedback",
+    "writingFeedback.how.step3.body":
+      "See your estimated band, criteria notes, rewrites, and next focus.",
+    "writingFeedback.final.eyebrow": "Free Writing practice",
+    "writingFeedback.final.title": "Ready to improve your IELTS Writing?",
+    "writingFeedback.final.description":
+      "Try one Writing task now, or review the sample report first to see the type of feedback you can expect.",
+    "writingFeedback.disclaimer":
+      "AI feedback is for study support and is not an official IELTS score.",
+
     "practice.eyebrow": "Practice",
     "practice.title": "Choose a practice mode",
     "practice.description":
@@ -1088,6 +1132,47 @@ export const messages: Record<Language, Record<string, string>> = {
     "demo.secondaryCta": "查看 Pro 权益",
     "demo.bottomCtaTitle": "想用自己的作文试试看？",
     "demo.freeLimitNote": "Free 用户每天可获得 1 次 AI Writing feedback。",
+
+    "writingFeedback.hero.eyebrow": "AI IELTS Writing",
+    "writingFeedback.hero.title": "几分钟内获得免费的 IELTS Writing feedback",
+    "writingFeedback.hero.description":
+      "提交作文后获得预估 Band score，并查看基于 IELTS Writing 评分标准的详细反馈。",
+    "writingFeedback.cta.primary": "免费尝试 Writing feedback",
+    "writingFeedback.cta.secondary": "查看反馈示例",
+    "writingFeedback.trust.free": "可免费试用",
+    "writingFeedback.trust.noCard": "无需信用卡",
+    "writingFeedback.trust.criteria": "反馈参考 IELTS Writing 评分标准",
+    "writingFeedback.features.band.title": "预估 Band",
+    "writingFeedback.features.band.body": "获得预估 overall band score。",
+    "writingFeedback.features.criteria.title": "四项评分",
+    "writingFeedback.features.criteria.body":
+      "覆盖 Task Achievement / Response、Coherence & Cohesion、Lexical Resource 和 Grammar。",
+    "writingFeedback.features.sentences.title": "句子修改建议",
+    "writingFeedback.features.sentences.body":
+      "查看更清楚、更自然的句子改写和纠错建议。",
+    "writingFeedback.features.actionable.title": "可执行反馈",
+    "writingFeedback.features.actionable.body":
+      "理解下一篇作文最应该优先改进什么。",
+    "writingFeedback.preview.title": "Writing feedback 预览",
+    "writingFeedback.preview.overall": "预估 Band",
+    "writingFeedback.how.eyebrow": "使用流程",
+    "writingFeedback.how.title": "从作文到反馈，只需三步",
+    "writingFeedback.how.description":
+      "目标很简单：先写一篇，了解主要扣分点，再带着更清楚的重点练下一篇。",
+    "writingFeedback.how.step1.title": "选择 Writing 题目",
+    "writingFeedback.how.step1.body":
+      "从 IELTS-style Task 1 或 Task 2 题目开始。",
+    "writingFeedback.how.step2.title": "完成你的作文",
+    "writingFeedback.how.step2.body": "在 Writing practice 页面直接完成作答。",
+    "writingFeedback.how.step3.title": "获得详细 AI feedback",
+    "writingFeedback.how.step3.body":
+      "查看预估 Band、四项反馈、句子改写和下一步重点。",
+    "writingFeedback.final.eyebrow": "免费 Writing 练习",
+    "writingFeedback.final.title": "准备开始提升 IELTS Writing 了吗？",
+    "writingFeedback.final.description":
+      "现在尝试一篇 Writing 题目，或先查看示例报告，了解你会收到什么类型的反馈。",
+    "writingFeedback.disclaimer":
+      "AI feedback 仅供学习参考，不代表官方 IELTS 成绩。",
 
     "practice.eyebrow": "练习中心",
     "practice.title": "选择一种练习方式",
