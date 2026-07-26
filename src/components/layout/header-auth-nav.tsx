@@ -448,7 +448,7 @@ function MarketingMobileMenu({
         </nav>
 
         <div className="space-y-3 border-t border-slate-200 px-4 py-4">
-          <LanguageSwitcher className="w-full justify-center" />
+          <LanguageSwitcher variant="menu" />
           {footer}
         </div>
       </div>

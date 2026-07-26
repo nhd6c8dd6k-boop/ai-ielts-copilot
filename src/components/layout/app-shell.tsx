@@ -25,10 +25,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="mb-4 space-y-4 lg:hidden">
             <div className="flex items-center justify-between gap-3">
               <BrandLogo compact className="min-w-0 flex-1" textClassName="truncate" />
-              <div className="flex shrink-0 items-center gap-2">
-                <LanguageSwitcher compact className="hidden shrink-0 sm:inline-flex" />
-                <MobileAppNav />
-              </div>
+              <MobileAppNav />
             </div>
             <AccountStatus />
           </div>
