@@ -18,6 +18,12 @@ export const env = {
   resendFromEmail: optionalEnv("RESEND_FROM_EMAIL"),
   resendReplyToEmail: optionalEnv("RESEND_REPLY_TO_EMAIL"),
   emailDeliveryEnabled: optionalEnv("EMAIL_DELIVERY_ENABLED"),
+  elevenLabsApiKey: optionalEnv("ELEVENLABS_API_KEY"),
+  elevenLabsVoiceBritishFemale: optionalEnv("ELEVENLABS_VOICE_BRITISH_FEMALE"),
+  elevenLabsVoiceBritishMale: optionalEnv("ELEVENLABS_VOICE_BRITISH_MALE"),
+  elevenLabsVoiceAustralianFemale: optionalEnv("ELEVENLABS_VOICE_AUSTRALIAN_FEMALE"),
+  elevenLabsVoiceAustralianMale: optionalEnv("ELEVENLABS_VOICE_AUSTRALIAN_MALE"),
+  elevenLabsVoiceNarrator: optionalEnv("ELEVENLABS_VOICE_NARRATOR"),
 };
 
 export function isSupabaseConfigured() {

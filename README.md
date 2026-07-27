@@ -36,6 +36,42 @@ pnpm lint
 pnpm build
 ```
 
+## ElevenLabs Listening audio
+
+ElevenLabs is used only from server-side scripts or services. Do not expose the
+API key with a `NEXT_PUBLIC_` prefix.
+
+Required environment variables for real Listening audio generation:
+
+```bash
+ELEVENLABS_API_KEY=
+ELEVENLABS_VOICE_BRITISH_FEMALE=
+ELEVENLABS_VOICE_BRITISH_MALE=
+ELEVENLABS_VOICE_AUSTRALIAN_FEMALE=
+ELEVENLABS_VOICE_AUSTRALIAN_MALE=
+ELEVENLABS_VOICE_NARRATOR=
+```
+
+To inspect available voices without modifying the database:
+
+```bash
+pnpm elevenlabs:voices
+```
+
+To validate the bundled ElevenLabs Listening sets without calling ElevenLabs,
+writing Supabase, or uploading audio:
+
+```bash
+pnpm listening:generate:elevenlabs -- --dry-run
+```
+
+Only run the real generation after voice IDs and Supabase service credentials
+are configured:
+
+```bash
+pnpm listening:generate:elevenlabs -- --execute
+```
+
 ## Supabase setup
 
 1. Create a Supabase project.

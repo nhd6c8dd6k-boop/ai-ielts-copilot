@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit -p tsconfig.typecheck.json",
-    "test": "pnpm test:usage-limits && pnpm test:speaking-pricing-and-limits && pnpm test:admin-speaking-generation",
+    "test": "pnpm test:usage-limits && pnpm test:speaking-pricing-and-limits && pnpm test:admin-speaking-generation && pnpm test:elevenlabs-listening-generation",
     "test:usage-limits": "node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-usage-limits.mjs",
     "test:speaking-pricing-and-limits": "node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-speaking-pricing-and-limits.mjs",
     "test:writing-scoring": "node scripts/verify-writing-scoring.mjs",
@@ -23,7 +23,10 @@
     "test:profile-lifetime-statistics": "node scripts/verify-profile-lifetime-statistics.mjs",
     "test:admin-writing-generation": "node scripts/verify-admin-writing-generation.mjs",
     "test:admin-speaking-generation": "node scripts/verify-admin-speaking-generation.mjs",
-    "test:writing-task-cards": "node scripts/verify-writing-task-cards.mjs"
+    "test:elevenlabs-listening-generation": "node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-elevenlabs-listening-generation.mjs",
+    "test:writing-task-cards": "node scripts/verify-writing-task-cards.mjs",
+    "elevenlabs:voices": "node scripts/list-elevenlabs-voices.mjs",
+    "listening:generate:elevenlabs": "node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/generate-elevenlabs-listening-practices.mjs"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.3.0",
