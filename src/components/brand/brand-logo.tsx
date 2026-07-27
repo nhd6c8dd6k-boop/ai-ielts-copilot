@@ -12,7 +12,6 @@ type BrandLogoProps = {
 
 export function BrandLogo({
   href = "/",
-  compact = false,
   className,
   textClassName,
 }: BrandLogoProps) {
@@ -20,10 +19,7 @@ export function BrandLogo({
     <>
       <BrandMark />
       <span className={cn("min-w-0 font-semibold tracking-tight", textClassName)}>
-        <span className={compact ? "hidden sm:inline" : "hidden sm:inline"}>
-          AI IELTS Copilot
-        </span>
-        <span className="sm:hidden">AI IELTS</span>
+        AI IELTS Copilot
       </span>
     </>
   );

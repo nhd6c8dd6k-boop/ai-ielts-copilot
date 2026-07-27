@@ -189,7 +189,7 @@ export function HeaderAuthNav() {
           type="button"
           variant="outline"
           size="icon"
-          className="md:hidden"
+          className="lg:hidden"
           aria-label={t("nav.open", "Open navigation")}
           aria-expanded={isMenuOpen}
           aria-controls="mobile-marketing-nav"
@@ -212,7 +212,7 @@ export function HeaderAuthNav() {
   if (mode !== "supabase" || !user) {
     return (
       <>
-        <div className="hidden min-w-0 items-center gap-1 md:flex lg:gap-2">
+        <div className="hidden min-w-0 items-center gap-1 lg:flex lg:gap-2">
           <Button asChild variant="ghost" size="sm">
             <Link href="/login">{t("nav.login", "Log in")}</Link>
           </Button>
@@ -227,7 +227,7 @@ export function HeaderAuthNav() {
           type="button"
           variant="outline"
           size="icon"
-          className="md:hidden"
+          className="lg:hidden"
           aria-label={t("nav.open", "Open navigation")}
           aria-expanded={isMenuOpen}
           aria-controls="mobile-marketing-nav"
@@ -286,7 +286,7 @@ export function HeaderAuthNav() {
 
   return (
     <>
-      <div className="hidden min-w-0 items-center gap-1 md:flex lg:gap-2">
+      <div className="hidden min-w-0 items-center gap-1 lg:flex lg:gap-2">
         <Button asChild variant="ghost" size="sm" className="px-2 sm:px-3">
           <Link href="/dashboard" aria-label={t("nav.dashboard", "Dashboard")}>
             <LayoutDashboard className="h-4 w-4" aria-hidden="true" />
@@ -336,7 +336,7 @@ export function HeaderAuthNav() {
         type="button"
         variant="outline"
         size="icon"
-        className="md:hidden"
+        className="lg:hidden"
         aria-label={t("nav.open", "Open navigation")}
         aria-expanded={isMenuOpen}
         aria-controls="mobile-marketing-nav"
@@ -394,7 +394,7 @@ function MarketingMobileMenu({
   return createPortal(
     <div
       id="mobile-marketing-nav"
-      className="fixed inset-0 z-50 md:hidden"
+      className="fixed inset-0 z-50 lg:hidden"
       role="dialog"
       aria-modal="true"
       aria-label={title}
@@ -447,7 +447,7 @@ function MarketingMobileMenu({
           })}
         </nav>
 
-        <div className="space-y-3 border-t border-slate-200 px-4 py-4">
+        <div className="space-y-3 border-t border-slate-200 px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom)+5rem)]">
           <LanguageSwitcher variant="menu" />
           {footer}
         </div>

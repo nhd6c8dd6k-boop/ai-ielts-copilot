@@ -523,56 +523,34 @@ export default function Home() {
       <main>
         <section className="relative overflow-hidden border-b border-slate-200 bg-[#f8faf8]">
           <div className="absolute inset-0 bg-[linear-gradient(to_right,#e5e7eb_1px,transparent_1px),linear-gradient(to_bottom,#e5e7eb_1px,transparent_1px)] bg-[size:72px_72px] opacity-40" />
-          <div className="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
-            <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
+          <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8 lg:py-16">
+            <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:gap-10">
               <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-3">
-                <Badge className="border-slate-950 bg-slate-950 text-white">
-                  {t.beta}
-                </Badge>
-                <Badge className="bg-white/80">{t.badge}</Badge>
-              </div>
-                <div className="mt-6 flex">
-                <BrandLogo
-                  className="rounded-lg border border-slate-200 bg-white/80 px-3 py-2 shadow-sm"
-                  textClassName="text-base"
-                />
-              </div>
-                <h1 className="mt-6 max-w-3xl break-words text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                  <Badge className="border-slate-950 bg-slate-950 text-white">
+                    {t.beta}
+                  </Badge>
+                  <Badge className="bg-white/80">{t.badge}</Badge>
+                </div>
+                <div className="mt-5 hidden sm:flex">
+                  <BrandLogo
+                    className="rounded-lg border border-slate-200 bg-white/80 px-3 py-2 shadow-sm"
+                    textClassName="text-base"
+                  />
+                </div>
+                <h1 className="mt-5 max-w-3xl break-words text-3xl font-semibold tracking-tight text-slate-950 sm:mt-6 sm:text-5xl lg:text-6xl">
                   {msg(
                     "home.hero.title",
-                    "Go beyond the Band score.",
+                    "Get IELTS Writing feedback you can actually use.",
                   )}
-              </h1>
-                <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">
+                </h1>
+                <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600 sm:mt-6 sm:text-lg sm:leading-8">
                   {msg(
                     "home.hero.subtitle",
                     "Get criterion scores, task-specific feedback, sentence rewrites, and clear next steps. Try one AI Writing feedback for free each day.",
                   )}
-              </p>
-                <p className="mt-4 inline-flex rounded-full border border-teal-200 bg-white/90 px-4 py-2 text-sm font-medium text-teal-800">
-                  {msg(
-                    "home.hero.freeWriting",
-                    "1 free AI Writing feedback each day",
-                  )}
-              </p>
-                <div className="mt-6 grid max-w-2xl gap-2 sm:grid-cols-2">
-                  {heroPoints.map((item) => (
-                  <div
-                    key={item}
-                    className="rounded-md border border-slate-200 bg-white/80 p-3 text-sm leading-6 text-slate-700"
-                  >
-                    {item}
-                  </div>
-                ))}
-              </div>
-                <p className="mt-4 text-sm leading-6 text-slate-500">
-                  {msg(
-                    "home.hero.disclaimer",
-                    "AI scores are for study guidance and are not official IELTS results.",
-                  )}
                 </p>
-                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <div className="mt-5 flex flex-col gap-3 sm:mt-8 sm:flex-row">
                   <Button asChild size="lg">
                     <Link href="/practice/writing">
                       {msg(
@@ -587,6 +565,28 @@ export default function Home() {
                       {msg("home.hero.sampleLink", "View Sample Feedback")}
                     </Link>
                   </Button>
+                </div>
+                <p className="mt-4 inline-flex rounded-full border border-teal-200 bg-white/90 px-4 py-2 text-sm font-medium text-teal-800">
+                  {msg(
+                    "home.hero.freeWriting",
+                    "1 free AI Writing feedback each day",
+                  )}
+                </p>
+                <p className="mt-3 text-sm leading-6 text-slate-500 sm:mt-4">
+                  {msg(
+                    "home.hero.disclaimer",
+                    "AI scores are for study guidance and are not official IELTS results.",
+                  )}
+                </p>
+                <div className="mt-5 grid max-w-2xl gap-2 sm:mt-6 sm:grid-cols-2">
+                  {heroPoints.map((item) => (
+                    <div
+                      key={item}
+                      className="rounded-md border border-slate-200 bg-white/80 p-3 text-sm leading-6 text-slate-700"
+                    >
+                      {item}
+                    </div>
+                  ))}
                 </div>
               </div>
               <div className="min-w-0">

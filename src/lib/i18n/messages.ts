@@ -39,7 +39,7 @@ export const messages: Record<Language, Record<string, string>> = {
     "footer.privacy": "Privacy Policy",
     "footer.terms": "Terms of Use",
 
-    "home.hero.title": "Go beyond the Band score.",
+    "home.hero.title": "Get IELTS Writing feedback you can actually use.",
     "home.hero.subtitle":
       "Get criterion scores, task-specific feedback, sentence rewrites, and clear next steps. Try one AI Writing feedback for free each day.",
     "home.hero.freeWriting": "1 free AI Writing feedback each day",
@@ -851,10 +851,10 @@ export const messages: Record<Language, Record<string, string>> = {
     "pricing.description":
       "Start with Reading, Listening, Speaking preparation, and limited Writing feedback. Upgrade when you need more Writing practice.",
     "pricing.billingStatus":
-      "Pro billing is currently handled through live chat and manual activation. The Pro buttons do not start Stripe Checkout.",
+      "Manual upgrade with quick activation. Contact us after payment and we’ll activate Pro manually.",
     "pricing.free": "Free",
     "pricing.availableNow": "Available now",
-    "pricing.startPracticing": "Start practising for free",
+    "pricing.startPracticing": "Start free",
     "pricing.freePlan": "Free",
     "pricing.freeBody":
       "Explore the core practice experience before upgrading.",
@@ -866,7 +866,7 @@ export const messages: Record<Language, Record<string, string>> = {
       "For learners who want regular Writing feedback without a long commitment.",
     "pricing.monthly.note":
       "Monthly access. Renewal is handled manually through support.",
-    "pricing.yearly.badge": "Yearly option",
+    "pricing.yearly.badge": "Recommended",
     "pricing.yearly.title": "Pro Yearly",
     "pricing.yearly.body":
       "For learners who expect to practise consistently across a longer period.",
@@ -875,19 +875,19 @@ export const messages: Record<Language, Record<string, string>> = {
     "pricing.yearly.note":
       "Save CA$39.89 compared with monthly billing.",
     "pricing.proPriceRmb": "Approx. ¥52 / month",
-    "pricing.contactUpgrade": "Contact to upgrade",
+    "pricing.contactUpgrade": "Contact us to upgrade",
     "pricing.checkingPlan": "Checking plan",
     "pricing.currentPlan": "Current plan",
     "pricing.continuePractice": "Continue practising",
     "pricing.proIncludes": "Everything in Free, plus:",
-    "pricing.chatCta.monthly": "Contact us to activate Pro Monthly",
-    "pricing.chatCta.yearly": "Contact us to activate Pro Yearly",
+    "pricing.chatCta.monthly": "Contact us to upgrade",
+    "pricing.chatCta.yearly": "Contact us to upgrade",
     "pricing.chatMessage.monthly":
       "Hi, I’d like to upgrade to the Pro Monthly plan for CA$9.99.",
     "pricing.chatMessage.yearly":
       "Hi, I’d like to upgrade to the Pro Yearly plan for CA$79.99.",
     "pricing.manualActivationNote":
-      "After payment is confirmed, Pro will be manually activated using your registered email.",
+      "Message us after payment and we’ll activate Pro manually using your registered email.",
     "pricing.activationTiming":
       "Use the registered email on your AI IELTS Copilot account so we can activate the correct user.",
     "pricing.noAutoActivation":
@@ -1785,10 +1785,10 @@ export const messages: Record<Language, Record<string, string>> = {
     "pricing.description":
       "先使用 Reading、Listening 和 Speaking 备考内容，并体验有限次数的 Writing Feedback；需要更多 Writing 练习时可升级 Pro。",
     "pricing.billingStatus":
-      "目前 Pro 通过在线客服和人工确认开通。Pro 按钮不会自动启动 Stripe Checkout。",
+      "人工升级，确认后尽快开通。付款后联系我们，我们会为你手动开通 Pro。",
     "pricing.free": "免费版",
     "pricing.availableNow": "当前可用",
-    "pricing.startPracticing": "开始免费练习",
+    "pricing.startPracticing": "免费开始",
     "pricing.freePlan": "免费版",
     "pricing.freeBody":
       "先体验核心练习功能，再决定是否升级。",
@@ -1798,24 +1798,24 @@ export const messages: Record<Language, Record<string, string>> = {
     "pricing.monthly.title": "Pro 月付",
     "pricing.monthly.body": "适合希望定期获得 Writing Feedback、但暂时不需要长期周期的学习者。",
     "pricing.monthly.note": "月付访问权限。续费通过客服人工处理。",
-    "pricing.yearly.badge": "年度选项",
+    "pricing.yearly.badge": "推荐",
     "pricing.yearly.title": "Pro 年付",
     "pricing.yearly.body": "适合计划在较长周期内持续练习的学习者。",
     "pricing.yearly.monthlyEquivalent": "约 CA$6.67 / 月",
     "pricing.yearly.save": "节省 33%",
     "pricing.yearly.note": "相比连续月付，可节省 CA$39.89。",
     "pricing.proPriceRmb": "约 ¥52 / 月",
-    "pricing.contactUpgrade": "联系开通 Pro",
+    "pricing.contactUpgrade": "联系我们升级",
     "pricing.checkingPlan": "正在检查计划",
     "pricing.currentPlan": "当前计划",
     "pricing.continuePractice": "继续练习",
     "pricing.proIncludes": "包含 Free 的全部内容，另外：",
-    "pricing.chatCta.monthly": "联系客服开通 Pro 月付",
-    "pricing.chatCta.yearly": "联系客服开通 Pro 年付",
+    "pricing.chatCta.monthly": "联系我们升级",
+    "pricing.chatCta.yearly": "联系我们升级",
     "pricing.chatMessage.monthly": "你好，我想升级到 CA$9.99/月的 Pro 月付套餐。",
     "pricing.chatMessage.yearly": "你好，我想升级到 CA$79.99/年的 Pro 年付套餐。",
     "pricing.manualActivationNote":
-      "付款确认后，管理员会使用你的注册邮箱手动开通 Pro。",
+      "付款后联系我们，我们会使用你的注册邮箱手动开通 Pro。",
     "pricing.activationTiming": "请使用你在 AI IELTS Copilot 注册的邮箱，方便我们开通正确账号。",
     "pricing.noAutoActivation":
       "这个按钮会打开在线客服，不会自动开通 Pro，也不会启动 Stripe Checkout。",

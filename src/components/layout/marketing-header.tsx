@@ -18,8 +18,8 @@ export function MarketingHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-background/90 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
-        <BrandLogo compact className="min-w-0 flex-1 md:flex-none" textClassName="truncate" />
-        <nav className="hidden items-center gap-7 text-sm text-slate-600 md:flex">
+        <BrandLogo compact className="min-w-0 flex-1 lg:flex-none" textClassName="truncate" />
+        <nav className="hidden items-center gap-7 text-sm text-slate-600 lg:flex">
           {navigation.map((item) => (
             <Link
               key={item.href}
@@ -31,7 +31,7 @@ export function MarketingHeader() {
           ))}
         </nav>
         <div className="flex shrink-0 items-center gap-1 sm:gap-2">
-          <LanguageSwitcher compact className="hidden shrink-0 md:inline-flex" />
+          <LanguageSwitcher compact className="hidden shrink-0 lg:inline-flex" />
           <HeaderAuthNav />
         </div>
       </div>

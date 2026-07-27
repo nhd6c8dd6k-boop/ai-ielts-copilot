@@ -86,8 +86,8 @@ export function PricingFreePlanAction() {
 
   if (viewerStatus === "loading") {
     return (
-      <Button className="mt-8 w-full" disabled>
-        <LocalizedText k="pricing.checkingPlan" fallback="Checking plan" />
+      <Button className="mt-8 w-full" disabled aria-busy="true">
+        <LocalizedText k="pricing.startPracticing" fallback="Start free" />
       </Button>
     );
   }
@@ -127,8 +127,11 @@ export function PricingProPlanAction({ plan }: { plan: "monthly" | "yearly" }) {
 
   if (viewerStatus === "loading") {
     return (
-      <Button className="mt-6 w-full" disabled>
-        <LocalizedText k="pricing.checkingPlan" fallback="Checking plan" />
+      <Button className="mt-6 w-full" disabled aria-busy="true">
+        <LocalizedText
+          k="pricing.contactUpgrade"
+          fallback="Contact us to upgrade"
+        />
       </Button>
     );
   }

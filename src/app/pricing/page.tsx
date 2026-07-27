@@ -139,7 +139,7 @@ export default function PricingPage() {
           <div className="mt-5 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-600">
             <LocalizedText
               k="pricing.billingStatus"
-              fallback="Pro billing is currently handled through live chat and manual activation. The Pro buttons do not start Stripe Checkout."
+              fallback="Manual upgrade with quick activation. Contact us after payment and we’ll activate Pro manually."
             />
           </div>
         </div>
@@ -361,7 +361,13 @@ function ProPlanCard({
   noteFallback: string;
 }) {
   return (
-    <section className="rounded-lg border border-teal-200 bg-[#fbfbf8] p-6">
+    <section
+      className={
+        plan === "yearly"
+          ? "rounded-lg border border-teal-400 bg-[#fbfbf8] p-6 shadow-md"
+          : "rounded-lg border border-teal-200 bg-[#fbfbf8] p-6"
+      }
+    >
       <div className="flex h-10 w-10 items-center justify-center rounded-md bg-white text-teal-800 shadow-sm ring-1 ring-teal-100">
         <Crown className="h-5 w-5" aria-hidden="true" />
       </div>
