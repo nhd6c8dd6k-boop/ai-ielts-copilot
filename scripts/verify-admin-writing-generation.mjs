@@ -339,7 +339,7 @@ const writingPracticeSource = await readFile(
 );
 assert.match(
   writingPracticeSource,
-  /\.select\("id,title,task_type,topic,prompt,visual_data,band_target,created_at"\)/,
+  /\.select\("id,slug,title,task_type,topic,prompt,visual_data,band_target,created_at"\)/,
 );
 assert.match(writingPracticeSource, /title:\s*task\.title/);
 assert.match(writingPracticeSource, /title:\s*data\.title/);
@@ -362,7 +362,7 @@ const adminDetailSource = await readFile(
 );
 assert.match(
   adminDetailSource,
-  /\.select\(\s*"id,title,task_type,topic,prompt,visual_data,/,
+  /\.select\(\s*"id,slug,title,task_type,topic,prompt,visual_data,/,
 );
 assert.match(adminDetailSource, /buildWritingDetailTitle\(data\)/);
 assert.match(adminDetailSource, /const normalizedWritingTitle/);

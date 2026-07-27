@@ -24,6 +24,7 @@ import {
   type AdminSpeakingPartThreeOutput,
   type AdminSpeakingPartTwoOutput,
 } from "@/server/services/admin-speaking-generation-schema";
+import { createUniqueWritingTaskSlug } from "@/server/services/writing-task-slugs";
 
 const adminReadingQuestionSchema = z.object({
   type: z.string().min(1),
@@ -363,6 +364,11 @@ export async function generateAdminWritingContent({
       const visualData = normalizeAdminWritingVisualDataForStorage(
         data.visual_data,
       );
+      const slug = await createUniqueWritingTaskSlug({
+        taskType: data.task_type === 1 ? 1 : 2,
+        title: data.title,
+        topic: data.topic,
+      });
 
       assertOriginalContentPolicy(data.prompt);
 
@@ -370,6 +376,7 @@ export async function generateAdminWritingContent({
         .from("writing_tasks")
         .insert({
           title: data.title.trim(),
+          slug,
           task_type: data.task_type,
           topic: data.topic,
           prompt: data.prompt,

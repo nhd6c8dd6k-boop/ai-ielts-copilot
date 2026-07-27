@@ -198,6 +198,7 @@ type AdminContentDetail =
       type: "writing";
       content: {
         id: string;
+        slug: string;
         title: string;
         taskType: number;
         topic: string;
@@ -1952,6 +1953,11 @@ function WritingDetail({
         <Metric label="Time" value={`${detail.content.suggestedTimeMinutes} min`} />
         <Metric label="Minimum" value={`${detail.content.minimumWords} words`} />
       </div>
+      <ReviewSection title="Slug">
+        <div className="rounded-md border border-slate-200 bg-slate-50 px-4 py-3 font-mono text-sm text-slate-700">
+          {detail.content.slug}
+        </div>
+      </ReviewSection>
       <ReviewSection title="Prompt">
         <WritingTaskVisual
           prompt={detail.content.prompt}

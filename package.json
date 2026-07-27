@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit -p tsconfig.typecheck.json",
-    "test": "pnpm test:usage-limits && pnpm test:speaking-pricing-and-limits && pnpm test:admin-speaking-generation && pnpm test:elevenlabs-listening-generation",
+    "test": "pnpm test:usage-limits && pnpm test:speaking-pricing-and-limits && pnpm test:admin-speaking-generation && pnpm test:elevenlabs-listening-generation && pnpm test:writing-task-seo-routes",
     "test:usage-limits": "node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-usage-limits.mjs",
     "test:speaking-pricing-and-limits": "node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-speaking-pricing-and-limits.mjs",
     "test:writing-scoring": "node scripts/verify-writing-scoring.mjs",
@@ -25,6 +25,7 @@
     "test:admin-speaking-generation": "node scripts/verify-admin-speaking-generation.mjs",
     "test:elevenlabs-listening-generation": "node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-elevenlabs-listening-generation.mjs",
     "test:writing-task-cards": "node scripts/verify-writing-task-cards.mjs",
+    "test:writing-task-seo-routes": "node scripts/verify-writing-task-seo-routes.mjs",
     "elevenlabs:voices": "node scripts/list-elevenlabs-voices.mjs",
     "listening:generate:elevenlabs": "node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/generate-elevenlabs-listening-practices.mjs"
   },

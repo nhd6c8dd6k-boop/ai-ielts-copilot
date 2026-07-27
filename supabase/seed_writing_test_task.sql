@@ -7,6 +7,7 @@ begin
       and prompt = 'Some people believe that online learning is more effective than traditional classroom learning. Others think that face-to-face teaching is still the best way to learn. Discuss both views and give your own opinion.'
   ) then
     insert into public.writing_tasks (
+      slug,
       task_type,
       topic,
       prompt,
@@ -20,6 +21,7 @@ begin
       published_at
     )
     values (
+      'online-learning-vs-classroom-education-task-2',
       2,
       'Education',
       'Some people believe that online learning is more effective than traditional classroom learning. Others think that face-to-face teaching is still the best way to learn. Discuss both views and give your own opinion.',

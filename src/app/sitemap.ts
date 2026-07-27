@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 
 import { absoluteUrl } from "@/lib/seo";
 import { getPublishedSpeakingSitemapEntries } from "@/server/services/speaking-practice";
+import { getPublishedWritingSitemapEntries } from "@/server/services/writing-practice";
 
 const publicRoutes = [
   "",
@@ -29,11 +30,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let speakingTopics: Awaited<
     ReturnType<typeof getPublishedSpeakingSitemapEntries>
   > = [];
+  let writingTasks: Awaited<
+    ReturnType<typeof getPublishedWritingSitemapEntries>
+  > = [];
 
-  try {
-    speakingTopics = await getPublishedSpeakingSitemapEntries();
-  } catch {
-    speakingTopics = [];
+  const [speakingResult, writingResult] = await Promise.allSettled([
+    getPublishedSpeakingSitemapEntries(),
+    getPublishedWritingSitemapEntries(),
+  ]);
+
+  if (speakingResult.status === "fulfilled") {
+    speakingTopics = speakingResult.value;
+  }
+
+  if (writingResult.status === "fulfilled") {
+    writingTasks = writingResult.value;
   }
 
   return [
@@ -46,6 +57,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...speakingTopics.map((topic) => ({
       url: absoluteUrl(`/practice/speaking/${topic.slug}`),
       lastModified: new Date(topic.createdAt),
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
+    })),
+    ...writingTasks.map((task) => ({
+      url: absoluteUrl(`/practice/writing/${task.slug}`),
+      lastModified: new Date(task.updatedAt),
       changeFrequency: "monthly" as const,
       priority: 0.7,
     })),

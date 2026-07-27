@@ -213,7 +213,7 @@ export async function GET(request: Request) {
   const { data, error } = await admin
     .from("writing_tasks")
     .select(
-      "id,title,task_type,topic,prompt,visual_data,band_target,sample_answer_band_7,sample_answer_band_8,sample_answer_band_9,scoring_notes,source_type,status,created_by,published_at,created_at,updated_at",
+      "id,slug,title,task_type,topic,prompt,visual_data,band_target,sample_answer_band_7,sample_answer_band_8,sample_answer_band_9,scoring_notes,source_type,status,created_by,published_at,created_at,updated_at",
     )
     .eq("id", id)
     .maybeSingle();
@@ -234,6 +234,7 @@ export async function GET(request: Request) {
     type,
     content: {
       id: data.id,
+      slug: data.slug,
       title: buildWritingDetailTitle(data),
       taskType: data.task_type,
       topic: data.topic,
@@ -656,7 +657,7 @@ async function loadCurrentWriting(
   const { data, error } = await admin
     .from("writing_tasks")
     .select(
-      "id,title,task_type,topic,prompt,visual_data,band_target,sample_answer_band_7,sample_answer_band_8,sample_answer_band_9,scoring_notes",
+      "id,slug,title,task_type,topic,prompt,visual_data,band_target,sample_answer_band_7,sample_answer_band_8,sample_answer_band_9,scoring_notes",
     )
     .eq("id", id)
     .maybeSingle();

@@ -9,6 +9,7 @@ import {
   getWritingDisplayTitle,
   getWritingQuestionTypeLabel,
 } from "@/lib/writing-task-display";
+import { isUuid } from "@/lib/writing-task-slug";
 import {
   getWritingVisualTypeLabel,
   normalizeWritingVisualData,
@@ -22,6 +23,7 @@ import { sanitizeScoreSummaryBands } from "@/server/services/writing-feedback-sa
 
 export type PublishedWritingTaskSummary = {
   id: string;
+  slug: string;
   taskType: 1 | 2;
   topic: string;
   title: string;
@@ -154,61 +156,76 @@ type UsageSummary = {
   estimatedCost: number;
 };
 
+type PublishedWritingTaskRow = {
+  id: string;
+  slug: string;
+  title: string | null;
+  task_type: number;
+  topic: string;
+  prompt: string;
+  visual_data: unknown;
+  band_target: number | null;
+  sample_answer_band_7: string | null;
+  sample_answer_band_8: string | null;
+  created_at: string;
+};
+
 export const getPublishedWritingTaskSummaries = cache(
   async (userId?: string | null) => {
-  if (!isSupabaseConfigured()) {
-    return [];
-  }
+    if (!isSupabaseConfigured()) {
+      return [];
+    }
 
-  const admin = createSupabaseAdminClient();
-  const { data, error } = await admin
-    .from("writing_tasks")
-    .select("id,title,task_type,topic,prompt,visual_data,band_target,created_at")
-    .eq("status", "published")
-    .order("created_at", { ascending: false })
-    .limit(50);
+    const admin = createSupabaseAdminClient();
+    const { data, error } = await admin
+      .from("writing_tasks")
+      .select("id,slug,title,task_type,topic,prompt,visual_data,band_target,created_at")
+      .eq("status", "published")
+      .order("created_at", { ascending: false })
+      .limit(50);
 
-  if (error) {
-    throw new Error(error.message);
-  }
+    if (error) {
+      throw new Error(error.message);
+    }
 
-  const taskIds = (data ?? []).map((task) => task.id);
-  const completionByTaskId = userId
-    ? await getWritingCompletionByTaskId({ userId, taskIds })
-    : new Map<string, WritingCompletionSummary>();
+    const taskIds = (data ?? []).map((task) => task.id);
+    const completionByTaskId = userId
+      ? await getWritingCompletionByTaskId({ userId, taskIds })
+      : new Map<string, WritingCompletionSummary>();
 
-  return (data ?? []).map(
-    (task): PublishedWritingTaskSummary => {
-      const taskType = normalizeTaskType(task.task_type);
-      const structuredVisualData = normalizeWritingVisualData(task.visual_data);
+    return (data ?? []).map(
+      (task): PublishedWritingTaskSummary => {
+        const taskType = normalizeTaskType(task.task_type);
+        const structuredVisualData = normalizeWritingVisualData(task.visual_data);
 
-      return {
-        id: task.id,
-        taskType,
-        topic: task.topic,
-        title: buildWritingTaskTitle({
+        return {
+          id: task.id,
+          slug: task.slug,
           taskType,
           topic: task.topic,
-          prompt: task.prompt,
-          title: task.title,
-          visualTitle: structuredVisualData?.title,
-        }),
-        promptSummary: summarizePrompt(task.prompt),
-        questionTypeLabel:
-          taskType === 2 ? getWritingQuestionTypeLabel(task.prompt) : null,
-        visualType: structuredVisualData?.type ?? null,
-        visualTypeLabel: getWritingVisualTypeLabel({
-          prompt: task.prompt,
-          taskType,
-          visualData: task.visual_data,
-        }),
-        bandTarget: task.band_target,
-        estimatedTimeMinutes: getSuggestedTimeMinutes(task.task_type),
-        createdAt: task.created_at,
-        completion: completionByTaskId.get(task.id) ?? null,
-      };
-    },
-  ).sort(sortIncompleteFirst);
+          title: buildWritingTaskTitle({
+            taskType,
+            topic: task.topic,
+            prompt: task.prompt,
+            title: task.title,
+            visualTitle: structuredVisualData?.title,
+          }),
+          promptSummary: summarizePrompt(task.prompt),
+          questionTypeLabel:
+            taskType === 2 ? getWritingQuestionTypeLabel(task.prompt) : null,
+          visualType: structuredVisualData?.type ?? null,
+          visualTypeLabel: getWritingVisualTypeLabel({
+            prompt: task.prompt,
+            taskType,
+            visualData: task.visual_data,
+          }),
+          bandTarget: task.band_target,
+          estimatedTimeMinutes: getSuggestedTimeMinutes(task.task_type),
+          createdAt: task.created_at,
+          completion: completionByTaskId.get(task.id) ?? null,
+        };
+      },
+    ).sort(sortIncompleteFirst);
   },
 );
 
@@ -271,7 +288,7 @@ export const getPublishedWritingTask = cache(async (id: string) => {
   const { data, error } = await admin
     .from("writing_tasks")
     .select(
-      "id,title,task_type,topic,prompt,visual_data,band_target,sample_answer_band_7,sample_answer_band_8,created_at",
+      "id,slug,title,task_type,topic,prompt,visual_data,band_target,sample_answer_band_7,sample_answer_band_8,created_at",
     )
     .eq("id", id)
     .eq("status", "published")
@@ -285,11 +302,76 @@ export const getPublishedWritingTask = cache(async (id: string) => {
     return null;
   }
 
+  return mapPublishedWritingTask(data);
+});
+
+export const getPublishedWritingTaskBySlugOrId = cache(async (value: string) => {
+  if (!isSupabaseConfigured()) {
+    return null;
+  }
+
+  if (isUuid(value)) {
+    const task = await getPublishedWritingTask(value);
+
+    return task ? { task, shouldRedirect: true } : null;
+  }
+
+  const admin = createSupabaseAdminClient();
+  const { data, error } = await admin
+    .from("writing_tasks")
+    .select(
+      "id,slug,title,task_type,topic,prompt,visual_data,band_target,sample_answer_band_7,sample_answer_band_8,created_at",
+    )
+    .eq("slug", value)
+    .eq("status", "published")
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  return {
+    task: mapPublishedWritingTask(data),
+    shouldRedirect: false,
+  };
+});
+
+export const getPublishedWritingSitemapEntries = cache(async () => {
+  if (!isSupabaseConfigured()) {
+    return [];
+  }
+
+  const admin = createSupabaseAdminClient();
+  const { data, error } = await admin
+    .from("writing_tasks")
+    .select("slug,updated_at")
+    .eq("status", "published")
+    .order("updated_at", { ascending: false })
+    .limit(500);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data ?? [])
+    .filter((task) => typeof task.slug === "string" && task.slug.length > 0)
+    .map((task) => ({
+      slug: task.slug,
+      updatedAt: task.updated_at,
+    }));
+});
+
+function mapPublishedWritingTask(data: PublishedWritingTaskRow) {
   const taskType = normalizeTaskType(data.task_type);
   const structuredVisualData = normalizeWritingVisualData(data.visual_data);
 
   return {
     id: data.id,
+    slug: data.slug,
     taskType,
     topic: data.topic,
     title: buildWritingTaskTitle({
@@ -318,7 +400,7 @@ export const getPublishedWritingTask = cache(async (id: string) => {
     completion: null,
     createdAt: data.created_at,
   } satisfies PublishedWritingTask;
-});
+}
 
 export async function submitWritingPractice({
   userId,

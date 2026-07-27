@@ -144,8 +144,8 @@ export default async function WritingPracticePage({ searchParams }: PageProps) {
                   <Link
                     href={
                       isSignedIn
-                        ? `/practice/writing/${task.id}`
-                        : buildLoginRedirectHref(`/practice/writing/${task.id}`)
+                        ? `/practice/writing/${task.slug}`
+                        : buildLoginRedirectHref(`/practice/writing/${task.slug}`)
                     }
                   >
                     {task.completion ? (
