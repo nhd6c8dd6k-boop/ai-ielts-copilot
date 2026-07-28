@@ -448,7 +448,7 @@ function MarketingMobileMenu({
         </nav>
 
         <div className="space-y-3 border-t border-slate-200 px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom)+5rem)]">
-          <LanguageSwitcher variant="menu" />
+          <LanguageSwitcher variant="menu" onSelect={onClose} />
           {footer}
         </div>
       </div>

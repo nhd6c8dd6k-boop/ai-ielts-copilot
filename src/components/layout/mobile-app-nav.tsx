@@ -254,7 +254,7 @@ export function MobileAppNav() {
             </nav>
 
             <div className="space-y-3 border-t border-slate-200 px-4 py-4">
-              <LanguageSwitcher variant="menu" />
+              <LanguageSwitcher variant="menu" onSelect={() => setIsOpen(false)} />
               {mode === "loading" ? null : isAuthenticated ? (
                 <Button
                   type="button"
