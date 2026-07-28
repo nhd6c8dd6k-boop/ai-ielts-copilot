@@ -16,12 +16,21 @@ import { getCurrentUserId } from "@/server/services/auth-session";
 import { getPublishedWritingTaskSummaries } from "@/server/services/writing-practice";
 import { getUserPracticeUsage } from "@/server/services/usage-limits";
 
+const writingPracticeUrl = absoluteUrl("/practice/writing");
+
 export const metadata: Metadata = {
   title: "IELTS Writing Practice with AI Feedback",
   description:
     "Practice IELTS Writing Task 1 and Task 2, then get AI-powered band feedback, criterion scores, sentence rewrites, and next steps.",
   alternates: {
-    canonical: absoluteUrl("/practice/writing"),
+    canonical: writingPracticeUrl,
+  },
+  openGraph: {
+    title: "IELTS Writing Practice with AI Feedback",
+    description:
+      "Practice IELTS Writing Task 1 and Task 2, then get AI-powered band feedback, criterion scores, sentence rewrites, and next steps.",
+    url: writingPracticeUrl,
+    type: "website",
   },
 };
 
