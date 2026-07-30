@@ -15,9 +15,14 @@ type LanguageSwitcherProps = {
   variant?: "dropdown" | "menu";
 };
 
-const options: Array<{ value: Language; label: string; triggerLabel: string }> = [
-  { value: "en", label: "English", triggerLabel: "EN" },
-  { value: "zh", label: "中文", triggerLabel: "中文" },
+const options: Array<{
+  value: Language;
+  flag: string;
+  label: string;
+  triggerLabel: string;
+}> = [
+  { value: "en", flag: "🇬🇧", label: "English", triggerLabel: "EN" },
+  { value: "zh", flag: "🇨🇳", label: "中文", triggerLabel: "中文" },
 ];
 
 export function LanguageSwitcher({
@@ -137,10 +142,8 @@ export function LanguageSwitcher({
                 onClick={() => selectLanguage(option.value)}
               >
                 <span className="flex items-center gap-2">
-                  <span className="flex h-4 w-4 items-center justify-center">
-                    {active ? <Check className="h-4 w-4" aria-hidden="true" /> : null}
-                  </span>
-                  {option.label}
+                  <span aria-hidden="true">{option.flag}</span>
+                  <span>{option.label}</span>
                 </span>
               </button>
             );
@@ -180,7 +183,10 @@ export function LanguageSwitcher({
           }
         }}
       >
-        <span>{currentOption.triggerLabel}</span>
+        <span className="flex items-center gap-1.5">
+          <span aria-hidden="true">{currentOption.flag}</span>
+          <span>{currentOption.triggerLabel}</span>
+        </span>
         <ChevronDown
           className={cn("h-3.5 w-3.5 transition-transform", isOpen ? "rotate-180" : null)}
           aria-hidden="true"
@@ -253,7 +259,8 @@ export function LanguageSwitcher({
                 <span className="flex h-4 w-4 items-center justify-center">
                   {active ? <Check className="h-4 w-4" aria-hidden="true" /> : null}
                 </span>
-                {option.label}
+                <span aria-hidden="true">{option.flag}</span>
+                <span>{option.label}</span>
               </button>
             );
           })}
