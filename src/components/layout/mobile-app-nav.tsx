@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  ArrowRight,
   BookOpenText,
   CreditCard,
   Headphones,
@@ -45,10 +46,22 @@ const baseItems = [
   },
   { href: "/practice/writing", labelKey: "nav.writing", fallback: "Writing", icon: PenLine },
   {
+    href: "/writing-feedback",
+    labelKey: "nav.writingFeedback",
+    fallback: "Writing Feedback",
+    icon: PenLine,
+  },
+  {
     href: "/dashboard",
     labelKey: "nav.dashboard",
     fallback: "Dashboard",
     icon: LayoutDashboard,
+  },
+  {
+    href: "/methodology",
+    labelKey: "nav.methodology",
+    fallback: "Methodology",
+    icon: BookOpenText,
   },
   { href: "/pricing", labelKey: "nav.pricing", fallback: "Pricing", icon: CreditCard },
   { href: "/profile", labelKey: "nav.profile", fallback: "Profile", icon: UserRound },
@@ -63,12 +76,18 @@ const supportItem = {
 
 const publicItems = [
   { href: "/practice", labelKey: "nav.practice", fallback: "Practice", icon: LibraryBig },
+  {
+    href: "/writing-feedback",
+    labelKey: "nav.writingFeedback",
+    fallback: "Writing Feedback",
+    icon: PenLine,
+  },
   { href: "/pricing", labelKey: "nav.pricing", fallback: "Pricing", icon: CreditCard },
   {
-    href: "/demo/writing-feedback",
-    labelKey: "nav.sampleFeedback",
-    fallback: "Sample Feedback",
-    icon: PenLine,
+    href: "/methodology",
+    labelKey: "nav.methodology",
+    fallback: "Methodology",
+    icon: BookOpenText,
   },
   supportItem,
 ];
@@ -239,9 +258,9 @@ export function MobileAppNav() {
                     href={item.href}
                     onClick={() => setIsOpen(false)}
                     className={cn(
-                      "flex items-center gap-3 border-l-2 px-3 py-2.5 text-sm transition-colors",
+                      "flex min-h-11 items-center gap-3 border-l-2 px-3 py-2.5 text-sm transition-colors",
                       isActive
-                        ? "border-slate-950 font-semibold text-slate-950"
+                        ? "border-teal-600 bg-teal-50 font-semibold text-slate-950"
                         : "border-transparent text-slate-600 hover:text-slate-950",
                     )}
                     aria-current={isActive ? "page" : undefined}
@@ -255,6 +274,16 @@ export function MobileAppNav() {
 
             <div className="space-y-3 border-t border-slate-200 px-4 py-4">
               <LanguageSwitcher variant="menu" onSelect={() => setIsOpen(false)} />
+              <Button
+                asChild
+                size="sm"
+                className="min-h-11 w-full justify-center bg-teal-700 font-semibold text-white hover:bg-teal-800"
+              >
+                <Link href="/practice/writing" onClick={() => setIsOpen(false)}>
+                  {t("nav.tryWriting", "Try Writing")}
+                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </Link>
+              </Button>
               {mode === "loading" ? null : isAuthenticated ? (
                 <Button
                   type="button"

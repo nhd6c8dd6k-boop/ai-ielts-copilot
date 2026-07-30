@@ -166,8 +166,8 @@ export function LanguageSwitcher({
         ref={triggerRef}
         type="button"
         className={cn(
-          "inline-flex h-10 min-w-10 items-center justify-center gap-1 rounded-md px-2.5 font-semibold tracking-wide text-slate-700 transition-colors",
-          "hover:bg-slate-100 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950",
+          "inline-flex h-9 min-w-10 items-center justify-center gap-1 rounded-md border border-teal-200 bg-teal-50/60 px-2.5 font-semibold tracking-wide text-teal-900 transition-colors",
+          "hover:border-teal-300 hover:bg-teal-100 hover:text-teal-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-700",
           compact ? "text-xs" : "text-sm",
         )}
         aria-label={triggerLabel}

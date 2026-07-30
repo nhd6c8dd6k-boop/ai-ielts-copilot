@@ -5,6 +5,7 @@ import Link from "next/link";
 import { createPortal } from "react-dom";
 import {
   ArrowRight,
+  BookOpenText,
   CreditCard,
   Home,
   LayoutDashboard,
@@ -12,6 +13,7 @@ import {
   LifeBuoy,
   LogOut,
   Menu,
+  PenLine,
   Shield,
   UserRound,
   X,
@@ -46,17 +48,48 @@ type MobileMenuItem = {
   icon: LucideIcon;
 };
 
-const publicMenuItems: MobileMenuItem[] = [
-  { href: "/", labelKey: "nav.home", fallback: "Home", icon: Home },
+type MobileMenuSection = {
+  id: string;
+  labelKey: string;
+  fallback: string;
+  items: MobileMenuItem[];
+};
+
+const mainMenuItems: MobileMenuItem[] = [
   { href: "/practice", labelKey: "nav.practice", fallback: "Practice", icon: LibraryBig },
-  { href: "/pricing", labelKey: "nav.pricing", fallback: "Plans", icon: CreditCard },
-  { href: "/support", labelKey: "nav.support", fallback: "Support", icon: LifeBuoy },
   {
-    href: "/demo/writing-feedback",
-    labelKey: "nav.sampleFeedback",
-    fallback: "Sample Feedback",
-    icon: ArrowRight,
+    href: "/writing-feedback",
+    labelKey: "nav.writingFeedback",
+    fallback: "Writing Feedback",
+    icon: PenLine,
   },
+  { href: "/pricing", labelKey: "nav.pricing", fallback: "Plans", icon: CreditCard },
+];
+
+const learnMenuItems: MobileMenuItem[] = [
+  {
+    href: "/methodology",
+    labelKey: "nav.methodology",
+    fallback: "Methodology",
+    icon: BookOpenText,
+  },
+  { href: "/support", labelKey: "nav.support", fallback: "Support", icon: LifeBuoy },
+];
+
+const publicMenuSections: MobileMenuSection[] = [
+  { id: "main", labelKey: "nav.main", fallback: "Main", items: mainMenuItems },
+  { id: "learn", labelKey: "nav.learnTrust", fallback: "Learn & trust", items: learnMenuItems },
+];
+
+const accountMenuItems: MobileMenuItem[] = [
+  { href: "/", labelKey: "nav.home", fallback: "Home", icon: Home },
+  {
+    href: "/dashboard",
+    labelKey: "nav.dashboard",
+    fallback: "Dashboard",
+    icon: LayoutDashboard,
+  },
+  { href: "/profile", labelKey: "nav.profile", fallback: "Profile", icon: UserRound },
 ];
 
 export function HeaderAuthNav() {
@@ -200,10 +233,10 @@ export function HeaderAuthNav() {
         <MarketingMobileMenu
           isOpen={isMenuOpen}
           title={t("nav.navigation", "Navigation")}
-          items={publicMenuItems}
+          sections={publicMenuSections}
           pathname={pathname}
           onClose={() => setIsMenuOpen(false)}
-          footer={null}
+          footer={<MobileTryWritingButton onClose={() => setIsMenuOpen(false)} />}
         />
       </>
     );
@@ -238,21 +271,24 @@ export function HeaderAuthNav() {
         <MarketingMobileMenu
           isOpen={isMenuOpen}
           title={t("nav.navigation", "Navigation")}
-          items={publicMenuItems}
+          sections={publicMenuSections}
           pathname={pathname}
           onClose={() => setIsMenuOpen(false)}
           footer={
-            <div className="grid grid-cols-2 gap-2">
-              <Button asChild size="sm" variant="outline">
-                <Link href="/login" onClick={() => setIsMenuOpen(false)}>
-                  {t("nav.login", "Log in")}
-                </Link>
-              </Button>
-              <Button asChild size="sm">
-                <Link href="/register" onClick={() => setIsMenuOpen(false)}>
-                  {t("nav.register", "Start free")}
-                </Link>
-              </Button>
+            <div className="space-y-2">
+              <MobileTryWritingButton onClose={() => setIsMenuOpen(false)} />
+              <div className="grid grid-cols-2 gap-2">
+                <Button asChild size="sm" variant="outline">
+                  <Link href="/login" onClick={() => setIsMenuOpen(false)}>
+                    {t("nav.login", "Log in")}
+                  </Link>
+                </Button>
+                <Button asChild size="sm">
+                  <Link href="/register" onClick={() => setIsMenuOpen(false)}>
+                    {t("nav.register", "Start free")}
+                  </Link>
+                </Button>
+              </div>
             </div>
           }
         />
@@ -261,28 +297,20 @@ export function HeaderAuthNav() {
   }
 
   const isAdmin = user.role === "admin";
-  const accountMenuItems = isAdmin
-    ? [
-        ...publicMenuItems,
-        {
-          href: "/dashboard",
-          labelKey: "nav.dashboard",
-          fallback: "Dashboard",
-          icon: LayoutDashboard,
-        },
-        { href: "/profile", labelKey: "nav.profile", fallback: "Profile", icon: UserRound },
-        { href: "/admin", labelKey: "nav.admin", fallback: "Admin", icon: Shield },
-      ]
-    : [
-        ...publicMenuItems,
-        {
-          href: "/dashboard",
-          labelKey: "nav.dashboard",
-          fallback: "Dashboard",
-          icon: LayoutDashboard,
-        },
-        { href: "/profile", labelKey: "nav.profile", fallback: "Profile", icon: UserRound },
-      ];
+  const authenticatedMenuSections: MobileMenuSection[] = [
+    ...publicMenuSections,
+    {
+      id: "account",
+      labelKey: "nav.account",
+      fallback: "Account",
+      items: isAdmin
+        ? [
+            ...accountMenuItems,
+            { href: "/admin", labelKey: "nav.admin", fallback: "Admin", icon: Shield },
+          ]
+        : accountMenuItems,
+    },
+  ];
 
   return (
     <>
@@ -347,40 +375,60 @@ export function HeaderAuthNav() {
       <MarketingMobileMenu
         isOpen={isMenuOpen}
         title={t("nav.navigation", "Navigation")}
-        items={accountMenuItems}
+        sections={authenticatedMenuSections}
         pathname={pathname}
         onClose={() => setIsMenuOpen(false)}
         footer={
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="w-full justify-start"
-            onClick={signOut}
-            disabled={isSigningOut}
-          >
-            <LogOut className="h-4 w-4" aria-hidden="true" />
-            {isSigningOut
-              ? t("nav.signingOut", "Signing out")
-              : t("nav.signOut", "Sign out")}
-          </Button>
+          <div className="space-y-2">
+            <MobileTryWritingButton onClose={() => setIsMenuOpen(false)} />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-full justify-start"
+              onClick={signOut}
+              disabled={isSigningOut}
+            >
+              <LogOut className="h-4 w-4" aria-hidden="true" />
+              {isSigningOut
+                ? t("nav.signingOut", "Signing out")
+                : t("nav.signOut", "Sign out")}
+            </Button>
+          </div>
         }
       />
     </>
   );
 }
 
+function MobileTryWritingButton({ onClose }: { onClose: () => void }) {
+  const { t } = useI18n();
+
+  return (
+    <Button
+      asChild
+      size="sm"
+      className="min-h-11 w-full justify-center bg-teal-700 font-semibold text-white hover:bg-teal-800"
+    >
+      <Link href="/practice/writing" onClick={onClose}>
+        {t("nav.tryWriting", "Try Writing")}
+        <ArrowRight className="h-4 w-4" aria-hidden="true" />
+      </Link>
+    </Button>
+  );
+}
+
 function MarketingMobileMenu({
   isOpen,
   title,
-  items,
+  sections,
   pathname,
   footer,
   onClose,
 }: {
   isOpen: boolean;
   title: string;
-  items: MobileMenuItem[];
+  sections: MobileMenuSection[];
   pathname: string;
   footer: ReactNode;
   onClose: () => void;
@@ -419,32 +467,39 @@ function MarketingMobileMenu({
           </Button>
         </div>
 
-        <nav className="flex-1 space-y-1 px-3 py-4">
-          {items.map((item) => {
-            const Icon = item.icon;
-            const isActive =
-              pathname === item.href ||
-              (item.href !== "/" && pathname.startsWith(`${item.href}/`));
+        <nav className="flex-1 space-y-5 px-3 py-4">
+          {sections.map((section) => (
+            <div key={section.id} className="space-y-1">
+              <p className="px-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                {t(section.labelKey, section.fallback)}
+              </p>
+              {section.items.map((item) => {
+                const Icon = item.icon;
+                const isActive =
+                  pathname === item.href ||
+                  (item.href !== "/" && pathname.startsWith(`${item.href}/`));
 
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={onClose}
-                className={cn(
-                  "flex items-center gap-3 border-l-2 px-3 py-2.5 text-sm transition-colors",
-                  "hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950",
-                  isActive
-                    ? "border-slate-950 font-semibold text-slate-950"
-                    : "border-transparent text-slate-600",
-                )}
-                aria-current={isActive ? "page" : undefined}
-              >
-                <Icon className="h-4 w-4" aria-hidden="true" />
-                {t(item.labelKey, item.fallback)}
-              </Link>
-            );
-          })}
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={onClose}
+                    className={cn(
+                      "flex min-h-11 items-center gap-3 border-l-2 px-3 py-2.5 text-sm transition-colors",
+                      "hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950",
+                      isActive
+                        ? "border-teal-600 bg-teal-50 font-semibold text-slate-950"
+                        : "border-transparent text-slate-600",
+                    )}
+                    aria-current={isActive ? "page" : undefined}
+                  >
+                    <Icon className="h-4 w-4" aria-hidden="true" />
+                    {t(item.labelKey, item.fallback)}
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
         </nav>
 
         <div className="space-y-3 border-t border-slate-200 px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom)+5rem)]">
