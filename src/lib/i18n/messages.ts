@@ -68,7 +68,7 @@ export const messages: Record<Language, Record<string, string>> = {
       "Next steps show what to practise in the next essay.",
     "home.practice.writingTitle": "Writing",
     "home.practice.writingDescription":
-      "Complete Task 1 or Task 2 and receive detailed AI feedback.",
+      "Estimated band, criteria-based feedback and sentence improvements.",
     "home.practice.writingCta": "Start Writing",
     "home.practice.aiFeedbackBadge": "AI feedback available",
     "home.why.eyebrow": "AI Writing Feedback",
@@ -96,10 +96,27 @@ export const messages: Record<Language, Record<string, string>> = {
     "home.modules.description":
       "Writing includes AI feedback. Reading and Listening use automatic scoring. Speaking is currently a preparation library.",
     "home.modules.cta": "View all practice",
+    "home.methodology.eyebrow": "Methodology",
+    "home.methodology.title": "Built for serious IELTS practice",
+    "home.methodology.description":
+      "Our feedback and practice content are built around clear IELTS-focused methods, reviewed content and transparent limitations.",
+    "home.methodology.cta": "See our methodology",
+    "home.methodology.criteria.title": "Criteria-based Writing analysis",
+    "home.methodology.criteria.description":
+      "Writing feedback aligned with the four IELTS Writing assessment criteria.",
+    "home.methodology.calibration.title": "Task-specific score calibration",
+    "home.methodology.calibration.description":
+      "Task type, response length, completion and score consistency are checked before presenting an estimated band.",
+    "home.methodology.review.title": "Reviewed original practice content",
+    "home.methodology.review.description":
+      "Original IELTS-style practice content is reviewed before publication.",
+    "home.methodology.audio.title": "Natural Listening audio",
+    "home.methodology.audio.description":
+      "Listening exercises use reviewed scripts and natural multi-speaker audio.",
     "home.trust.eyebrow": "Before you start",
-    "home.trust.title": "Clear answers about scoring, privacy, and Pro access.",
+    "home.trust.title": "Quick questions before you start",
     "home.trust.description":
-      "AI IELTS Copilot provides IELTS-style practice and AI feedback for study purposes. Here are answers to common questions before you begin.",
+      "A short set of answers about estimated scores, privacy, and feedback language.",
     "home.trust.point.study": "AI scores are for study guidance",
     "home.trust.point.demo": "Public demos do not use real user essays",
     "home.trust.point.pro": "Pro is manually activated after verification",
@@ -128,6 +145,46 @@ export const messages: Record<Language, Record<string, string>> = {
       "Can I receive feedback in English or Chinese?",
     "home.faq.language.answer":
       "Yes. The site supports Chinese and English. New Writing feedback follows the interface language used when the essay is submitted, without displaying two full versions of the same report.",
+    "methodology.hero.badge": "Methodology",
+    "methodology.hero.title":
+      "How AI IELTS Copilot builds useful IELTS practice feedback",
+    "methodology.hero.description":
+      "We combine criteria-based Writing feedback, internal content review and transparent limitations so students know what the product can and cannot do.",
+    "methodology.writing.title": "Writing Feedback Method",
+    "methodology.writing.description":
+      "Writing responses are analysed across the four public IELTS Writing assessment criteria:",
+    "methodology.writing.followup":
+      "The system also checks task completion, response length and score consistency before presenting an estimated band score and detailed feedback.",
+    "methodology.calibration.title": "Score Calibration and Safety Checks",
+    "methodology.calibration.description":
+      "Task-specific checks help reduce inconsistent feedback. The report is designed to show practical strengths, areas to improve and sentence-level examples without claiming to replace an official result.",
+    "methodology.calibration.item.taskType": "Task 1 and Task 2 distinction",
+    "methodology.calibration.item.length":
+      "Minimum word guidance and underlength handling",
+    "methodology.calibration.item.taskFeedback": "Task-specific feedback",
+    "methodology.calibration.item.consistency": "Score consistency checks",
+    "methodology.calibration.item.improvements":
+      "Sentence improvements, strengths and areas to improve",
+    "methodology.review.title": "Practice Content Review",
+    "methodology.review.description":
+      "AI-generated practice content enters an internal review stage before publication.",
+    "methodology.review.item.clarity": "Clarity",
+    "methodology.review.item.originality": "Originality",
+    "methodology.review.item.format": "Task format",
+    "methodology.review.item.data": "Data consistency",
+    "methodology.review.item.answers": "Answer alignment",
+    "methodology.review.item.visual": "Visual validity",
+    "methodology.listening.title": "Listening Audio Production",
+    "methodology.listening.description":
+      "Listening audio is produced from reviewed IELTS-style scripts using ElevenLabs voice technology. Scripts, questions and answer keys are checked before publication.",
+    "methodology.limitations.title": "Limitations and Disclaimer",
+    "methodology.limitations.description":
+      "AI feedback is designed for study support. Estimated band scores are not official IELTS results and may differ from a certified examiner’s assessment.",
+    "methodology.cta.title": "Ready to try Writing feedback?",
+    "methodology.cta.description":
+      "Start with one Writing task or view a sample report first.",
+    "methodology.cta.primary": "Try Writing feedback",
+    "methodology.cta.secondary": "View sample feedback",
     "demo.badge": "Sample report",
     "demo.title": "See a complete IELTS Writing AI feedback example",
     "demo.subtitle":
@@ -1059,7 +1116,7 @@ export const messages: Record<Language, Record<string, string>> = {
     "home.preview.nextPoint": "下一步建议会告诉你下一篇最该练什么。",
     "home.practice.writingTitle": "Writing",
     "home.practice.writingDescription":
-      "完成 Task 1 或 Task 2，并获得详细 AI Feedback。",
+      "预估分数、四项标准分析和句子修改建议。",
     "home.practice.writingCta": "开始 Writing",
     "home.practice.aiFeedbackBadge": "提供 AI Feedback",
     "home.why.eyebrow": "AI Writing Feedback",
@@ -1087,10 +1144,27 @@ export const messages: Record<Language, Record<string, string>> = {
     "home.modules.description":
       "Writing 提供 AI Feedback；Reading 和 Listening 自动判分；Speaking 当前是备考题库。",
     "home.modules.cta": "查看全部练习",
+    "home.methodology.eyebrow": "评估方法",
+    "home.methodology.title": "为认真备考 IELTS 而设计",
+    "home.methodology.description":
+      "我们的反馈与练习内容基于清晰的 IELTS 备考方法，并经过内容审核，同时明确说明 AI 反馈的适用范围。",
+    "home.methodology.cta": "了解我们的评估方法",
+    "home.methodology.criteria.title": "基于评分标准的 Writing 分析",
+    "home.methodology.criteria.description":
+      "按照 IELTS Writing 四项评分维度进行分析。",
+    "home.methodology.calibration.title": "Task-specific 分数校准",
+    "home.methodology.calibration.description":
+      "结合题型、字数、完成度和评分一致性进行预估分数校准。",
+    "home.methodology.review.title": "经过审核的原创练习内容",
+    "home.methodology.review.description":
+      "原创 IELTS 风格练习内容在发布前经过审核。",
+    "home.methodology.audio.title": "自然的 Listening 音频",
+    "home.methodology.audio.description":
+      "听力练习采用经过审核的脚本和自然的多角色语音。",
     "home.trust.eyebrow": "使用前你可能想知道",
-    "home.trust.title": "清楚了解评分、隐私和 Pro 开通方式",
+    "home.trust.title": "开始前的三个常见问题",
     "home.trust.description":
-      "AI IELTS Copilot 提供学习用途的 IELTS-style 练习与 AI feedback。下面是开始练习前最常见的问题。",
+      "关于预估分数、作文隐私和反馈语言的简短说明。",
     "home.trust.point.study": "AI 评分仅供学习参考",
     "home.trust.point.demo": "不使用真实用户作文作为公开 Demo",
     "home.trust.point.pro": "Pro 由管理员确认后人工开通",
@@ -1117,6 +1191,42 @@ export const messages: Record<Language, Record<string, string>> = {
     "home.faq.language.question": "可以选择中文或英文反馈吗？",
     "home.faq.language.answer":
       "可以。网站支持中文和 EN 切换。新提交的 Writing feedback 会根据提交时的界面语言生成中文或英文，不会同时堆叠两套完整反馈。",
+    "methodology.hero.badge": "评估方法",
+    "methodology.hero.title": "AI IELTS Copilot 如何生成有用的 IELTS 练习反馈",
+    "methodology.hero.description":
+      "我们结合基于评分标准的 Writing feedback、内部内容审核和清晰的限制说明，让学生知道产品能做什么，也知道它不能替代什么。",
+    "methodology.writing.title": "Writing Feedback 方法",
+    "methodology.writing.description":
+      "Writing 作文会按照 IELTS 公开的四项写作评分维度进行分析：",
+    "methodology.writing.followup":
+      "系统还会结合任务完成度、作文字数和评分一致性，生成 estimated band score 和具体修改建议。",
+    "methodology.calibration.title": "分数校准与安全检查",
+    "methodology.calibration.description":
+      "Task-specific 检查可以减少反馈前后不一致的问题。报告会展示实用的优点、改进方向和句子层面的例子，但不会声称替代官方成绩。",
+    "methodology.calibration.item.taskType": "区分 Task 1 和 Task 2",
+    "methodology.calibration.item.length": "最低字数提示与低字数处理",
+    "methodology.calibration.item.taskFeedback": "Task-specific feedback",
+    "methodology.calibration.item.consistency": "评分一致性检查",
+    "methodology.calibration.item.improvements": "句子改进、优点和待提升方向",
+    "methodology.review.title": "练习内容审核",
+    "methodology.review.description":
+      "AI 生成的练习内容会先进入内部审核流程，通过检查后才会发布。",
+    "methodology.review.item.clarity": "清晰度",
+    "methodology.review.item.originality": "原创性",
+    "methodology.review.item.format": "题型格式",
+    "methodology.review.item.data": "数据一致性",
+    "methodology.review.item.answers": "答案对应关系",
+    "methodology.review.item.visual": "图表有效性",
+    "methodology.listening.title": "Listening 音频制作",
+    "methodology.listening.description":
+      "听力音频基于经过审核的 IELTS 风格脚本，并使用 ElevenLabs 语音技术生成。脚本、题目和答案会在发布前进行检查。",
+    "methodology.limitations.title": "限制说明",
+    "methodology.limitations.description":
+      "AI 反馈用于学习和练习。预估分数不是 IELTS 官方成绩，也可能与认证考官的评分存在差异。",
+    "methodology.cta.title": "准备体验 Writing feedback 吗？",
+    "methodology.cta.description": "你可以先选择一道 Writing 题目，或先查看一份示例报告。",
+    "methodology.cta.primary": "体验 Writing 批改",
+    "methodology.cta.secondary": "查看反馈示例",
     "demo.badge": "示例报告",
     "demo.title": "查看一份完整的 IELTS Writing AI 反馈示例",
     "demo.subtitle":

@@ -16,6 +16,7 @@ const publicRoutes = [
   "/practice/speaking/part-3",
   "/demo/writing-feedback",
   "/writing-feedback",
+  "/methodology",
   "/writing-score",
   "/pricing",
   "/support",
