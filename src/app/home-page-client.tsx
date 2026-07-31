@@ -528,7 +528,7 @@ export default function Home() {
                 <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600 sm:mt-6 sm:text-lg sm:leading-8">
                   {msg(
                     "home.hero.subtitle",
-                    "Get criterion scores, task-specific feedback, sentence rewrites, and clear next steps. Try one AI Writing feedback for free each day.",
+                    "Get criterion scores, task-specific feedback, sentence rewrites, and clear next steps. Try full AI Writing feedback on your first 3 submissions.",
                   )}
                 </p>
                 <div className="mt-5 flex flex-col gap-3 sm:mt-8 sm:flex-row">
@@ -550,7 +550,7 @@ export default function Home() {
                 <p className="mt-4 inline-flex rounded-full border border-teal-200 bg-white/90 px-4 py-2 text-sm font-medium text-teal-800">
                   {msg(
                     "home.hero.freeWriting",
-                    "1 free AI Writing feedback each day",
+                    "3 full Writing feedback submissions included",
                   )}
                 </p>
                 <p className="mt-3 text-sm leading-6 text-slate-500 sm:mt-4">

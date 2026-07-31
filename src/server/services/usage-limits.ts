@@ -9,8 +9,9 @@ import {
 import {
   FREE_LISTENING_SET_LIMIT,
   FREE_READING_SET_LIMIT,
-  FREE_WRITING_DAILY_LIMIT,
+  FREE_WRITING_FEEDBACK_LIFETIME_LIMIT,
   PRO_WRITING_DAILY_LIMIT,
+  getFreeWritingLifetimeLimitDecision,
   getPracticeSetLimitDecision,
   getUsageDayRange,
   getWritingDailyLimitDecision,
@@ -49,6 +50,10 @@ export type PracticeUsageBucket = {
 };
 
 export type WritingUsageBucket = {
+  used: number;
+  limit: number | null;
+  remaining: number | null;
+  resetType: "lifetime" | "daily" | "none";
   usedToday: number;
   limitToday: number | null;
   unlimited: boolean;
@@ -85,12 +90,33 @@ export type WritingFeedbackUsageDecision = {
   plan: MembershipPlan;
   isAdmin: boolean;
   isPro: boolean;
+  used: number;
+  limit: number | null;
+  remaining: number | null;
+  resetType: "lifetime" | "daily" | "none";
+  reason: "free_lifetime_limit_reached" | "pro_daily_limit_reached" | null;
   usedToday: number;
   limitToday: number | null;
   unlimited: boolean;
   resetsAt: string;
   timezone: "UTC";
   upgradeUrl: "/pricing";
+};
+
+export type WritingFeedbackQuotaReservation = {
+  reservationId: string;
+  used: number;
+  limit: number;
+  remaining: number;
+};
+
+type WritingFeedbackQuotaRpcRow = {
+  allowed?: boolean | null;
+  reservation_id?: string | null;
+  used?: number | null;
+  limit_total?: number | null;
+  remaining?: number | null;
+  reason?: string | null;
 };
 
 const freeDailyLimits: Record<AiUsageFeature, number> = {
@@ -105,6 +131,8 @@ const freeDailyLimits: Record<AiUsageFeature, number> = {
 
 const proDailyLimit = 100;
 const writingUsageLocks = new Map<string, Promise<void>>();
+const FREE_WRITING_FEEDBACK_QUOTA_VERSION =
+  "free_writing_feedback_lifetime_v1";
 
 const skillByFeature: Record<AiUsageFeature, AiUsageSkill> = {
   reading_generate: "reading",
@@ -207,6 +235,7 @@ export async function getUserPracticeUsage(
     readingSetIds,
     listeningSetIds,
     writingUsageResult,
+    freeWritingQuotaResult,
   ] = await Promise.all([
     admin.from("profiles").select("role").eq("id", userId).maybeSingle(),
     admin
@@ -228,6 +257,12 @@ export async function getUserPracticeUsage(
       .eq("user_id", userId)
       .gte("created_at", dayRange.startOfDay.toISOString())
       .lt("created_at", dayRange.endOfDay.toISOString()),
+    admin
+      .from("writing_feedback_quota_usage")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .eq("quota_version", FREE_WRITING_FEEDBACK_QUOTA_VERSION)
+      .eq("status", "consumed"),
   ]);
 
   if (profileResult.error) {
@@ -242,11 +277,24 @@ export async function getUserPracticeUsage(
     throw new Error(writingUsageResult.error.message);
   }
 
+  if (freeWritingQuotaResult.error) {
+    throw new Error(freeWritingQuotaResult.error.message);
+  }
+
   const subscription = subscriptionResult.data;
   const isAdmin = profileResult.data?.role === "admin";
   const isPro = isProSubscription(subscription);
   const plan = parseMembershipPlan(subscription?.plan);
   const unlimitedPractice = isAdmin || isPro;
+  const freeWritingUsed = freeWritingQuotaResult.count ?? 0;
+  const proWritingUsedToday = writingUsageResult.count ?? 0;
+  const writingLimit = isAdmin
+    ? null
+    : isPro
+      ? PRO_WRITING_DAILY_LIMIT
+      : FREE_WRITING_FEEDBACK_LIFETIME_LIMIT;
+  const writingUsed = isPro ? proWritingUsedToday : freeWritingUsed;
+  const writingResetType = isAdmin ? "none" : isPro ? "daily" : "lifetime";
 
   return {
     plan,
@@ -263,12 +311,13 @@ export async function getUserPracticeUsage(
       unlimited: unlimitedPractice,
     },
     writing: {
-      usedToday: writingUsageResult.count ?? 0,
-      limitToday: isAdmin
-        ? null
-        : isPro
-          ? PRO_WRITING_DAILY_LIMIT
-          : FREE_WRITING_DAILY_LIMIT,
+      used: writingUsed,
+      limit: writingLimit,
+      remaining:
+        writingLimit === null ? null : Math.max(0, writingLimit - writingUsed),
+      resetType: writingResetType,
+      usedToday: proWritingUsedToday,
+      limitToday: isAdmin ? null : isPro ? PRO_WRITING_DAILY_LIMIT : null,
       unlimited: isAdmin,
       resetsAt: dayRange.endOfDay.toISOString(),
       timezone: dayRange.timezone,
@@ -295,26 +344,178 @@ export async function canSubmitListeningSet(userId: string, setId: string) {
 export async function canSubmitWritingFeedback(
   userId: string,
 ): Promise<WritingFeedbackUsageDecision> {
+  return getWritingFeedbackEntitlement(userId);
+}
+
+export async function getWritingFeedbackEntitlement(
+  userId: string,
+): Promise<WritingFeedbackUsageDecision> {
   const usage = await getUserPracticeUsage(userId);
-  const decision = getWritingDailyLimitDecision({
+  const dailyDecision = getWritingDailyLimitDecision({
     isAdmin: usage.isAdmin,
     isPro: usage.isPro,
     usedToday: usage.writing.usedToday,
   });
+  const lifetimeDecision = getFreeWritingLifetimeLimitDecision({
+    isAdmin: usage.isAdmin,
+    isPro: usage.isPro,
+    used: usage.writing.used,
+  });
+  const isFreeLimited = !usage.isAdmin && !usage.isPro;
+  const allowed = isFreeLimited ? lifetimeDecision.allowed : dailyDecision.allowed;
+  const reason =
+    allowed
+      ? null
+      : isFreeLimited
+        ? "free_lifetime_limit_reached"
+        : "pro_daily_limit_reached";
 
   return {
-    allowed: decision.allowed,
+    allowed,
     resource: "writing",
     plan: usage.plan,
     isAdmin: usage.isAdmin,
     isPro: usage.isPro,
-    usedToday: decision.usedToday,
-    limitToday: decision.limitToday,
-    unlimited: decision.unlimited,
+    used: isFreeLimited ? lifetimeDecision.used : dailyDecision.usedToday,
+    limit: isFreeLimited ? lifetimeDecision.limit : dailyDecision.limitToday,
+    remaining: isFreeLimited
+      ? lifetimeDecision.remaining
+      : dailyDecision.remainingToday,
+    resetType: usage.writing.resetType,
+    reason,
+    usedToday: dailyDecision.usedToday,
+    limitToday: dailyDecision.limitToday,
+    unlimited: dailyDecision.unlimited,
     resetsAt: usage.writing.resetsAt,
     timezone: usage.writing.timezone,
     upgradeUrl: "/pricing",
   };
+}
+
+export async function reserveFreeWritingFeedbackQuota(
+  userId: string,
+): Promise<WritingFeedbackQuotaReservation> {
+  const admin = createSupabaseAdminClient();
+  const requestId = crypto.randomUUID();
+  const { data, error } = await admin
+    .rpc("reserve_free_writing_feedback_quota", {
+      p_user_id: userId,
+      p_request_id: requestId,
+      p_limit: FREE_WRITING_FEEDBACK_LIFETIME_LIMIT,
+      p_quota_version: FREE_WRITING_FEEDBACK_QUOTA_VERSION,
+    })
+    .single();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const reservation = data as WritingFeedbackQuotaRpcRow | null;
+
+  if (!reservation?.allowed || !reservation.reservation_id) {
+    throw new FreeWritingFeedbackLimitReachedError({
+      used: reservation?.used ?? FREE_WRITING_FEEDBACK_LIFETIME_LIMIT,
+      limit: reservation?.limit_total ?? FREE_WRITING_FEEDBACK_LIFETIME_LIMIT,
+      remaining: reservation?.remaining ?? 0,
+    });
+  }
+
+  return {
+    reservationId: reservation.reservation_id,
+    used: reservation.used ?? 0,
+    limit: reservation.limit_total ?? FREE_WRITING_FEEDBACK_LIFETIME_LIMIT,
+    remaining: reservation.remaining ?? 0,
+  };
+}
+
+export async function consumeFreeWritingFeedbackQuota({
+  userId,
+  reservationId,
+  attemptId,
+}: {
+  userId: string;
+  reservationId: string;
+  attemptId: string;
+}) {
+  const admin = createSupabaseAdminClient();
+  const { data, error } = await admin
+    .rpc("consume_free_writing_feedback_quota", {
+      p_user_id: userId,
+      p_reservation_id: reservationId,
+      p_attempt_id: attemptId,
+      p_quota_version: FREE_WRITING_FEEDBACK_QUOTA_VERSION,
+    })
+    .single();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const result = data as {
+    consumed?: boolean | null;
+    reason?: string | null;
+  } | null;
+
+  if (!result?.consumed) {
+    throw new Error(result?.reason ?? "free_writing_quota_consume_failed");
+  }
+}
+
+export async function releaseFreeWritingFeedbackQuota({
+  userId,
+  reservationId,
+  reason,
+}: {
+  userId: string;
+  reservationId: string;
+  reason: string;
+}) {
+  const admin = createSupabaseAdminClient();
+  const { error } = await admin.rpc("release_free_writing_feedback_quota", {
+    p_user_id: userId,
+    p_reservation_id: reservationId,
+    p_release_reason: reason,
+    p_quota_version: FREE_WRITING_FEEDBACK_QUOTA_VERSION,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+export class FreeWritingFeedbackLimitReachedError extends Error {
+  decision: WritingFeedbackUsageDecision;
+
+  constructor({
+    used,
+    limit,
+    remaining,
+  }: {
+    used: number;
+    limit: number;
+    remaining: number;
+  }) {
+    super("free_writing_feedback_limit_reached");
+    this.name = "FreeWritingFeedbackLimitReachedError";
+    this.decision = {
+      allowed: false,
+      resource: "writing",
+      plan: "free",
+      isAdmin: false,
+      isPro: false,
+      used,
+      limit,
+      remaining,
+      resetType: "lifetime",
+      reason: "free_lifetime_limit_reached",
+      usedToday: 0,
+      limitToday: null,
+      unlimited: false,
+      resetsAt: getUsageDayRange().endOfDay.toISOString(),
+      timezone: "UTC",
+      upgradeUrl: "/pricing",
+    };
+  }
 }
 
 export async function runWithWritingUsageGate<T>(
@@ -347,11 +548,20 @@ export function buildUsageLimitResponse(
 ) {
   if (decision.resource === "writing") {
     return {
-      error: "usage_limit_reached",
+      error:
+        decision.reason === "free_lifetime_limit_reached"
+          ? "FREE_WRITING_FEEDBACK_LIMIT_REACHED"
+          : "usage_limit_reached",
+      code:
+        decision.reason === "free_lifetime_limit_reached"
+          ? "FREE_WRITING_FEEDBACK_LIMIT_REACHED"
+          : "WRITING_FEEDBACK_LIMIT_REACHED",
       message: buildUsageLimitMessage(decision.resource, decision.isPro),
       resource: decision.resource,
-      limit: decision.limitToday,
-      used: decision.usedToday,
+      limit: decision.limit,
+      used: decision.used,
+      remaining: decision.remaining,
+      resetType: decision.resetType,
       canRetryExisting: false,
       upgradeUrl: decision.upgradeUrl,
       resetsAt: decision.resetsAt,
@@ -477,5 +687,5 @@ function buildUsageLimitMessage(
 
   return isPro
     ? "You've used today's 10 AI Writing feedbacks. Your allowance resets daily."
-    : "You've used today's free AI Writing feedback. Upgrade to Pro for up to 10 AI Writing feedbacks per day.";
+    : "You've used your 3 free Writing feedback submissions. Upgrade to Pro to continue receiving estimated bands, criteria-based feedback and sentence improvements.";
 }

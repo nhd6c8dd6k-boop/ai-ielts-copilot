@@ -23,6 +23,10 @@ type UsageStatusProps =
   | {
       resource: "writing";
       isSignedIn: boolean;
+      used?: number;
+      limit?: number | null;
+      remaining?: number | null;
+      resetType?: "lifetime" | "daily" | "none";
       usedToday?: number;
       limitToday?: number | null;
       unlimited?: boolean;
@@ -73,22 +77,44 @@ export function UsageStatus(props: UsageStatusProps) {
   }
 
   if (props.resource === "writing") {
-    const used = props.usedToday ?? 0;
-    const limit = props.limitToday ?? 1;
+    const used = props.used ?? props.usedToday ?? 0;
+    const limit = props.limit ?? props.limitToday ?? 3;
+    const resetType = props.resetType ?? "lifetime";
     const isLocked = Boolean(props.locked || used >= limit);
+    const remaining = props.remaining ?? Math.max(0, limit - used);
 
     return (
       <div className={cn(cardClassName(isLocked), props.className)}>
         <UsageHeader title={title} locked={isLocked} />
         <p className="mt-1 text-slate-600">
-          {t("usage.writingUsed", "{used} / {limit} used")
-            .replace("{used}", String(used))
-            .replace("{limit}", String(limit))}
+          {resetType === "lifetime"
+            ? t("usage.writingFreeRemaining", "{remaining} of {limit} free submissions remaining")
+                .replace("{remaining}", String(remaining))
+                .replace("{limit}", String(limit))
+            : t("usage.writingUsed", "{used} / {limit} used")
+                .replace("{used}", String(used))
+                .replace("{limit}", String(limit))}
         </p>
-        <p className="mt-1 text-xs text-slate-500">
-          {t("usage.resetsDaily", "Resets daily at 00:00 UTC")}
-        </p>
-        {isLocked ? <UpgradeActions resource="writing" isProLimit={limit > 1} /> : null}
+        {resetType === "daily" ? (
+          <p className="mt-1 text-xs text-slate-500">
+            {t("usage.resetsDaily", "Resets daily at 00:00 UTC")}
+          </p>
+        ) : (
+          <p className="mt-1 text-xs text-slate-500">
+            {remaining === 1
+              ? t(
+                  "usage.writingLastFreeSubmission",
+                  "You have 1 free Writing feedback submission left.",
+                )
+              : t(
+                  "usage.writingLifetimeHint",
+                  "Free includes 3 full Writing feedback submissions in total.",
+                )}
+          </p>
+        )}
+        {isLocked ? (
+          <UpgradeActions resource="writing" isProLimit={resetType === "daily"} />
+        ) : null}
       </div>
     );
   }
@@ -199,7 +225,7 @@ function getUsageTitle(
     return t("usage.listeningTitle", "Listening usage");
   }
 
-  return t("usage.writingTitle", "Today's AI Writing feedback");
+  return t("usage.writingTitle", "AI Writing feedback");
 }
 
 function getSignedOutMessage(

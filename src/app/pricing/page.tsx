@@ -35,7 +35,7 @@ const freeFeatures = [
     "pricing.feature.listening",
     "Access to 5 different Listening practice sets",
   ],
-  ["pricing.feature.writing", "1 AI Writing feedback per day"],
+  ["pricing.feature.writing", "3 full AI Writing feedback submissions"],
   [
     "pricing.feature.speaking",
     "5 Speaking Preparation Library questions per day",
@@ -78,13 +78,13 @@ const faqs = [
     "pricing.faq.free.q",
     "What is included in the Free plan?",
     "pricing.faq.free.a",
-    "Free includes 5 different Reading sets, 5 different Listening sets, 1 AI Writing feedback each day, and 5 Speaking preparation questions each day.",
+    "Free includes 5 different Reading sets, 5 different Listening sets, 3 full AI Writing feedback submissions, and 5 Speaking preparation questions each day.",
   ],
   [
     "pricing.faq.writing.q",
     "How many Writing feedback submissions do I get?",
     "pricing.faq.writing.a",
-    "Free users get 1 AI Writing feedback per day. Pro users get up to 10 AI Writing feedbacks per day.",
+    "Free users get 3 full AI Writing feedback submissions in total. Pro users get up to 10 AI Writing feedbacks per day.",
   ],
   [
     "pricing.faq.skills.q",

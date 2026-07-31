@@ -74,7 +74,7 @@ function getTitle(
 
   return t(
     "usage.writingLimitTitle",
-    "You've used today's AI Writing feedback allowance.",
+    "You've used your 3 free Writing feedback submissions.",
   );
 }
 
@@ -104,6 +104,6 @@ function getDescription(
       )
     : t(
         "usage.writingLimitDescription",
-        "Upgrade to Pro for up to 10 AI Writing feedbacks per day.",
+        "Upgrade to Pro to continue receiving estimated bands, criteria-based feedback and sentence improvements.",
       );
 }

@@ -46,8 +46,8 @@ export const messages: Record<Language, Record<string, string>> = {
 
     "home.hero.title": "Get IELTS Writing feedback you can actually use.",
     "home.hero.subtitle":
-      "Get criterion scores, task-specific feedback, sentence rewrites, and clear next steps. Try one AI Writing feedback for free each day.",
-    "home.hero.freeWriting": "1 free AI Writing feedback each day",
+      "Get criterion scores, task-specific feedback, sentence rewrites, and clear next steps. Try full AI Writing feedback on your first 3 submissions.",
+    "home.hero.freeWriting": "3 full Writing feedback submissions included",
     "home.hero.point.taskFeedback": "Task 1 and Task 2 specific feedback",
     "home.hero.point.rewrite": "Original → Improved → Why",
     "home.hero.point.criteria": "Criterion scores and score summary",
@@ -132,7 +132,7 @@ export const messages: Record<Language, Record<string, string>> = {
       "No. AI scores are provided for practice and study guidance only. They do not replace an official IELTS result or assessment from a qualified examiner. The report combines criterion scores, task-specific feedback, and practical revisions to help identify key issues.",
     "home.faq.free.question": "What is included in the Free plan?",
     "home.faq.free.answer":
-      "Free users can complete any 5 different Reading sets, any 5 different Listening sets, and receive 1 AI Writing feedback each day. Completed Reading and Listening sets can be repeated without using another slot.",
+      "Free users can complete any 5 different Reading sets, any 5 different Listening sets, and receive full AI Writing feedback for their first 3 submissions. Completed Reading and Listening sets can be repeated without using another slot.",
     "home.faq.pro.question": "What is included in Pro?",
     "home.faq.pro.answer":
       "Pro includes unlimited Reading and Listening practice, plus up to 10 AI Writing feedbacks each day. Pro currently costs CA$9.99 per month, approximately ¥52 per month. The RMB amount may vary with the exchange rate at the time of payment.",
@@ -221,7 +221,7 @@ export const messages: Record<Language, Record<string, string>> = {
     "demo.primaryCta": "Get feedback on my essay",
     "demo.secondaryCta": "View Pro plans",
     "demo.bottomCtaTitle": "Ready to try it with your own essay?",
-    "demo.freeLimitNote": "Free users receive 1 AI Writing feedback each day.",
+    "demo.freeLimitNote": "Free users get 3 full AI Writing feedback submissions.",
 
     "writingFeedback.hero.eyebrow": "AI IELTS Writing",
     "writingFeedback.hero.title": "Get free IELTS Writing feedback in minutes",
@@ -297,12 +297,12 @@ export const messages: Record<Language, Record<string, string>> = {
     "practice.betaPreview": "Preview",
     "usage.readingTitle": "Reading usage",
     "usage.listeningTitle": "Listening usage",
-    "usage.writingTitle": "Today's AI Writing feedback",
+    "usage.writingTitle": "AI Writing feedback",
     "usage.readingSignedOut":
       "Sign in to complete any 5 Reading practice sets for free.",
     "usage.listeningSignedOut":
       "Sign in to complete any 5 Listening practice sets for free.",
-    "usage.writingSignedOut": "Sign in to get AI Writing feedback.",
+    "usage.writingSignedOut": "Sign in to get 3 free Writing feedback submissions.",
     "usage.proUnlimited": "Unlimited practice",
     "usage.proWriting": "Pro: up to 10 AI Writing feedbacks per day",
     "usage.unlimited": "Unlimited",
@@ -311,7 +311,14 @@ export const messages: Record<Language, Record<string, string>> = {
     "usage.practiceUsed": "{used} / {limit} different practice sets completed",
     "usage.practiceOverLimit": "{used} completed · Free limit {limit}",
     "usage.profilePractice": "{used} / {limit} different sets",
-    "usage.profileWriting": "{used} / {limit} today",
+    "usage.profileWritingDaily": "{used} / {limit} today",
+    "usage.profileWritingLifetime": "{used} / {limit} free submissions used",
+    "usage.writingFreeRemaining":
+      "{remaining} of {limit} free submissions remaining",
+    "usage.writingLastFreeSubmission":
+      "This is your final free Writing feedback submission.",
+    "usage.writingLifetimeHint":
+      "Free Writing feedback is limited to 3 successful submissions.",
     "usage.repeatSet":
       "This set can be practised again without using another slot.",
     "usage.remainingNewSets": "Remaining: {count} new sets",
@@ -333,9 +340,9 @@ export const messages: Record<Language, Record<string, string>> = {
     "usage.listeningLimitDescription":
       "You can still repeat completed sets. Upgrade to Pro for unlimited access to new Listening sets.",
     "usage.writingLimitTitle":
-      "You've used today's AI Writing feedback allowance.",
+      "You've used your 3 free Writing feedback submissions.",
     "usage.writingLimitDescription":
-      "Upgrade to Pro for up to 10 AI Writing feedbacks per day.",
+      "Upgrade to Pro to continue receiving estimated bands, criteria-based feedback and sentence improvements.",
     "usage.writingProLimitDescription": "Your allowance resets daily.",
     "practice.startPractice": "Start Practice",
     "practice.completed": "Completed",
@@ -969,10 +976,10 @@ export const messages: Record<Language, Record<string, string>> = {
       "No. AI Writing feedback is for practice and study guidance only. It does not replace an official IELTS score or examiner assessment.",
     "pricing.faq.free.q": "What is included in the Free plan?",
     "pricing.faq.free.a":
-      "Free includes 5 different Reading sets, 5 different Listening sets, 1 AI Writing feedback each day, and 5 Speaking preparation questions each day.",
+      "Free includes 5 different Reading sets, 5 different Listening sets, 3 full AI Writing feedback submissions, and 5 Speaking preparation questions each day.",
     "pricing.faq.writing.q": "How many Writing feedback submissions do I get?",
     "pricing.faq.writing.a":
-      "Free users get 1 AI Writing feedback per day. Pro users get up to 10 AI Writing feedbacks per day.",
+      "Free users get 3 full AI Writing feedback submissions in total. Pro users get up to 10 AI Writing feedbacks per day.",
     "pricing.faq.skills.q": "Do Reading, Listening, and Speaking require Pro?",
     "pricing.faq.skills.a":
       "You can start all three on the Free plan. Pro raises the limits for Reading, Listening, and Speaking preparation.",
@@ -990,7 +997,7 @@ export const messages: Record<Language, Record<string, string>> = {
       "Because this is currently a manual payment system, there is no automatic recurring charge unless the current payment method explicitly creates one.",
     "pricing.feature.reading": "Access to 5 different Reading practice sets",
     "pricing.feature.listening": "Access to 5 different Listening practice sets",
-    "pricing.feature.writing": "1 AI Writing feedback per day",
+    "pricing.feature.writing": "3 full AI Writing feedback submissions",
     "pricing.feature.speaking":
       "5 Speaking Preparation Library questions per day",
     "pricing.feature.repeat": "Repeat completed sets without using another slot",
@@ -1102,8 +1109,8 @@ export const messages: Record<Language, Record<string, string>> = {
 
     "home.hero.title": "不只给分，告诉你 IELTS Writing 怎么改",
     "home.hero.subtitle":
-      "获得四项评分、Task 1 / Task 2 专项反馈、原句改写和清晰的下一步建议。每天可免费使用一次 AI Writing feedback。",
-    "home.hero.freeWriting": "每天免费 1 次 AI Writing feedback",
+      "获得四项评分、Task 1 / Task 2 专项反馈、原句改写和清晰的下一步建议。前 3 次提交可获得完整 AI Writing feedback。",
+    "home.hero.freeWriting": "包含 3 次完整 AI Writing feedback",
     "home.hero.point.taskFeedback": "Task 1 / Task 2 专项反馈",
     "home.hero.point.rewrite": "原句 → 修改后 → 为什么这样改",
     "home.hero.point.criteria": "四项评分与评分小结",
@@ -1184,7 +1191,7 @@ export const messages: Record<Language, Record<string, string>> = {
       "不是。AI 评分仅用于练习和学习参考，不能替代正式 IELTS 考试成绩或真人考官评分。报告会结合四项评分、专项反馈和具体修改建议，帮助你发现主要问题。",
     "home.faq.free.question": "免费版可以使用多少次？",
     "home.faq.free.answer":
-      "Free 用户可以任意完成 5 套不同 Reading、5 套不同 Listening，并且每天获得 1 次 AI Writing feedback。已经完成过的 Reading 和 Listening 可以重复练习，不会再次占用额度。",
+      "Free 用户可以任意完成 5 套不同 Reading、5 套不同 Listening，并且前 3 次提交可获得完整 AI Writing feedback。已经完成过的 Reading 和 Listening 可以重复练习，不会再次占用额度。",
     "home.faq.pro.question": "Pro 包含哪些权益？",
     "home.faq.pro.answer":
       "Pro 用户可以无限练习 Reading 和 Listening，并且每天最多获得 10 次 AI Writing feedback。Pro 当前价格为 CA$9.99/月，约 ¥52/月。人民币金额会随付款时汇率变化。",
@@ -1268,7 +1275,7 @@ export const messages: Record<Language, Record<string, string>> = {
     "demo.primaryCta": "免费批改我的作文",
     "demo.secondaryCta": "查看 Pro 权益",
     "demo.bottomCtaTitle": "想用自己的作文试试看？",
-    "demo.freeLimitNote": "Free 用户每天可获得 1 次 AI Writing feedback。",
+    "demo.freeLimitNote": "Free 用户可获得 3 次完整 AI Writing feedback。",
 
     "writingFeedback.hero.eyebrow": "AI IELTS Writing",
     "writingFeedback.hero.title": "几分钟内获得免费的 IELTS Writing feedback",
@@ -1338,10 +1345,10 @@ export const messages: Record<Language, Record<string, string>> = {
     "practice.betaPreview": "预览",
     "usage.readingTitle": "Reading 使用量",
     "usage.listeningTitle": "Listening 使用量",
-    "usage.writingTitle": "今日 AI Writing feedback",
+    "usage.writingTitle": "AI Writing feedback",
     "usage.readingSignedOut": "登录后可免费完成任意 5 套 Reading。",
     "usage.listeningSignedOut": "登录后可免费完成任意 5 套 Listening。",
-    "usage.writingSignedOut": "登录后可获得 AI Writing feedback。",
+    "usage.writingSignedOut": "登录后可获得 3 次免费 Writing feedback。",
     "usage.proUnlimited": "无限练习",
     "usage.proWriting": "Pro：每天最多 10 次 AI Writing feedback",
     "usage.unlimited": "无限",
@@ -1350,7 +1357,11 @@ export const messages: Record<Language, Record<string, string>> = {
     "usage.practiceUsed": "已完成 {used} / {limit} 套不同练习",
     "usage.practiceOverLimit": "已完成 {used} 套 · 免费额度 {limit} 套",
     "usage.profilePractice": "{used} / {limit} 套不同练习",
-    "usage.profileWriting": "{used} / {limit} 今日",
+    "usage.profileWritingDaily": "{used} / {limit} 今日",
+    "usage.profileWritingLifetime": "已使用 {used} / {limit} 次免费提交",
+    "usage.writingFreeRemaining": "还剩 {remaining} / {limit} 次免费提交",
+    "usage.writingLastFreeSubmission": "这是你最后一次免费 Writing feedback 提交。",
+    "usage.writingLifetimeHint": "Free Writing feedback 总共限制为 3 次成功提交。",
     "usage.repeatSet": "这套练习可以重复完成，不会再次占用额度。",
     "usage.remainingNewSets": "还可完成 {count} 套新练习",
     "usage.readingHint": "你可以任意选择题目；重复练习同一套不会再次占用额度。",
@@ -1366,9 +1377,9 @@ export const messages: Record<Language, Record<string, string>> = {
     "usage.listeningLimitTitle": "你已完成 5 套免费 Listening 练习。",
     "usage.listeningLimitDescription":
       "已完成过的题目仍可重复练习。升级 Pro 可继续完成新的 Listening 练习。",
-    "usage.writingLimitTitle": "你今天的 AI Writing feedback 额度已使用完。",
+    "usage.writingLimitTitle": "你的 3 次免费 Writing feedback 已使用完。",
     "usage.writingLimitDescription":
-      "升级 Pro 后每天最多可获得 10 次 AI Writing feedback。",
+      "升级 Pro 后可继续获得预估分数、评分标准反馈和句子改写。",
     "usage.writingProLimitDescription": "额度会每日重置。",
     "practice.startPractice": "开始练习",
     "practice.completed": "已完成",
@@ -1954,10 +1965,10 @@ export const messages: Record<Language, Record<string, string>> = {
       "不是。AI Writing Feedback 仅用于练习和学习参考，不代表官方 IELTS 成绩，也不能替代考官评分。",
     "pricing.faq.free.q": "Free 包含哪些内容？",
     "pricing.faq.free.a":
-      "Free 包含 5 套不同 Reading、5 套不同 Listening、每天 1 次 AI Writing Feedback，以及每天 5 道 Speaking preparation 题。",
+      "Free 包含 5 套不同 Reading、5 套不同 Listening、3 次完整 AI Writing Feedback，以及每天 5 道 Speaking preparation 题。",
     "pricing.faq.writing.q": "Writing Feedback 有多少次？",
     "pricing.faq.writing.a":
-      "Free 用户每天 1 次 AI Writing Feedback。Pro 用户每天最多 10 次 AI Writing Feedback。",
+      "Free 用户总共可获得 3 次完整 AI Writing Feedback。Pro 用户每天最多 10 次 AI Writing Feedback。",
     "pricing.faq.skills.q": "Reading、Listening 和 Speaking 需要 Pro 吗？",
     "pricing.faq.skills.a":
       "Free 用户也可以开始使用这三项。Pro 会提高 Reading、Listening 和 Speaking preparation 的使用额度。",
@@ -1975,7 +1986,7 @@ export const messages: Record<Language, Record<string, string>> = {
       "当前是人工付款流程，除非付款方式本身明确创建了自动扣款，否则不会自动续费。",
     "pricing.feature.reading": "可解锁 5 套不同的 Reading 练习",
     "pricing.feature.listening": "可解锁 5 套不同的 Listening 练习",
-    "pricing.feature.writing": "每天 1 次 AI Writing feedback",
+    "pricing.feature.writing": "3 次完整 AI Writing feedback",
     "pricing.feature.speaking": "每天 5 道 Speaking Preparation Library 题",
     "pricing.feature.repeat": "已完成题目可重复练习",
     "pricing.feature.dashboard": "保存练习记录",

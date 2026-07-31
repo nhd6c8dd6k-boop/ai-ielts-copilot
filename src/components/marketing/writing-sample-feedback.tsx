@@ -192,7 +192,7 @@ export function WritingSampleFeedbackPage() {
             <p className="mt-3 text-sm leading-6 text-slate-600">
               {t(
                 "demo.freeLimitNote",
-                "Free users receive 1 AI Writing feedback each day.",
+                "Free users get 3 full AI Writing feedback submissions.",
               )}
             </p>
             <DemoCta />

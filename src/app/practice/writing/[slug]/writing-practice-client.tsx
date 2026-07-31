@@ -84,7 +84,7 @@ export function WritingPracticeClient({
             )
           : t(
               "usage.writingLimitDescription",
-              "Upgrade to Pro for up to 10 AI Writing feedbacks per day.",
+              "Upgrade to Pro to continue receiving estimated bands, criteria-based feedback and sentence improvements.",
             ),
       );
       return;
@@ -194,6 +194,10 @@ export function WritingPracticeClient({
       <UsageStatus
         resource="writing"
         isSignedIn
+        used={usageDecision.used}
+        limit={usageDecision.limit}
+        remaining={usageDecision.remaining}
+        resetType={usageDecision.resetType}
         usedToday={usageDecision.usedToday}
         limitToday={usageDecision.limitToday}
         unlimited={usageDecision.unlimited}

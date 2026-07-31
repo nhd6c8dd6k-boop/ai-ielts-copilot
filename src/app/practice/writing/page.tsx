@@ -79,6 +79,10 @@ export default async function WritingPracticePage({ searchParams }: PageProps) {
       <UsageStatus
         resource="writing"
         isSignedIn={isSignedIn}
+        used={usage?.writing.used}
+        limit={usage?.writing.limit}
+        remaining={usage?.writing.remaining}
+        resetType={usage?.writing.resetType}
         usedToday={usage?.writing.usedToday}
         limitToday={usage?.writing.limitToday}
         unlimited={usage?.writing.unlimited}

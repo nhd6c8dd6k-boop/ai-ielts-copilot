@@ -7,11 +7,16 @@ import {
   submitWritingPracticeSchema,
 } from "@/server/services/writing-practice";
 import {
+  FreeWritingFeedbackLimitReachedError,
   buildUsageLimitResponse,
   canSubmitWritingFeedback,
+  consumeFreeWritingFeedbackQuota,
   recordAiUsage,
+  releaseFreeWritingFeedbackQuota,
+  reserveFreeWritingFeedbackQuota,
   runWithWritingUsageGate,
   type WritingFeedbackUsageDecision,
+  type WritingFeedbackQuotaReservation,
 } from "@/server/services/usage-limits";
 import { apiErrorResponse } from "@/server/utils/api-error";
 
@@ -46,18 +51,51 @@ export async function POST(request: Request) {
     const input = submitWritingPracticeSchema.parse(await request.json());
     const result = await runWithWritingUsageGate(user.id, async () => {
       const usageDecision = await canSubmitWritingFeedback(user.id);
+      let quotaReservation: WritingFeedbackQuotaReservation | null = null;
+      let feedbackSaved = false;
 
       if (!usageDecision.allowed) {
         throw new WritingUsageLimitReachedError(usageDecision);
       }
 
-      return submitWritingPractice({
-        userId: user.id,
-        writingTaskId: input.writingTaskId,
-        essay: input.essay,
-        language: input.language,
-        timeSpentSeconds: input.timeSpentSeconds,
-      });
+      try {
+        if (!usageDecision.isAdmin && !usageDecision.isPro) {
+          quotaReservation = await reserveFreeWritingFeedbackQuota(user.id);
+        }
+
+        const submitResult = await submitWritingPractice({
+          userId: user.id,
+          writingTaskId: input.writingTaskId,
+          essay: input.essay,
+          language: input.language,
+          timeSpentSeconds: input.timeSpentSeconds,
+        });
+        feedbackSaved = true;
+
+        if (quotaReservation) {
+          await consumeFreeWritingFeedbackQuota({
+            userId: user.id,
+            reservationId: quotaReservation.reservationId,
+            attemptId: submitResult.attemptId,
+          });
+        }
+
+        return submitResult;
+      } catch (submitError) {
+        if (quotaReservation && !feedbackSaved) {
+          await releaseFreeWritingFeedbackQuota({
+            userId: user.id,
+            reservationId: quotaReservation.reservationId,
+            reason: "writing_submit_failed",
+          }).catch(() => undefined);
+        }
+
+        if (submitError instanceof FreeWritingFeedbackLimitReachedError) {
+          throw new WritingUsageLimitReachedError(submitError.decision);
+        }
+
+        throw submitError;
+      }
     });
 
     await recordAiUsage({

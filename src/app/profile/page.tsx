@@ -75,6 +75,10 @@ type ApiUsage = {
     unlimited: boolean;
   };
   writing: {
+    used?: number | null;
+    limit?: number | null;
+    remaining?: number | null;
+    resetType?: "lifetime" | "daily" | "none" | null;
     usedToday: number;
     limitToday: number | null;
     unlimited: boolean;
@@ -591,8 +595,10 @@ export default function ProfilePage() {
             <ProfileUsageItem
               label="Writing"
               value={formatWritingUsage(
-                usage?.writing.usedToday ?? 0,
-                usage?.writing.limitToday ?? 1,
+                usage?.writing.used ?? usage?.writing.usedToday ?? 0,
+                usage?.writing.limit ?? usage?.writing.limitToday ?? 3,
+                usage?.writing.remaining ?? null,
+                usage?.writing.resetType ?? "lifetime",
                 Boolean(usage?.writing.unlimited),
                 t,
               )}
@@ -943,6 +949,8 @@ function formatPracticeUsage(
 function formatWritingUsage(
   used: number,
   limit: number,
+  remaining: number | null,
+  resetType: "lifetime" | "daily" | "none",
   unlimited: boolean,
   t: (key: string, fallback: string) => string,
 ) {
@@ -950,9 +958,19 @@ function formatWritingUsage(
     return t("usage.unlimited", "Unlimited");
   }
 
-  return t("usage.profileWriting", "{used} / {limit} today")
+  if (resetType === "daily") {
+    return t("usage.profileWritingDaily", "{used} / {limit} today")
+      .replace("{used}", String(used))
+      .replace("{limit}", String(limit));
+  }
+
+  return t(
+    "usage.profileWritingLifetime",
+    "{used} / {limit} free submissions used",
+  )
     .replace("{used}", String(used))
-    .replace("{limit}", String(limit));
+    .replace("{limit}", String(limit))
+    .replace("{remaining}", String(remaining ?? Math.max(0, limit - used)));
 }
 
 function getSubscriptionSummary(

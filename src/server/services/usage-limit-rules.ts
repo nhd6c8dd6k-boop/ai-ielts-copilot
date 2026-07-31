@@ -1,6 +1,6 @@
 export const FREE_READING_SET_LIMIT = 5;
 export const FREE_LISTENING_SET_LIMIT = 5;
-export const FREE_WRITING_DAILY_LIMIT = 1;
+export const FREE_WRITING_FEEDBACK_LIFETIME_LIMIT = 3;
 export const PRO_WRITING_DAILY_LIMIT = 10;
 export const FREE_SPEAKING_DAILY_QUESTION_LIMIT = 5;
 
@@ -18,6 +18,12 @@ export type WritingDailyLimitInput = {
   isAdmin: boolean;
   isPro: boolean;
   usedToday: number;
+};
+
+export type FreeWritingLifetimeLimitInput = {
+  isAdmin: boolean;
+  isPro: boolean;
+  used: number;
 };
 
 export type SpeakingDailyLimitInput = {
@@ -71,14 +77,33 @@ export function getWritingDailyLimitDecision({
   usedToday,
 }: WritingDailyLimitInput) {
   const unlimited = isAdmin;
-  const limit = isPro ? PRO_WRITING_DAILY_LIMIT : FREE_WRITING_DAILY_LIMIT;
+  const limit = PRO_WRITING_DAILY_LIMIT;
+  const dailyLimited = isPro;
 
   return {
-    allowed: unlimited || usedToday < limit,
+    allowed: unlimited || !dailyLimited || usedToday < limit,
     unlimited,
     usedToday,
-    limitToday: unlimited ? null : limit,
-    remainingToday: unlimited ? null : Math.max(0, limit - usedToday),
+    limitToday: unlimited || !dailyLimited ? null : limit,
+    remainingToday:
+      unlimited || !dailyLimited ? null : Math.max(0, limit - usedToday),
+  };
+}
+
+export function getFreeWritingLifetimeLimitDecision({
+  isAdmin,
+  isPro,
+  used,
+}: FreeWritingLifetimeLimitInput) {
+  const unlimited = isAdmin || isPro;
+  const limit = FREE_WRITING_FEEDBACK_LIFETIME_LIMIT;
+
+  return {
+    allowed: unlimited || used < limit,
+    unlimited,
+    used,
+    limit: unlimited ? null : limit,
+    remaining: unlimited ? null : Math.max(0, limit - used),
   };
 }
 
