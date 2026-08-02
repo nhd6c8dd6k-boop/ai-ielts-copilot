@@ -10,6 +10,9 @@ function read(path) {
   return readFileSync(join(root, path), "utf8");
 }
 
+assert.equal(proPricing.monthly.cad, "CA$9.99");
+assert.equal(proPricing.monthly.display, "CA$9.99 / month");
+assert.equal(Object.hasOwn(proPricing.monthly, "rmbEstimate"), false);
 assert.equal(proPricing.yearly.cad, "CA$79.99");
 assert.equal(proPricing.yearly.display, "CA$79.99 / year");
 assert.equal(proPricing.yearly.monthlyEquivalent, "About CA$6.67/month");
@@ -20,12 +23,41 @@ assert.equal(
 );
 
 const messages = read("src/lib/i18n/messages.ts");
+const pricingPage = read("src/app/pricing/page.tsx");
+const supportPage = read("src/app/support/page.tsx");
+const layout = read("src/app/layout.tsx");
+
 assert.match(messages, /CA\$79\.99\/year/);
 assert.match(messages, /CA\$79\.99\/年/);
 assert.match(messages, /About CA\$6\.67\/month/);
 assert.match(messages, /约 CA\$6\.67 \/ 月/);
 assert.match(messages, /Save 33%/);
 assert.match(messages, /节省 33%/);
+assert.match(messages, /All prices are shown in Canadian dollars \(CAD\)/);
+assert.match(messages, /所有价格均以加拿大元（CAD）显示/);
+assert.match(messages, /current RMB payment amount/);
+assert.match(messages, /当前人民币付款金额/);
+assert.doesNotMatch(messages, /Approx\. ¥52/);
+assert.doesNotMatch(messages, /约 ¥52/);
+assert.doesNotMatch(messages, /approximately ¥52/);
+assert.doesNotMatch(messages, /pricing\.proPriceRmb/);
+
+assert.match(pricingPage, /pricing\.currencyNote/);
+assert.match(pricingPage, /proPricing\.monthly\.display/);
+assert.match(pricingPage, /proPricing\.yearly\.monthlyEquivalent/);
+assert.match(pricingPage, /current RMB payment amount/);
+assert.doesNotMatch(pricingPage, /proPriceRmb/);
+assert.doesNotMatch(pricingPage, /rmbEstimate/);
+assert.doesNotMatch(pricingPage, /¥52/);
+
+assert.match(
+  supportPage,
+  /Pro Monthly is CA\$9\.99\/month\. Pro Yearly is CA\$79\.99\/year\./,
+);
+assert.doesNotMatch(supportPage, /¥52/);
+
+assert.match(layout, /"@type": "Offer"/);
+assert.doesNotMatch(layout, /priceCurrency:\s*"(?!CAD)/);
 
 const upgradeButton = read("src/features/payments/contact-to-upgrade-button.tsx");
 assert.match(upgradeButton, /Pro Yearly plan for \$\{proPricing\.yearly\.cad\}/);

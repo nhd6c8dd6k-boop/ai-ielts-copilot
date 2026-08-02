@@ -3,7 +3,6 @@ export const proPricing = {
     cad: "CA$9.99",
     period: "month",
     display: "CA$9.99 / month",
-    rmbEstimate: "Approx. ¥52 / month",
   },
   yearly: {
     cad: "CA$79.99",

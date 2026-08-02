@@ -108,7 +108,13 @@ const faqs = [
     "pricing.faq.pay.q",
     "How do I pay?",
     "pricing.faq.pay.a",
-    "Use WeChat Pay, Alipay, PayPal, or Interac e-Transfer. Contact us in live chat for payment details. Pro is manually activated after confirmation.",
+    "Use WeChat Pay, Alipay, PayPal, or Interac e-Transfer. Contact us in live chat for payment details. For WeChat Pay or Alipay, contact support to confirm the current RMB payment amount. Pro is manually activated after confirmation.",
+  ],
+  [
+    "pricing.faq.currency.q",
+    "What currency are prices shown in?",
+    "pricing.faq.currency.a",
+    "All prices are shown in Canadian dollars (CAD). Your payment provider may display the equivalent amount in your local currency.",
   ],
   [
     "pricing.faq.cancel.q",
@@ -202,8 +208,6 @@ export default function PricingPage() {
               bodyKey="pricing.monthly.body"
               bodyFallback="Monthly Pro access with manual activation after payment confirmation."
               price={proPricing.monthly.display}
-              subPriceKey="pricing.proPriceRmb"
-              subPriceFallback={proPricing.monthly.rmbEstimate}
               noteKey="pricing.monthly.note"
               noteFallback="Monthly access. Renewal is handled manually through support."
             />
@@ -222,10 +226,17 @@ export default function PricingPage() {
               highlightKey="pricing.yearly.save"
               highlightFallback={proPricing.yearly.savingsPercent}
               noteKey="pricing.yearly.note"
-              noteFallback="Approximate local payment amount will be confirmed in live chat."
+              noteFallback="Billed annually. Save CA$39.89 compared with monthly billing."
             />
           </div>
         </PricingPlanActionProvider>
+
+        <p className="mt-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600">
+          <LocalizedText
+            k="pricing.currencyNote"
+            fallback="All prices are shown in Canadian dollars (CAD). Your payment provider may display the equivalent amount in your local currency."
+          />
+        </p>
 
         <section className="mt-12 grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
           <Card>
@@ -285,7 +296,7 @@ export default function PricingPage() {
               <p>
                 <LocalizedText
                   k="pricing.confirmation.body"
-                  fallback="After payment, send your payment screenshot, PayPal transaction ID, e-Transfer sender name, or payment reference in live chat."
+                  fallback="After payment, send your payment screenshot, PayPal transaction ID, e-Transfer sender name, or payment reference in live chat. For WeChat Pay or Alipay, contact support to confirm the current RMB payment amount."
                 />
               </p>
               <p className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-amber-900">
@@ -353,8 +364,8 @@ function ProPlanCard({
   bodyKey: string;
   bodyFallback: string;
   price: string;
-  subPriceKey: string;
-  subPriceFallback: string;
+  subPriceKey?: string;
+  subPriceFallback?: string;
   highlightKey?: string;
   highlightFallback?: string;
   noteKey: string;
@@ -390,19 +401,26 @@ function ProPlanCard({
         <p className="text-3xl font-semibold tracking-tight text-slate-950">
           {price}
         </p>
-        <div className="mt-1 flex flex-wrap items-center gap-2">
-          <p className="text-sm font-medium text-teal-800">
-            <LocalizedText k={subPriceKey} fallback={subPriceFallback} />
-          </p>
-          {highlightKey ? (
-            <Badge className="border-teal-200 bg-teal-50 text-teal-900">
-              <LocalizedText
-                k={highlightKey}
-                fallback={highlightFallback ?? "Save 33%"}
-              />
-            </Badge>
-          ) : null}
-        </div>
+        {subPriceKey || highlightKey ? (
+          <div className="mt-1 flex flex-wrap items-center gap-2">
+            {subPriceKey ? (
+              <p className="text-sm font-medium text-teal-800">
+                <LocalizedText
+                  k={subPriceKey}
+                  fallback={subPriceFallback ?? ""}
+                />
+              </p>
+            ) : null}
+            {highlightKey ? (
+              <Badge className="border-teal-200 bg-teal-50 text-teal-900">
+                <LocalizedText
+                  k={highlightKey}
+                  fallback={highlightFallback ?? "Save 33%"}
+                />
+              </Badge>
+            ) : null}
+          </div>
+        ) : null}
         <p className="mt-2 text-xs leading-5 text-slate-500">
           <LocalizedText k={noteKey} fallback={noteFallback} />
         </p>

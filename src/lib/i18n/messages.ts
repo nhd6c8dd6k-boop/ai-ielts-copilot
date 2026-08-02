@@ -135,7 +135,7 @@ export const messages: Record<Language, Record<string, string>> = {
       "Free users can complete any 5 different Reading sets, any 5 different Listening sets, and receive full AI Writing feedback for their first 3 submissions. Completed Reading and Listening sets can be repeated without using another slot.",
     "home.faq.pro.question": "What is included in Pro?",
     "home.faq.pro.answer":
-      "Pro includes unlimited Reading and Listening practice, plus up to 10 AI Writing feedbacks each day. Pro currently costs CA$9.99 per month, approximately ¥52 per month. The RMB amount may vary with the exchange rate at the time of payment.",
+      "Pro includes unlimited Reading and Listening practice, plus up to 10 AI Writing feedbacks each day. Pro Monthly is CA$9.99/month, and Pro Yearly is CA$79.99/year. All listed prices are shown in Canadian dollars (CAD).",
     "home.faq.upgrade.question": "How do I upgrade to Pro?",
     "home.faq.upgrade.answer":
       "We currently support WeChat Pay, Alipay, and e-Transfer. After payment, send your payment confirmation and registered email. Pro will be manually activated after verification. Full instructions are available on the Support page.",
@@ -942,8 +942,9 @@ export const messages: Record<Language, Record<string, string>> = {
     "pricing.yearly.monthlyEquivalent": "About CA$6.67/month",
     "pricing.yearly.save": "Save 33%",
     "pricing.yearly.note":
-      "Save CA$39.89 compared with monthly billing.",
-    "pricing.proPriceRmb": "Approx. ¥52 / month",
+      "Billed annually. Save CA$39.89 compared with monthly billing.",
+    "pricing.currencyNote":
+      "All prices are shown in Canadian dollars (CAD). Your payment provider may display the equivalent amount in your local currency.",
     "pricing.contactUpgrade": "Contact us to upgrade",
     "pricing.checkingPlan": "Checking plan",
     "pricing.currentPlan": "Current plan",
@@ -967,7 +968,7 @@ export const messages: Record<Language, Record<string, string>> = {
     "pricing.how.step.confirm": "Complete payment and send confirmation",
     "pricing.confirmation.title": "Payment confirmation",
     "pricing.confirmation.body":
-      "After payment, send your payment screenshot, PayPal transaction ID, e-Transfer sender name, or payment reference in live chat.",
+      "After payment, send your payment screenshot, PayPal transaction ID, e-Transfer sender name, or payment reference in live chat. For WeChat Pay or Alipay, contact support to confirm the current RMB payment amount.",
     "pricing.confirmation.security":
       "Do not send passwords, card numbers, bank login details, or authentication codes.",
     "pricing.faq.title": "FAQ",
@@ -985,7 +986,10 @@ export const messages: Record<Language, Record<string, string>> = {
       "You can start all three on the Free plan. Pro raises the limits for Reading, Listening, and Speaking preparation.",
     "pricing.faq.pay.q": "How do I pay?",
     "pricing.faq.pay.a":
-      "Use WeChat Pay, Alipay, PayPal, or Interac e-Transfer. Contact us in live chat for payment details. Pro is manually activated after confirmation.",
+      "Use WeChat Pay, Alipay, PayPal, or Interac e-Transfer. Contact us in live chat for payment details. For WeChat Pay or Alipay, contact support to confirm the current RMB payment amount. Pro is manually activated after confirmation.",
+    "pricing.faq.currency.q": "What currency are prices shown in?",
+    "pricing.faq.currency.a":
+      "All prices are shown in Canadian dollars (CAD). Your payment provider may display the equivalent amount in your local currency.",
     "pricing.faq.price.q": "How much is Pro?",
     "pricing.faq.price.a":
       "Monthly Pro is CA$9.99/month. Yearly Pro is CA$79.99/year, about CA$6.67/month and 33% less than paying monthly for 12 months.",
@@ -1036,7 +1040,7 @@ export const messages: Record<Language, Record<string, string>> = {
     "support.faqTitle": "FAQ",
     "support.faq.price.q": "How much is Pro?",
     "support.faq.price.a":
-      "Pro is CA$9.99 per month, approximately ¥52 per month. The RMB amount is an estimate and may vary with the exchange rate.",
+      "Pro Monthly is CA$9.99/month. Pro Yearly is CA$79.99/year. All prices are shown in Canadian dollars (CAD).",
     "support.faq.methods.q": "Which payment methods are supported?",
     "support.faq.methods.a":
       "We currently support WeChat Pay, Alipay, and e-Transfer with manual activation after payment confirmation.",
@@ -1194,7 +1198,7 @@ export const messages: Record<Language, Record<string, string>> = {
       "Free 用户可以任意完成 5 套不同 Reading、5 套不同 Listening，并且前 3 次提交可获得完整 AI Writing feedback。已经完成过的 Reading 和 Listening 可以重复练习，不会再次占用额度。",
     "home.faq.pro.question": "Pro 包含哪些权益？",
     "home.faq.pro.answer":
-      "Pro 用户可以无限练习 Reading 和 Listening，并且每天最多获得 10 次 AI Writing feedback。Pro 当前价格为 CA$9.99/月，约 ¥52/月。人民币金额会随付款时汇率变化。",
+      "Pro 用户可以无限练习 Reading 和 Listening，并且每天最多获得 10 次 AI Writing feedback。Pro 月付为 CA$9.99/月，Pro 年付为 CA$79.99/年。页面价格均以加拿大元（CAD）显示。",
     "home.faq.upgrade.question": "如何开通 Pro？",
     "home.faq.upgrade.answer":
       "目前支持 WeChat Pay、Alipay 和 e-Transfer。付款后请发送付款确认和注册邮箱，管理员确认后会人工开通 Pro。完整步骤可在 Support 页面查看。",
@@ -1934,8 +1938,9 @@ export const messages: Record<Language, Record<string, string>> = {
     "pricing.yearly.body": "适合计划在较长周期内持续练习的学习者。",
     "pricing.yearly.monthlyEquivalent": "约 CA$6.67 / 月",
     "pricing.yearly.save": "节省 33%",
-    "pricing.yearly.note": "相比连续月付，可节省 CA$39.89。",
-    "pricing.proPriceRmb": "约 ¥52 / 月",
+    "pricing.yearly.note": "按年收费。相比连续月付，可节省 CA$39.89。",
+    "pricing.currencyNote":
+      "所有价格均以加拿大元（CAD）显示。付款时，支付平台可能会显示对应的当地货币金额。",
     "pricing.contactUpgrade": "联系我们升级",
     "pricing.checkingPlan": "正在检查计划",
     "pricing.currentPlan": "当前计划",
@@ -1956,7 +1961,7 @@ export const messages: Record<Language, Record<string, string>> = {
     "pricing.how.step.confirm": "完成付款并发送付款确认",
     "pricing.confirmation.title": "付款确认",
     "pricing.confirmation.body":
-      "付款后，请在在线客服中发送付款截图、PayPal transaction ID、e-Transfer 付款人姓名或付款参考信息。",
+      "付款后，请在在线客服中发送付款截图、PayPal transaction ID、e-Transfer 付款人姓名或付款参考信息。如使用微信或支付宝付款，请联系客服确认当前人民币付款金额。",
     "pricing.confirmation.security":
       "不要发送密码、银行卡号、网银登录信息或验证码。",
     "pricing.faq.title": "常见问题",
@@ -1974,7 +1979,10 @@ export const messages: Record<Language, Record<string, string>> = {
       "Free 用户也可以开始使用这三项。Pro 会提高 Reading、Listening 和 Speaking preparation 的使用额度。",
     "pricing.faq.pay.q": "如何付款？",
     "pricing.faq.pay.a":
-      "支持 WeChat Pay、Alipay、PayPal 和 Interac e-Transfer。请通过在线客服获取正确付款信息。确认后会人工开通 Pro。",
+      "支持 WeChat Pay、Alipay、PayPal 和 Interac e-Transfer。请通过在线客服获取正确付款信息。如使用微信或支付宝付款，请联系客服确认当前人民币付款金额。确认后会人工开通 Pro。",
+    "pricing.faq.currency.q": "价格以什么货币显示？",
+    "pricing.faq.currency.a":
+      "所有价格均以加拿大元（CAD）显示。付款时，支付平台可能会显示对应的当地货币金额。",
     "pricing.faq.price.q": "Pro 价格是多少？",
     "pricing.faq.price.a":
       "Pro 月付为 CA$9.99/月。Pro 年付为 CA$79.99/年，约 CA$6.67/月，比连续购买 12 个月月付节省约 33%。",
@@ -2017,7 +2025,7 @@ export const messages: Record<Language, Record<string, string>> = {
     "support.faqTitle": "常见问题",
     "support.faq.price.q": "Pro 价格是多少？",
     "support.faq.price.a":
-      "Pro 为 CA$9.99/月，约 ¥52/月。人民币金额仅供参考，实际金额以付款时汇率为准。",
+      "Pro 月付为 CA$9.99/月，Pro 年付为 CA$79.99/年。所有价格均以加拿大元（CAD）显示。",
     "support.faq.methods.q": "支持哪些付款方式？",
     "support.faq.methods.a":
       "目前支持 WeChat Pay、Alipay 和 e-Transfer，并由管理员人工确认开通。",

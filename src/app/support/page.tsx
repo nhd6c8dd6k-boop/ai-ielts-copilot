@@ -43,7 +43,7 @@ const faqs = [
     "support.faq.price.q",
     "How much is Pro?",
     "support.faq.price.a",
-    "Pro is CA$9.99 per month, approximately ¥52 per month. The RMB amount is an estimate and may vary with the exchange rate.",
+    "Pro Monthly is CA$9.99/month. Pro Yearly is CA$79.99/year. All prices are shown in Canadian dollars (CAD).",
   ],
   [
     "support.faq.methods.q",
