@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import {
   BookOpen,
   Headphones,
+  type LucideIcon,
   MessageSquareText,
   PenLine,
   Timer,
@@ -33,17 +34,32 @@ export default async function PracticePage() {
 
   const practiceCards = [
     {
+      slug: "writing",
+      title: "Writing",
+      titleKey: "practice.writing.title",
+      description:
+        "Get an estimated band, criteria-based feedback, and sentence improvements.",
+      descriptionKey: "practice.writing.description",
+      href: "/practice/writing",
+      cta: "Start Writing practice",
+      ctaKey: "practice.writing.cta",
+      icon: PenLine,
+      badge: "AI Feedback",
+      badgeKey: "practice.aiFeedbackAvailable",
+      isFeatured: true,
+    },
+    {
       slug: "reading",
       title: "Reading",
       titleKey: "practice.reading.title",
       description:
-        "Practise IELTS-style Reading questions and review your results after submitting.",
+        "Practice IELTS-style passages with automatic answer checking.",
       descriptionKey: "practice.reading.description",
       href: "/practice/reading",
-      cta: "Start Reading",
+      cta: "Start Reading practice",
       ctaKey: "practice.reading.cta",
       icon: BookOpen,
-      badge: "Automatic scoring",
+      badge: "Auto scoring",
       badgeKey: "practice.automaticScoring",
     },
     {
@@ -51,54 +67,36 @@ export default async function PracticePage() {
       title: "Listening",
       titleKey: "practice.listening.title",
       description:
-        "Listen to IELTS-style audio, answer the questions, and review your results.",
+        "Practice with IELTS-style audio created from reviewed scripts.",
       descriptionKey: "practice.listening.description",
       href: "/practice/listening",
-      cta: "Start Listening",
+      cta: "Start Listening practice",
       ctaKey: "practice.listening.cta",
       icon: Headphones,
       badge: "Audio practice",
       badgeKey: "practice.audioPractice",
     },
     {
-      slug: "writing",
-      title: "Writing",
-      titleKey: "practice.writing.title",
-      description:
-        "Complete IELTS Writing tasks and receive detailed feedback across all four criteria.",
-      descriptionKey: "practice.writing.description",
-      href: "/practice/writing",
-      cta: "Start Writing",
-      ctaKey: "practice.writing.cta",
-      icon: PenLine,
-      badge: "AI feedback available",
-      badgeKey: "practice.aiFeedbackAvailable",
-      badgeClassName: "border-teal-200 bg-teal-50 text-teal-800",
-    },
-    {
       slug: "speaking",
       title: "Speaking",
       titleKey: "practice.speaking.title",
       description:
-        "Browse IELTS Speaking topics and prepare answers for Parts 1, 2, and 3.",
+        "Prepare for Part 1, Part 2, and Part 3 with questions, ideas, and sample answers.",
       descriptionKey: "practice.speaking.description",
       href: "/practice/speaking",
-      cta: "View Speaking Library",
+      cta: "Open Speaking preparation",
       ctaKey: "practice.speaking.cta",
       icon: MessageSquareText,
-      badge: "Topic library",
+      badge: "Preparation",
       badgeKey: "practice.topicLibrary",
     },
   ];
   const fullExamCard = {
-    title: "Full IELTS Mock Exam",
+    title: "Full Mock Test",
     titleKey: "practice.fullExam.title",
     description:
-      "Complete Reading, Listening, and Writing in one timed exam experience.",
+      "Complete Listening, Reading, and Writing in one timed computer-based practice session.",
     descriptionKey: "practice.fullExam.description",
-    href: "/exam",
-    cta: "Learn more",
-    ctaKey: "practice.fullExam.cta",
     icon: Timer,
     badge: "Coming soon",
     badgeKey: "practice.comingSoon",
@@ -109,106 +107,127 @@ export default async function PracticePage() {
       <PageHeader
         eyebrow="Practice"
         eyebrowKey="practice.eyebrow"
-        title="Choose a practice mode"
+        title="Practice every IELTS skill"
         titleKey="practice.title"
-        description="Choose Reading, Listening, Writing, or Speaking practice and build familiarity with the computer-based IELTS workflow."
+        description="Choose a skill and start an IELTS-style practice activity."
         descriptionKey="practice.description"
       />
 
-      <div className="mb-5 rounded-md border border-teal-200 bg-teal-50 px-4 py-3 text-sm leading-6 text-teal-800">
+      <p className="mb-5 text-sm font-medium text-slate-500">
         <LocalizedText
           k="practice.betaHint"
-          fallback="Sign in to start practice for free and save your progress."
+          fallback="Four skills. One practice hub."
         />
-      </div>
+      </p>
 
       <div className="space-y-5">
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {practiceCards.map((card) => {
-            const Icon = card.icon;
-
-            return (
-              <Card
-                key={card.slug}
-                className="flex h-full flex-col overflow-hidden transition-colors hover:border-slate-300"
-              >
-                <CardHeader>
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <CardTitle>
-                        <LocalizedText
-                          k={card.titleKey}
-                          fallback={card.title}
-                        />
-                      </CardTitle>
-                      <div className="mt-3">
-                        <Badge className={card.badgeClassName ?? "bg-white"}>
-                          <LocalizedText
-                            k={card.badgeKey}
-                            fallback={card.badge}
-                          />
-                        </Badge>
-                      </div>
-                    </div>
-                    <div className="flex h-10 w-10 items-center justify-center rounded-md bg-slate-100 text-slate-600">
-                      <Icon className="h-5 w-5" aria-hidden="true" />
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="flex flex-1 flex-col">
-                  <p className="min-h-[72px] text-sm leading-6 text-slate-600">
-                    <LocalizedText
-                      k={card.descriptionKey}
-                      fallback={card.description}
-                    />
-                  </p>
-                  <Button asChild className="mt-auto w-full">
-                    <Link
-                      href={
-                        isSignedIn
-                          ? card.href
-                          : buildLoginRedirectHref(card.href)
-                      }
-                    >
-                      <LocalizedText k={card.ctaKey} fallback={card.cta} />
-                    </Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            );
-          })}
+        <div className="grid gap-4 md:grid-cols-2">
+          {practiceCards.map((card) => (
+            <PracticeModuleCard
+              key={card.slug}
+              card={card}
+              href={
+                isSignedIn ? card.href : buildLoginRedirectHref(card.href)
+              }
+            />
+          ))}
         </div>
 
-        <FullExamCard
-          card={fullExamCard}
-          href={
-            isSignedIn
-              ? fullExamCard.href
-              : buildLoginRedirectHref(fullExamCard.href)
-          }
-        />
+        <FullExamCard card={fullExamCard} />
       </div>
     </AppShell>
   );
 }
 
-function FullExamCard({
+type PracticeModuleCardData = {
+  title: string;
+  titleKey: string;
+  description: string;
+  descriptionKey: string;
+  href: string;
+  cta: string;
+  ctaKey: string;
+  icon: LucideIcon;
+  badge: string;
+  badgeKey: string;
+  isFeatured?: boolean;
+};
+
+function PracticeModuleCard({
   card,
   href,
+}: {
+  card: PracticeModuleCardData;
+  href: string;
+}) {
+  const Icon = card.icon;
+
+  return (
+    <Card
+      className={
+        card.isFeatured
+          ? "flex h-full flex-col overflow-hidden border-teal-200 bg-teal-50/60 transition-colors hover:border-teal-300"
+          : "flex h-full flex-col overflow-hidden transition-colors hover:border-slate-300"
+      }
+    >
+      <CardHeader>
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <CardTitle>
+              <LocalizedText k={card.titleKey} fallback={card.title} />
+            </CardTitle>
+            <div className="mt-3">
+              <Badge
+                className={
+                  card.isFeatured
+                    ? "border-teal-200 bg-white text-teal-800"
+                    : "bg-white text-slate-700"
+                }
+              >
+                <LocalizedText k={card.badgeKey} fallback={card.badge} />
+              </Badge>
+            </div>
+          </div>
+          <div
+            className={
+              card.isFeatured
+                ? "flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-white text-teal-700 shadow-sm"
+                : "flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-600"
+            }
+          >
+            <Icon className="h-5 w-5" aria-hidden="true" />
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="flex flex-1 flex-col">
+        <p className="text-sm leading-6 text-slate-600">
+          <LocalizedText
+            k={card.descriptionKey}
+            fallback={card.description}
+          />
+        </p>
+        <Button asChild className="mt-6 w-full">
+          <Link href={href}>
+            <LocalizedText k={card.ctaKey} fallback={card.cta} />
+          </Link>
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+function FullExamCard({
+  card,
 }: {
   card: {
     title: string;
     titleKey: string;
     description: string;
     descriptionKey: string;
-    href: string;
-    cta: string;
-    ctaKey: string;
     icon: typeof Timer;
     badge: string;
     badgeKey: string;
   };
-  href: string;
 }) {
   const Icon = card.icon;
 
@@ -237,15 +256,9 @@ function FullExamCard({
               </p>
             </div>
           </div>
-          <Button
-            asChild
-            variant="outline"
-            className="w-full shrink-0 bg-white sm:w-auto"
-          >
-            <Link href={href}>
-              <LocalizedText k={card.ctaKey} fallback={card.cta} />
-            </Link>
-          </Button>
+          <div className="w-full shrink-0 rounded-md border border-slate-200 bg-white px-4 py-2 text-center text-sm font-medium text-slate-500 sm:w-auto">
+            <LocalizedText k={card.badgeKey} fallback={card.badge} />
+          </div>
         </div>
       </CardContent>
     </Card>
