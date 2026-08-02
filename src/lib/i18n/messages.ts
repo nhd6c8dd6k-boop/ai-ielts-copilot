@@ -34,6 +34,22 @@ export const messages: Record<Language, Record<string, string>> = {
     "nav.language": "Language",
     "nav.switchToEnglish": "Switch language to English",
     "nav.switchToChinese": "Switch language to Chinese",
+    "nav.practiceMenu.open": "Open Practice menu",
+    "nav.practiceMenu.label": "Practice modules",
+    "nav.practiceMenu.viewAll": "View all practice",
+    "nav.practiceMenu.writing.title": "Writing",
+    "nav.practiceMenu.writing.description":
+      "Estimated bands, criteria-based feedback and sentence improvements.",
+    "nav.practiceMenu.writing.badge": "AI Feedback",
+    "nav.practiceMenu.reading.title": "Reading",
+    "nav.practiceMenu.reading.description":
+      "IELTS-style passages with automatic answer checking.",
+    "nav.practiceMenu.listening.title": "Listening",
+    "nav.practiceMenu.listening.description":
+      "Audio practice using reviewed IELTS-style scripts.",
+    "nav.practiceMenu.speaking.title": "Speaking",
+    "nav.practiceMenu.speaking.description":
+      "Part 1, Part 2 and Part 3 preparation materials.",
 
     "footer.helpTitle": "Need help or want to report a bug?",
     "footer.contactPrefix": "Contact:",
@@ -1102,6 +1118,22 @@ export const messages: Record<Language, Record<string, string>> = {
     "nav.language": "语言",
     "nav.switchToEnglish": "切换到英文",
     "nav.switchToChinese": "切换到中文",
+    "nav.practiceMenu.open": "打开练习菜单",
+    "nav.practiceMenu.label": "练习模块",
+    "nav.practiceMenu.viewAll": "查看全部练习",
+    "nav.practiceMenu.writing.title": "Writing 写作",
+    "nav.practiceMenu.writing.description":
+      "预估分数、四项评分分析和句子修改建议。",
+    "nav.practiceMenu.writing.badge": "AI Feedback",
+    "nav.practiceMenu.reading.title": "Reading 阅读",
+    "nav.practiceMenu.reading.description":
+      "IELTS 风格文章与自动答案检查。",
+    "nav.practiceMenu.listening.title": "Listening 听力",
+    "nav.practiceMenu.listening.description":
+      "基于审核脚本的 IELTS 风格音频练习。",
+    "nav.practiceMenu.speaking.title": "Speaking 口语",
+    "nav.practiceMenu.speaking.description":
+      "Part 1、Part 2 和 Part 3 备考材料。",
 
     "footer.helpTitle": "遇到问题或想反馈？",
     "footer.contactPrefix": "欢迎联系：",

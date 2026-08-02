@@ -4,16 +4,12 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  ArrowRight,
   BookOpenText,
   CreditCard,
-  Headphones,
   LayoutDashboard,
-  LibraryBig,
   LifeBuoy,
   LogOut,
   Menu,
-  PenLine,
   Shield,
   UserRound,
   X,
@@ -21,6 +17,7 @@ import {
 
 import { LanguageSwitcher } from "@/components/i18n/language-switcher";
 import { useI18n } from "@/components/i18n/language-provider";
+import { PracticeMobileAccordion } from "@/components/layout/practice-navigation";
 import { Button } from "@/components/ui/button";
 import { isSupabaseConfigured } from "@/lib/env";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -36,21 +33,6 @@ type SessionResponse = {
 type AuthMode = "loading" | "demo" | "anonymous" | "supabase" | "error";
 
 const baseItems = [
-  { href: "/practice", labelKey: "nav.practice", fallback: "Practice", icon: LibraryBig },
-  { href: "/practice/reading", labelKey: "nav.reading", fallback: "Reading", icon: BookOpenText },
-  {
-    href: "/practice/listening",
-    labelKey: "nav.listening",
-    fallback: "Listening",
-    icon: Headphones,
-  },
-  { href: "/practice/writing", labelKey: "nav.writing", fallback: "Writing", icon: PenLine },
-  {
-    href: "/writing-feedback",
-    labelKey: "nav.writingFeedback",
-    fallback: "Writing Feedback",
-    icon: PenLine,
-  },
   {
     href: "/dashboard",
     labelKey: "nav.dashboard",
@@ -75,20 +57,13 @@ const supportItem = {
 };
 
 const publicItems = [
-  { href: "/practice", labelKey: "nav.practice", fallback: "Practice", icon: LibraryBig },
-  {
-    href: "/writing-feedback",
-    labelKey: "nav.writingFeedback",
-    fallback: "Writing Feedback",
-    icon: PenLine,
-  },
-  { href: "/pricing", labelKey: "nav.pricing", fallback: "Pricing", icon: CreditCard },
   {
     href: "/methodology",
     labelKey: "nav.methodology",
     fallback: "Methodology",
     icon: BookOpenText,
   },
+  { href: "/pricing", labelKey: "nav.pricing", fallback: "Pricing", icon: CreditCard },
   supportItem,
 ];
 
@@ -174,6 +149,9 @@ export function MobileAppNav() {
   }, [isOpen]);
 
   const isAuthenticated = mode === "supabase";
+  const closeAfterNavigationStarts = () => {
+    window.setTimeout(() => setIsOpen(false), 0);
+  };
 
   const signOut = async () => {
     setIsSigningOut(true);
@@ -246,6 +224,11 @@ export function MobileAppNav() {
             </div>
 
             <nav className="flex-1 space-y-1 px-3 py-4">
+              <PracticeMobileAccordion
+                pathname={pathname}
+                onNavigate={closeAfterNavigationStarts}
+                className="mb-1"
+              />
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const isActive =
@@ -256,7 +239,7 @@ export function MobileAppNav() {
                   <Link
                     key={item.href}
                     href={item.href}
-                    onClick={() => setIsOpen(false)}
+                    onClick={closeAfterNavigationStarts}
                     className={cn(
                       "flex min-h-11 items-center gap-3 border-l-2 px-3 py-2.5 text-sm transition-colors",
                       isActive
@@ -274,16 +257,6 @@ export function MobileAppNav() {
 
             <div className="space-y-3 border-t border-slate-200 px-4 py-4">
               <LanguageSwitcher variant="menu" onSelect={() => setIsOpen(false)} />
-              <Button
-                asChild
-                size="sm"
-                className="min-h-11 w-full justify-center bg-teal-700 font-semibold text-white hover:bg-teal-800"
-              >
-                <Link href="/practice/writing" onClick={() => setIsOpen(false)}>
-                  {t("nav.tryWriting", "Try Writing")}
-                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                </Link>
-              </Button>
               {mode === "loading" ? null : isAuthenticated ? (
                 <Button
                   type="button"
@@ -300,12 +273,12 @@ export function MobileAppNav() {
               ) : (
                 <div className="grid grid-cols-2 gap-2">
                   <Button asChild size="sm" variant="outline">
-                    <Link href="/login" onClick={() => setIsOpen(false)}>
+                    <Link href="/login" onClick={closeAfterNavigationStarts}>
                       {t("nav.login", "Log in")}
                     </Link>
                   </Button>
                   <Button asChild size="sm">
-                    <Link href="/register" onClick={() => setIsOpen(false)}>
+                    <Link href="/register" onClick={closeAfterNavigationStarts}>
                       {t("nav.register", "Start free")}
                     </Link>
                   </Button>

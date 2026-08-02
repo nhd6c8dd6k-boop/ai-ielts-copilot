@@ -9,11 +9,9 @@ import {
   CreditCard,
   Home,
   LayoutDashboard,
-  LibraryBig,
   LifeBuoy,
   LogOut,
   Menu,
-  PenLine,
   Shield,
   UserRound,
   X,
@@ -23,6 +21,7 @@ import { usePathname } from "next/navigation";
 
 import { LanguageSwitcher } from "@/components/i18n/language-switcher";
 import { useI18n } from "@/components/i18n/language-provider";
+import { PracticeMobileAccordion } from "@/components/layout/practice-navigation";
 import { Button } from "@/components/ui/button";
 import { isSupabaseConfigured } from "@/lib/env";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -56,29 +55,13 @@ type MobileMenuSection = {
 };
 
 const mainMenuItems: MobileMenuItem[] = [
-  { href: "/practice", labelKey: "nav.practice", fallback: "Practice", icon: LibraryBig },
-  {
-    href: "/writing-feedback",
-    labelKey: "nav.writingFeedback",
-    fallback: "Writing Feedback",
-    icon: PenLine,
-  },
+  { href: "/methodology", labelKey: "nav.methodology", fallback: "Methodology", icon: BookOpenText },
   { href: "/pricing", labelKey: "nav.pricing", fallback: "Plans", icon: CreditCard },
-];
-
-const learnMenuItems: MobileMenuItem[] = [
-  {
-    href: "/methodology",
-    labelKey: "nav.methodology",
-    fallback: "Methodology",
-    icon: BookOpenText,
-  },
   { href: "/support", labelKey: "nav.support", fallback: "Support", icon: LifeBuoy },
 ];
 
 const publicMenuSections: MobileMenuSection[] = [
   { id: "main", labelKey: "nav.main", fallback: "Main", items: mainMenuItems },
-  { id: "learn", labelKey: "nav.learnTrust", fallback: "Learn & trust", items: learnMenuItems },
 ];
 
 const accountMenuItems: MobileMenuItem[] = [
@@ -236,7 +219,6 @@ export function HeaderAuthNav() {
           sections={publicMenuSections}
           pathname={pathname}
           onClose={() => setIsMenuOpen(false)}
-          footer={<MobileTryWritingButton onClose={() => setIsMenuOpen(false)} />}
         />
       </>
     );
@@ -275,20 +257,23 @@ export function HeaderAuthNav() {
           pathname={pathname}
           onClose={() => setIsMenuOpen(false)}
           footer={
-            <div className="space-y-2">
-              <MobileTryWritingButton onClose={() => setIsMenuOpen(false)} />
-              <div className="grid grid-cols-2 gap-2">
-                <Button asChild size="sm" variant="outline">
-                  <Link href="/login" onClick={() => setIsMenuOpen(false)}>
-                    {t("nav.login", "Log in")}
-                  </Link>
-                </Button>
-                <Button asChild size="sm">
-                  <Link href="/register" onClick={() => setIsMenuOpen(false)}>
-                    {t("nav.register", "Start free")}
-                  </Link>
-                </Button>
-              </div>
+            <div className="grid grid-cols-2 gap-2">
+              <Button asChild size="sm" variant="outline">
+                <Link
+                  href="/login"
+                  onClick={() => window.setTimeout(() => setIsMenuOpen(false), 0)}
+                >
+                  {t("nav.login", "Log in")}
+                </Link>
+              </Button>
+              <Button asChild size="sm">
+                <Link
+                  href="/register"
+                  onClick={() => window.setTimeout(() => setIsMenuOpen(false), 0)}
+                >
+                  {t("nav.register", "Start free")}
+                </Link>
+              </Button>
             </div>
           }
         />
@@ -379,42 +364,22 @@ export function HeaderAuthNav() {
         pathname={pathname}
         onClose={() => setIsMenuOpen(false)}
         footer={
-          <div className="space-y-2">
-            <MobileTryWritingButton onClose={() => setIsMenuOpen(false)} />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="w-full justify-start"
-              onClick={signOut}
-              disabled={isSigningOut}
-            >
-              <LogOut className="h-4 w-4" aria-hidden="true" />
-              {isSigningOut
-                ? t("nav.signingOut", "Signing out")
-                : t("nav.signOut", "Sign out")}
-            </Button>
-          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="w-full justify-start"
+            onClick={signOut}
+            disabled={isSigningOut}
+          >
+            <LogOut className="h-4 w-4" aria-hidden="true" />
+            {isSigningOut
+              ? t("nav.signingOut", "Signing out")
+              : t("nav.signOut", "Sign out")}
+          </Button>
         }
       />
     </>
-  );
-}
-
-function MobileTryWritingButton({ onClose }: { onClose: () => void }) {
-  const { t } = useI18n();
-
-  return (
-    <Button
-      asChild
-      size="sm"
-      className="min-h-11 w-full justify-center bg-teal-700 font-semibold text-white hover:bg-teal-800"
-    >
-      <Link href="/practice/writing" onClick={onClose}>
-        {t("nav.tryWriting", "Try Writing")}
-        <ArrowRight className="h-4 w-4" aria-hidden="true" />
-      </Link>
-    </Button>
   );
 }
 
@@ -430,10 +395,13 @@ function MarketingMobileMenu({
   title: string;
   sections: MobileMenuSection[];
   pathname: string;
-  footer: ReactNode;
+  footer?: ReactNode;
   onClose: () => void;
 }) {
   const { t } = useI18n();
+  const closeAfterNavigationStarts = () => {
+    window.setTimeout(onClose, 0);
+  };
 
   if (!isOpen) {
     return null;
@@ -468,6 +436,7 @@ function MarketingMobileMenu({
         </div>
 
         <nav className="flex-1 space-y-5 px-3 py-4">
+          <PracticeMobileAccordion pathname={pathname} onNavigate={onClose} />
           {sections.map((section) => (
             <div key={section.id} className="space-y-1">
               <p className="px-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -483,7 +452,7 @@ function MarketingMobileMenu({
                   <Link
                     key={item.href}
                     href={item.href}
-                    onClick={onClose}
+                    onClick={closeAfterNavigationStarts}
                     className={cn(
                       "flex min-h-11 items-center gap-3 border-l-2 px-3 py-2.5 text-sm transition-colors",
                       "hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950",
@@ -504,7 +473,7 @@ function MarketingMobileMenu({
 
         <div className="space-y-3 border-t border-slate-200 px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom)+5rem)]">
           <LanguageSwitcher variant="menu" onSelect={onClose} />
-          {footer}
+          {footer ? footer : null}
         </div>
       </div>
     </div>,
