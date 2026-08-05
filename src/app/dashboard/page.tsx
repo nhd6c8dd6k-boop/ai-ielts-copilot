@@ -59,6 +59,7 @@ import {
   getWeeklyPracticeProgress,
 } from "@/features/dashboard/weekly-progress";
 import { countWords } from "@/lib/word-count";
+import type { AccountabilityEnrollment } from "@/server/services/accountability-beta";
 
 const skillLabels: Record<PracticeSkill, string> = {
   reading: "Reading",
@@ -88,6 +89,12 @@ type DashboardSpeakingStats = {
   partCounts: Record<"1" | "2" | "3", number>;
 };
 
+type DashboardAccountabilityState = {
+  enabled: boolean;
+  enrollment: AccountabilityEnrollment | null;
+  isAuthenticated: boolean;
+};
+
 export default function DashboardPage() {
   const { t } = useI18n();
   const { history, syncMode } = useSyncedPracticeHistory();
@@ -100,6 +107,9 @@ export default function DashboardPage() {
   const [speakingStats, setSpeakingStats] =
     useState<DashboardSpeakingStats | null>(null);
   const [isSpeakingStatsLoading, setIsSpeakingStatsLoading] = useState(true);
+  const [accountabilityState, setAccountabilityState] =
+    useState<DashboardAccountabilityState | null>(null);
+  const [isAccountabilityLoading, setIsAccountabilityLoading] = useState(true);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -142,6 +152,56 @@ export default function DashboardPage() {
     }
 
     void loadSpeakingStats();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function loadAccountabilityState() {
+      try {
+        const response = await fetch("/api/accountability-beta", {
+          cache: "no-store",
+        });
+
+        if (response.status === 401) {
+          if (isActive) {
+            setAccountabilityState({
+              enabled: true,
+              enrollment: null,
+              isAuthenticated: false,
+            });
+          }
+          return;
+        }
+
+        const payload = (await response.json()) as {
+          enabled?: boolean;
+          enrollment?: AccountabilityEnrollment | null;
+        };
+
+        if (isActive) {
+          setAccountabilityState({
+            enabled: payload.enabled !== false,
+            enrollment: payload.enrollment ?? null,
+            isAuthenticated: true,
+          });
+        }
+      } catch {
+        if (isActive) {
+          setAccountabilityState(null);
+        }
+      } finally {
+        if (isActive) {
+          setIsAccountabilityLoading(false);
+        }
+      }
+    }
+
+    void loadAccountabilityState();
 
     return () => {
       isActive = false;
@@ -254,6 +314,12 @@ export default function DashboardPage() {
           {t(`dashboard.sync.${syncMode}`, syncLabels[syncMode])}
         </Badge>
       </div>
+
+      <DashboardAccountabilityCard
+        state={accountabilityState}
+        isLoading={isAccountabilityLoading}
+        t={t}
+      />
 
       {isLoading ? (
         <DashboardStatusPanel
@@ -533,6 +599,141 @@ function DashboardStatusPanel({
         <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
           {description}
         </p>
+      </CardContent>
+    </Card>
+  );
+}
+
+function DashboardAccountabilityCard({
+  state,
+  isLoading,
+  t,
+}: {
+  state: DashboardAccountabilityState | null;
+  isLoading: boolean;
+  t: (key: string, fallback?: string) => string;
+}) {
+  if (!isLoading && (!state || state.enabled === false)) {
+    return null;
+  }
+
+  const enrollment = state?.enrollment ?? null;
+  const todayTask = enrollment?.todayTask ?? null;
+  const completedCount = enrollment?.completedCount ?? 0;
+
+  const title = isLoading
+    ? t("dashboard.accountability.loadingTitle", "Loading 7-day beta")
+    : !state?.isAuthenticated
+      ? t("dashboard.accountability.loggedOutTitle", "Join the 7-day IELTS beta")
+      : !enrollment
+        ? t("dashboard.accountability.joinTitle", "Try the 7-day IELTS accountability beta")
+        : enrollment.status === "waitlisted"
+          ? t("dashboard.accountability.waitlistTitle", "You are on the beta waitlist")
+          : enrollment.status === "completed"
+            ? t("dashboard.accountability.completedTitle", "7-day beta completed")
+            : todayTask?.title ?? t("dashboard.accountability.activeTitle", "Today’s IELTS task");
+
+  const description = isLoading
+    ? t(
+        "dashboard.accountability.loadingDescription",
+        "Checking your accountability beta status.",
+      )
+    : !state?.isAuthenticated
+      ? t(
+          "dashboard.accountability.loggedOutDescription",
+          "Log in to join a small 7-day IELTS practice group with one focused task per day.",
+        )
+      : !enrollment
+        ? t(
+            "dashboard.accountability.joinDescription",
+            "A lightweight 7-day plan with manual reminder support. Limited to 10 active students.",
+          )
+        : enrollment.status === "waitlisted"
+          ? t(
+              "dashboard.accountability.waitlistDescription",
+              "The active beta group is full. You will be activated manually when a spot opens.",
+            )
+          : enrollment.status === "completed"
+            ? t(
+                "dashboard.accountability.completedDescription",
+                "Review your completed tasks or submit beta feedback.",
+              )
+            : todayTask?.description ??
+              t(
+                "dashboard.accountability.activeDescription",
+                "Open your 7-day plan to continue today’s practice.",
+              );
+
+  const primaryHref = !state?.isAuthenticated
+    ? "/login?redirect=/accountability-beta"
+    : todayTask?.targetPath ?? "/accountability-beta";
+  const primaryLabel = !state?.isAuthenticated
+    ? t("dashboard.accountability.login", "Log in to join")
+    : enrollment?.status === "active" && todayTask
+      ? t("dashboard.accountability.startTask", "Start task")
+      : t("dashboard.accountability.openPlan", "Open plan");
+
+  return (
+    <Card className="mb-6 overflow-hidden border-slate-300">
+      <CardContent
+        className="grid gap-5 p-6 lg:grid-cols-[1fr_auto] lg:items-center"
+        aria-busy={isLoading}
+      >
+        <div className="flex min-w-0 gap-4">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-slate-950 text-white">
+            {isLoading ? (
+              <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
+            ) : (
+              <Target className="h-5 w-5" aria-hidden="true" />
+            )}
+          </div>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                {t("dashboard.accountability.eyebrow", "7-day accountability")}
+              </p>
+              {enrollment ? (
+                <Badge className="border-slate-200 bg-white text-slate-700">
+                  {formatMessage(
+                    t(
+                      "dashboard.accountability.progress",
+                      "{completed}/7 completed",
+                    ),
+                    { completed: `${completedCount}` },
+                  )}
+                </Badge>
+              ) : null}
+              {enrollment?.status === "active" ? (
+                <Badge className="border-slate-200 bg-white text-slate-700">
+                  {formatMessage(t("dashboard.accountability.day", "Day {day}"), {
+                    day: `${enrollment.currentDay || 1}`,
+                  })}
+                </Badge>
+              ) : null}
+            </div>
+            <h2 className="mt-2 text-xl font-semibold leading-tight text-slate-950">
+              {title}
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+              {description}
+            </p>
+          </div>
+        </div>
+        {!isLoading ? (
+          <div className="flex flex-wrap gap-2">
+            <Button asChild className="w-full lg:w-auto">
+              <Link href={primaryHref}>
+                {primaryLabel}
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="w-full lg:w-auto">
+              <Link href="/accountability-beta">
+                {t("dashboard.accountability.viewPlan", "View plan")}
+              </Link>
+            </Button>
+          </div>
+        ) : null}
       </CardContent>
     </Card>
   );

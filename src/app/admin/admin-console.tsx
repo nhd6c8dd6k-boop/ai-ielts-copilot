@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Activity,
   Crown,
@@ -29,6 +29,7 @@ import { Label } from "@/components/ui/label";
 import { WritingTaskVisual } from "@/components/writing/writing-task-visual";
 import { SpeakingAdminPanel } from "./components/speaking-admin-panel";
 import type { AdminSpeakingTopicCountState } from "./components/speaking-types";
+import type { AdminAccountabilityParticipant } from "@/server/services/accountability-beta";
 import type {
   AdminContentItem,
   AdminContentStatus,
@@ -54,6 +55,7 @@ type AdminTab =
   | "users"
   | "userActivity"
   | "memberships"
+  | "accountability"
   | "prompts"
   | "logs";
 type GenerateMode = "reading" | "listening" | "writing" | "speaking";
@@ -425,6 +427,68 @@ export function AdminConsole({
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationResult, setGenerationResult] =
     useState<GenerateApiResponse | null>(null);
+  const [accountabilityParticipants, setAccountabilityParticipants] = useState<
+    AdminAccountabilityParticipant[]
+  >([]);
+  const [isAccountabilityLoading, setIsAccountabilityLoading] = useState(false);
+  const [accountabilityError, setAccountabilityError] = useState<string | null>(
+    null,
+  );
+  const [accountabilityActionId, setAccountabilityActionId] = useState<
+    string | null
+  >(null);
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function loadAccountabilityParticipants() {
+      if (activeTab !== "accountability" || mode !== "admin") {
+        return;
+      }
+
+      setIsAccountabilityLoading(true);
+      setAccountabilityError(null);
+
+      try {
+        const response = await fetch("/api/admin/accountability-beta", {
+          cache: "no-store",
+        });
+        const payload = (await response.json()) as
+          | { participants: AdminAccountabilityParticipant[] }
+          | { error?: string };
+
+        if (!response.ok || !("participants" in payload)) {
+          throw new Error(
+            "error" in payload && payload.error
+              ? payload.error
+              : "Failed to load Accountability Beta.",
+          );
+        }
+
+        if (isActive) {
+          setAccountabilityParticipants(payload.participants);
+        }
+      } catch (loadError) {
+        if (isActive) {
+          setAccountabilityError(
+            loadError instanceof Error
+              ? loadError.message
+              : "Failed to load Accountability Beta.",
+          );
+        }
+      } finally {
+        if (isActive) {
+          setIsAccountabilityLoading(false);
+        }
+      }
+    }
+
+    void loadAccountabilityParticipants();
+
+    return () => {
+      isActive = false;
+    };
+  }, [activeTab, mode]);
 
   const counts = useMemo(
     () => ({
@@ -893,6 +957,75 @@ export function AdminConsole({
     }
   };
 
+  const updateAccountabilityParticipant = async (
+    action: "activate_waitlisted" | "mark_reminder_sent",
+    enrollmentId: string,
+  ) => {
+    setAccountabilityError(null);
+    setToastMessage(null);
+
+    if (mode !== "admin") {
+      setToastMessage("Accountability Beta management is available after admin login.");
+      return;
+    }
+
+    setAccountabilityActionId(enrollmentId);
+
+    try {
+      const response = await fetch("/api/admin/accountability-beta", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          action,
+          enrollmentId,
+          channel: "crisp",
+        }),
+      });
+      const payload = (await response.json()) as
+        | { participants: AdminAccountabilityParticipant[] }
+        | { error?: string };
+
+      if (!response.ok || !("participants" in payload)) {
+        throw new Error(
+          "error" in payload && payload.error
+            ? payload.error
+            : "Accountability action failed.",
+        );
+      }
+
+      setAccountabilityParticipants(payload.participants);
+      setLogs((current) => [`Accountability Beta · ${action}`, ...current]);
+      setToastMessage(
+        action === "activate_waitlisted"
+          ? "Waitlisted participant activated."
+          : "Reminder marked as sent.",
+      );
+    } catch (actionError) {
+      const message =
+        actionError instanceof Error
+          ? actionError.message
+          : "Accountability action failed.";
+
+      setAccountabilityError(message);
+      setToastMessage(message);
+    } finally {
+      setAccountabilityActionId(null);
+    }
+  };
+
+  const copyAccountabilityReminder = async (
+    participant: AdminAccountabilityParticipant,
+  ) => {
+    try {
+      await navigator.clipboard.writeText(participant.reminderMessage);
+      setToastMessage(`Reminder copied for ${participant.email}.`);
+    } catch {
+      setToastMessage(participant.reminderMessage);
+    }
+  };
+
   return (
     <AppShell>
       <PageHeader
@@ -960,6 +1093,7 @@ export function AdminConsole({
           ["users", "Users"],
           ["userActivity", "User Activity"],
           ["memberships", "Memberships"],
+          ["accountability", "Accountability"],
           ["prompts", "Prompts"],
           ["logs", "Logs"],
         ].map(([value, label]) => (
@@ -1300,6 +1434,23 @@ export function AdminConsole({
           />
         ) : null}
 
+        {activeTab === "accountability" ? (
+          <AccountabilityBetaAdminPanel
+            mode={mode}
+            rows={accountabilityParticipants}
+            isLoading={isAccountabilityLoading}
+            error={accountabilityError}
+            actionId={accountabilityActionId}
+            onActivate={(enrollmentId) =>
+              updateAccountabilityParticipant("activate_waitlisted", enrollmentId)
+            }
+            onMarkReminderSent={(enrollmentId) =>
+              updateAccountabilityParticipant("mark_reminder_sent", enrollmentId)
+            }
+            onCopyReminder={copyAccountabilityReminder}
+          />
+        ) : null}
+
         {activeTab === "prompts" ? (
           <DataTable
             title="Prompt templates"
@@ -1383,6 +1534,177 @@ export function AdminConsole({
         />
       ) : null}
     </AppShell>
+  );
+}
+
+function AccountabilityBetaAdminPanel({
+  mode,
+  rows,
+  isLoading,
+  error,
+  actionId,
+  onActivate,
+  onMarkReminderSent,
+  onCopyReminder,
+}: {
+  mode: "demo" | "admin";
+  rows: AdminAccountabilityParticipant[];
+  isLoading: boolean;
+  error: string | null;
+  actionId: string | null;
+  onActivate: (enrollmentId: string) => void;
+  onMarkReminderSent: (enrollmentId: string) => void;
+  onCopyReminder: (participant: AdminAccountabilityParticipant) => void;
+}) {
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <CardTitle>7-Day Accountability Beta</CardTitle>
+            <p className="mt-2 text-sm leading-6 text-slate-500">
+              Manual beta operations only: activate waitlist, copy reminder,
+              mark reminder sent, and inspect progress.
+            </p>
+          </div>
+          <Badge className="bg-white text-slate-700">
+            {mode === "admin" ? "Admin only" : "Demo preview"}
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {error ? (
+          <div className="rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            {error}
+          </div>
+        ) : null}
+
+        {isLoading ? (
+          <div
+            className="flex min-h-40 items-center justify-center rounded-md border border-slate-200 bg-slate-50"
+            aria-busy="true"
+          >
+            <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
+          </div>
+        ) : null}
+
+        {!isLoading && mode !== "admin" ? (
+          <div className="rounded-md border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
+            <p className="text-sm font-medium text-slate-950">
+              Accountability Beta management appears after admin login.
+            </p>
+          </div>
+        ) : null}
+
+        {!isLoading && mode === "admin" && !rows.length ? (
+          <div className="rounded-md border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
+            <p className="text-sm font-medium text-slate-950">
+              No Accountability Beta participants yet.
+            </p>
+          </div>
+        ) : null}
+
+        {!isLoading && mode === "admin" && rows.length
+          ? rows.map((row) => (
+              <div
+                key={row.id}
+                className="rounded-md border border-slate-200 bg-white p-4"
+              >
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge>{formatAccountabilityStatus(row.status)}</Badge>
+                      <Badge className="bg-white">Band {row.targetBand}</Badge>
+                      <Badge className="bg-white">
+                        {formatAccountabilitySkill(row.weakestSkill)}
+                      </Badge>
+                      <Badge className="bg-slate-50 text-slate-700">
+                        {row.completedTasks}/{row.taskCount} tasks
+                      </Badge>
+                    </div>
+                    <p className="mt-3 text-sm font-medium text-slate-950">
+                      {row.email}
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Day {row.currentDay || 1} · {row.dailyMinutes} min/day ·
+                      reminder: {row.reminderPreference}
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Started: {row.startedAt ? formatDateTime(row.startedAt) : "-"} ·
+                      Last activity:{" "}
+                      {row.lastActivityAt ? formatDateTime(row.lastActivityAt) : "-"}
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Exam date: {row.examDate ?? "Not booked"} · Rating:{" "}
+                      {row.feedbackRating ?? "-"}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {row.status === "waitlisted" ? (
+                      <Button
+                        type="button"
+                        size="sm"
+                        disabled={actionId === row.id}
+                        onClick={() => onActivate(row.id)}
+                      >
+                        {actionId === row.id ? (
+                          <Loader2
+                            className="h-4 w-4 animate-spin"
+                            aria-hidden="true"
+                          />
+                        ) : null}
+                        Activate
+                      </Button>
+                    ) : null}
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => onCopyReminder(row)}
+                    >
+                      Copy reminder
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={actionId === row.id}
+                      onClick={() => onMarkReminderSent(row.id)}
+                    >
+                      Mark sent
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-4">
+                  {row.tasks.map((task) => (
+                    <div
+                      key={task.id}
+                      className="rounded-md border border-slate-200 bg-slate-50 p-3"
+                    >
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge className="bg-white">Day {task.dayNumber}</Badge>
+                        <Badge
+                          className={
+                            task.completedAt
+                              ? "bg-teal-50 text-teal-800"
+                              : "bg-white text-slate-700"
+                          }
+                        >
+                          {task.completedAt ? "Done" : task.status}
+                        </Badge>
+                      </div>
+                      <p className="mt-2 line-clamp-2 text-xs font-medium text-slate-950">
+                        {task.title}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))
+          : null}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -2943,6 +3265,31 @@ function buildGeneratePayload({
 
 function formatContentStatus(status: AdminContentStatus) {
   return status === "review" ? "pending_review" : status;
+}
+
+function formatAccountabilityStatus(status: string) {
+  if (status === "waitlisted") {
+    return "Waitlisted";
+  }
+  if (status === "active") {
+    return "Active";
+  }
+  if (status === "completed") {
+    return "Completed";
+  }
+  if (status === "withdrawn") {
+    return "Withdrawn";
+  }
+
+  return status;
+}
+
+function formatAccountabilitySkill(skill: string) {
+  if (skill === "not_sure") {
+    return "Not sure";
+  }
+
+  return skill.charAt(0).toUpperCase() + skill.slice(1);
 }
 
 function formatAudioStatus(status?: string | null) {

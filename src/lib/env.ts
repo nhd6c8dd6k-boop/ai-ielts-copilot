@@ -24,6 +24,7 @@ export const env = {
   elevenLabsVoiceAustralianFemale: optionalEnv("ELEVENLABS_VOICE_AUSTRALIAN_FEMALE"),
   elevenLabsVoiceAustralianMale: optionalEnv("ELEVENLABS_VOICE_AUSTRALIAN_MALE"),
   elevenLabsVoiceNarrator: optionalEnv("ELEVENLABS_VOICE_NARRATOR"),
+  accountabilityBetaEnabled: optionalEnv("ACCOUNTABILITY_BETA_ENABLED"),
 };
 
 export function isSupabaseConfigured() {

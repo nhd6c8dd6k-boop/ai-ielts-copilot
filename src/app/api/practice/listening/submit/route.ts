@@ -10,6 +10,7 @@ import {
   isListeningAnswerCorrect,
   normalizePracticeAnswer,
 } from "@/server/services/listening-practice";
+import { markAccountabilityAttemptCompleted } from "@/server/services/accountability-beta";
 import {
   buildUsageLimitResponse,
   canSubmitListeningSet,
@@ -204,6 +205,18 @@ export async function POST(request: Request) {
       status: 400,
       context: "listening_submit_user_answers_insert_failed",
     });
+  }
+
+  try {
+    await markAccountabilityAttemptCompleted({
+      admin,
+      userId: user.id,
+      skill: "listening",
+      contentId: listeningSet.id,
+      attemptId: attempt.id,
+    });
+  } catch {
+    // Accountability updates should never block normal practice submission.
   }
 
   return NextResponse.json({

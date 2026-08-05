@@ -20,6 +20,7 @@ import {
   getMinimumWordsForWritingTask,
 } from "@/server/services/writing-scoring";
 import { sanitizeScoreSummaryBands } from "@/server/services/writing-feedback-sanitizer";
+import { markAccountabilityAttemptCompleted } from "@/server/services/accountability-beta";
 
 export type PublishedWritingTaskSummary = {
   id: string;
@@ -490,6 +491,18 @@ export async function submitWritingPractice({
       writingAttemptId: attempt.id,
     },
   });
+
+  try {
+    await markAccountabilityAttemptCompleted({
+      admin,
+      userId,
+      skill: "writing",
+      contentId: task.id,
+      attemptId: attempt.id,
+    });
+  } catch {
+    // Accountability updates should never block Writing feedback delivery.
+  }
 
   await admin.from("ai_usage_logs").insert({
     admin_user_id: null,

@@ -9,6 +9,7 @@ import {
   isPracticeAnswerCorrect,
   normalizePracticeAnswer,
 } from "@/server/services/reading-practice";
+import { markAccountabilityAttemptCompleted } from "@/server/services/accountability-beta";
 import {
   buildUsageLimitResponse,
   canSubmitReadingSet,
@@ -198,6 +199,18 @@ export async function POST(request: Request) {
       status: 400,
       context: "reading_submit_user_answers_insert_failed",
     });
+  }
+
+  try {
+    await markAccountabilityAttemptCompleted({
+      admin,
+      userId: user.id,
+      skill: "reading",
+      contentId: readingSet.id,
+      attemptId: attempt.id,
+    });
+  } catch {
+    // Accountability updates should never block normal practice submission.
   }
 
   return NextResponse.json({
